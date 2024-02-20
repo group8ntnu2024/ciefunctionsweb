@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify, make_response
+from flask_cors import CORS
 from compute import compute_tabulated
 import numpy as np
 
 api = Flask(__name__)
+CORS(api)
 
 # Convert results and plots to JSON serializable format
 def convert_to_json_serializable(data):
