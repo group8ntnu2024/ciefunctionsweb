@@ -3,7 +3,7 @@
 
 import cieapi
 from cieapi import VisualDataAPI
-from cieapi import compute_default_visual_data_endpoint
+from cieapi import compute_all_default_data
 import requests
 import pprint
 
@@ -29,7 +29,7 @@ def get_color_function_data(json_data, color_function):
 # to retrieve the data for a specified color function
 def simulate_api_call_and_process_data(color_function):
     # The endpoint
-    url = 'http://127.0.0.1:5000/compute_default_visual_data'
+    url = 'http://127.0.0.1:5000/compute_all_default_data'
     
     # Make the GET request to the Flask application
     response = requests.get(url)

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, make_response
 from compute import compute_tabulated
 import numpy as np
 
@@ -22,8 +22,36 @@ def convert_to_json_serializable(data):
                 convert_to_json_serializable(item)
 
 @api.route('/')
-def test():
-    return jsonify({"Test": ["Test value 1", "Test value 2", "Test value 3"]})
+def home():
+    endpoints_description = """
+Welcome to the CIE colour match API. Use the endpoints listed below to interact with the API.
+
+Endpoints:
+
+1. Path: /compute_all_specific_data
+   Method: POST
+   Description: Computes specific visual data based on the provided parameters (field_size, age, min, max, step). Returns both results and plots.
+
+2. Path: /compute_all_default_data
+   Method: GET
+   Description: Computes default visual data for all color functions. Returns both results and plots.
+
+3. Path: /compute_LMS_default_data
+   Method: GET
+   Description: Computes default visual data specifically for the LMS color function. Returns both results and plots.
+
+4. Path: /compute_LMS_plots_default_data
+   Method: GET
+   Description: Computes default visual data specifically for the LMS color function. Returns only plots.
+
+5. Path: /compute_LMS_results_default_data
+   Method: GET
+   Description: Computes default visual data specifically for the LMS color function. Returns only results.
+    """
+    response = make_response(endpoints_description, 200)
+    response.mimetype = "text/plain"
+    return response
+
 
 
 
@@ -31,23 +59,10 @@ class VisualDataAPI:
     def __init__(self):
         pass
 
-# Checks the type of claculation to be performed
-    def compute_visual_data(self, data):
-        if 'type' in data and data['type'] == 'specific_computation':
-            results, plots = self.compute(data)
-        # Can be removed without affecting functionality of the API.
-        # Default computations should be gotten
-        # with the get request /compute_default_visual_data
-        # Keeping it in case of future changes
-        elif 'type' in data and data['type'] == 'default_computation':
-            results, plots = self.compute_default()
-        else:
-            results, plots = {"error": "Invalid computation type specified."}, {}            
-        return results, plots
 
 # Computes the default tabulated data
     def compute_default(self):
-        field_size, age, λ_min, λ_max, λ_step = 0, 0, 390, 830, 1
+        field_size, age, λ_min, λ_max, λ_step = 2.0, 32, 390.0, 830.0, 1.0
         results, plots = compute_tabulated(field_size, age, λ_min, λ_max, λ_step)
         convert_to_json_serializable(results)
         convert_to_json_serializable(plots)
@@ -67,25 +82,53 @@ class VisualDataAPI:
 
 
 
-# Endpoint to compute the specific data
-@api.route('/compute_visual_data', methods=['POST'])
-def compute_visual_data_endpoint():
+# Endpoint to computes and return all the specific data
+@api.route('/compute_all_specific_data', methods=['POST'])
+def compute_all_specific_data():
     data_api = VisualDataAPI()
     data = request.json
-    results, plots = data_api.compute_visual_data(data)
-    
-    #Check if error occurred
-    if 'error' in results:
-        return jsonify(results, "Error 400 Bad request")
+    results, plots = data_api.compute(data)
     
     return jsonify({'results': results, 'plots': plots})
 
-# Endpoint to compute the default data
-@api.route('/compute_default_visual_data', methods=['GET'])
-def compute_default_visual_data_endpoint():
+# Endpoint to computes and retruns all the default data
+@api.route('/compute_all_default_data', methods=['GET'])
+def compute_all_default_data():
     data_api = VisualDataAPI()
     results, plots = data_api.compute_default()
+    
     return jsonify({'results': results, 'plots': plots})
+
+# Endpoint that computes all data and filters it to the LMS color function
+# Retruns both results and plots
+@api.route('/compute_LMS_default_data', methods=['GET'])
+def compute_LMS_default_data():
+    data_api = VisualDataAPI()
+    results, plots = data_api.compute_default()
+    lms_data = {
+        'results': results.get('LMS', []),
+        'plots': plots.get('LMS', [])
+    }
+    return jsonify(lms_data)
+
+# Endpoint that computes all data and filters it to the LMS color function
+# Retruns onlyplots
+@api.route('/compute_LMS_plots_default_data', methods=['GET'])
+def compute_LMS_plots_default_data():
+    data_api = VisualDataAPI()
+    _, plots = data_api.compute_default()
+    lms_plots = plots.get('LMS', [])
+    return jsonify({'plots': lms_plots})
+
+
+# Endpoint that computes all data and filters it to the LMS color function
+# Retruns results
+@api.route('/compute_LMS_results_default_data', methods=['GET'])
+def compute_LMS_results_default_data():
+    data_api = VisualDataAPI()
+    results, _ = data_api.compute_default()
+    lms_results = results.get('LMS', [])
+    return jsonify({'results': lms_results})
 
 if __name__ == '__main__':
     api.run(debug=True)
