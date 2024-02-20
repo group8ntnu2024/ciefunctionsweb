@@ -1,36 +1,31 @@
-import { useState } from 'react'
-import dodoLogo from './assets/dodo.png'
-import './App.css'
+import { useState, useEffect } from 'react';
 
 function App() {
-  //count used for button presses
-  const [count, setCount] = useState(0)
-  
-  //Parameters for spinning image
-  const [spinDirection, setSpinDirection] = useState('spin-clockwise')
-  const toggleSpinDirection = () => {
-    setSpinDirection((prevDirection) =>
-      prevDirection === 'spin-clockwise' ? 'spin-counterclockwise' : 'spin-clockwise'
-    );
-  };
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch('/api/');
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setData(data);
+      } catch (error) {
+        console.error('There was a problem with your fetch operation:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
-    <>
-      <div>
-      <img src={dodoLogo} className={`logo ${spinDirection}`} alt="logo" onClick={toggleSpinDirection} />
-      </div>
-      <h1>Hello World!</h1>
-      <p>Number of times clicked: {count }</p>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          Button
-        </button>
-      </div>
-      <button onClick={() => setCount(() => 0)}>
-          Reset count
-        </button>
-    </>
-  )
+    <div>
+      <h1>Response from backend:</h1>
+      {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
+    </div>
+  );
 }
 
-export default App
+export default App;
