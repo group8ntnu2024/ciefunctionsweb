@@ -5,7 +5,24 @@
   text-align: center;
 }
 
+.scrollable-table {
+  max-height: 600px;
+  overflow-y: auto;
+}
 
+.scrollable-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.scrollable-table th, .scrollable-table td {
+  border: 1px solid #ffffff;
+  padding: 8px;
+}
+
+.scrollable-table th {
+  background-color: #3b3b3b;
+}
 
 .logo {
   height: 15em;

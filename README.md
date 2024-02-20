@@ -1,8 +1,10 @@
 # Frontend setup
 1. navigate to frontend/cie-react
 2. npm install
-3. npm run dev
+3. npm install recharts
+4. npm run dev 
 
+Accessible at http://localhost:5173/
 
 # Backend setup
 ### Windows:
@@ -15,6 +17,8 @@
 7. Enter command "pip install scipy"
 8. Enter command "python cieapi.py"
 
+Accessible at http://localhost:5000/
+
 ### Mac OS/Linux:
 1. python3 -m venv venv
 2. source venv/bin/activate
@@ -24,6 +28,8 @@
 5. pip install scipy
 6. export FLASK_APP=cieapi.py
 7. flask run
+
+Accessible at http://localhost:5000/
 
 ### Disable virtual environment:
 
