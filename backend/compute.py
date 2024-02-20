@@ -6,6 +6,60 @@ import scipy.interpolate
 import warnings
 from scipy.spatial import Delaunay
 from utils import resource_path
+
+def my_round(x, n=0):
+    """
+    Round array x to n decimal points using round half away from zero.
+
+    This function is needed because the rounding specified in the CIE
+    recommendation is different from the standard rounding scheme in python
+    (which is following the IEEE recommendation).
+
+    Parameters
+    ----------
+    x : ndarray
+        Array to be rounded
+    n : int
+        Number of decimal points
+
+    Returns
+    -------
+    y : ndarray
+        Rounded array
+    """
+    s = np.sign(x)
+    return s*np.floor(np.absolute(x)*10**n + 0.5)/10**n
+
+
+def sign_figs(x, n=0):
+    """
+    Round x to n significant figures (not decimal points).
+
+    This function is needed because the rounding specified in the CIE
+    recommendation is different from the standard rounding scheme in python
+    (which is following the IEEE recommendation). Uses my_round (above).
+
+    Parameters
+    ----------
+    x : int, float or ndarray
+        Number or array to be rounded.
+
+    Returns
+    -------
+    t : float or ndarray
+        Rounded number or array.
+    """
+    if type(x) == float or type(x) == int:
+        if x == 0.:
+            return 0
+        else:
+            exponent = np.ceil(np.log10(x))
+            return 10**exponent * my_round(x / 10**exponent, n)
+    exponent = x.copy()
+    exponent[x == 0] = 0
+    exponent[x != 0] = np.ceil(np.log10(abs(x[x != 0])))
+    return 10**exponent * my_round(x / 10**exponent, n)
+
 def chop(arr, epsilon=1e-14):
     """
     Chop values smaller than epsilon in absolute value to zero.
