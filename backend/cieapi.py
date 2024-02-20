@@ -21,7 +21,9 @@ def convert_to_json_serializable(data):
             elif isinstance(item, dict):
                 convert_to_json_serializable(item)
 
-
+@api.route('/')
+def test():
+    return jsonify({"Test": ["Test value 1", "Test value 2", "Test value 3"]})
 
 
 
