@@ -8,7 +8,7 @@ const FetchedChart = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/compute_LMS_plots_default_data');
+        const response = await fetch('http://127.0.0.1:5000/compute_LMS_plots_default_data');
         const json = await response.json();
         
         // Parse and transform 
