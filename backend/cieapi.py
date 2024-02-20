@@ -33,6 +33,10 @@ class VisualDataAPI:
     def compute_visual_data(self, data):
         if 'type' in data and data['type'] == 'specific_computation':
             results, plots = self.compute(data)
+        # Can be removed without affecting functionality of the API.
+        # Default computations should be gotten
+        # with the get request /compute_default_visual_data
+        # Keeping it in case of future changes
         elif 'type' in data and data['type'] == 'default_computation':
             results, plots = self.compute_default()
         else:
@@ -67,6 +71,11 @@ def compute_visual_data_endpoint():
     data_api = VisualDataAPI()
     data = request.json
     results, plots = data_api.compute_visual_data(data)
+    
+    #Check if error occurred
+    if 'error' in results:
+        return jsonify(results, "Error 400 Bad request")
+    
     return jsonify({'results': results, 'plots': plots})
 
 # Endpoint to compute the default data
