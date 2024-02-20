@@ -1,4 +1,4 @@
-###Create virutual environment and run Flask:
+### Create virutual environment and run Flask:
 Windows:
 .
 .
@@ -6,7 +6,7 @@ Windows:
 
 Mac OS/Linux:
 python3 -m venv venv
-source my_env/bin/activate
+source venv/bin/activate
 pip install Flask
 pip install numpy
 pip install scipy
@@ -14,6 +14,6 @@ pip install scipy
 export FLASK_APP=cieapi.py
 flask run
 
-###Disable virtual environment:
+### Disable virtual environment:
 
 deactivate
