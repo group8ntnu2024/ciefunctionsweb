@@ -5,23 +5,60 @@
   text-align: center;
 }
 
+.content-container {
+  width: 800px;
+  height: 600px;
+  border: 2px solid #ccc;
+  padding: 1rem;
+  display: flex; 
+  flex-direction: column; 
+  justify-content: start;
+}
+
 .scrollable-table {
-  max-height: 600px;
+  flex-grow: 1;
+  min-height: 0; 
   overflow-y: auto;
 }
 
 .scrollable-table table {
+  height: 100%;
   width: 100%;
   border-collapse: collapse;
 }
 
 .scrollable-table th, .scrollable-table td {
-  border: 1px solid #ffffff;
+  border: 1px solid #000000;
   padding: 8px;
 }
 
 .scrollable-table th {
-  background-color: #3b3b3b;
+  background-color: #a5a5a5;
+}
+
+.tabs {
+  display: flex;
+  justify-content: flex-start;
+  padding: 1rem 0;
+}
+
+.tab-button {
+  border: 2px solid #000000;
+  background-color: #ffffff;
+  cursor: pointer;
+  padding: 10px;
+  margin-right: 10px;
+  outline: none;
+}
+
+.tab-button.active {
+  border-bottom: none;
+  background-color: #afafaf;
+}
+
+.content-container {
+  border: 2px solid #ccc;
+  padding: 1rem;
 }
 
 .logo {

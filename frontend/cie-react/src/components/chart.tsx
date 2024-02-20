@@ -29,15 +29,15 @@ const FetchedChart = () => {
   }, []);
 
   return (
-    <LineChart width={600} height={300} data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+    <LineChart width={800} height={600} data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
       <CartesianGrid strokeDasharray="3 3" />
       <XAxis dataKey="xValue" />
       <YAxis />
       <Tooltip />
       <Legend />
-      <Line type="monotone" dataKey="y1" stroke="#8884d8" />
-      <Line type="monotone" dataKey="y2" stroke="#82ca9d" />
-      <Line type="monotone" dataKey="y3" stroke="#ffc658" />
+      <Line type="monotone" dataKey="y1" stroke="#FF0000" />
+      <Line type="monotone" dataKey="y2" stroke="#00FF4D" />
+      <Line type="monotone" dataKey="y3" stroke="#0027FF" />
     </LineChart>
   );
 };
