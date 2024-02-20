@@ -1,24 +1,21 @@
-class VisualDataComputation:
-    
-    import numpy as np
-    import scipy.optimize
-    import scipy.interpolate
-    import warnings
-    from scipy.spatial import Delaunay
 
+
+import numpy as np
+import scipy.optimize
+import scipy.interpolate
+import warnings
+from scipy.spatial import Delaunay
+from utils import resource_path
 def chop(arr, epsilon=1e-14):
     """
     Chop values smaller than epsilon in absolute value to zero.
-
     Similar to Mathematica function.
-
     Parameters
     ----------
     arr : float or ndarray
         Array or number to be chopped.
     epsilon : float
         Minimum number.
-
     Returns
     -------
     chopped : float or ndarray
@@ -32,19 +29,15 @@ def chop(arr, epsilon=1e-14):
     chopped = arr.copy()                    # initialise to arr values
     chopped[np.abs(chopped) < epsilon] = 0  # set too low values to zero
     return chopped
-
-
 def read_csv_file(filename, pad=-np.inf):
     """
     Read a CSV file and return pylab array.
-
     Parameters
     ----------
     filename : string
         Name of the CSV file to read
     pad : float
         Value to pad for missing values.
-
     Returns
     -------
     csv_array : ndarray
@@ -60,23 +53,18 @@ def read_csv_file(filename, pad=-np.inf):
             else:
                 data[i][j] = float(data[i][j])
     return np.array(data)
-
-
 #=============================================================================  
 #  Function/class determining/constituting the database
 #=============================================================================
-
 def docul_fine(ocular_sum_32, docul2):
     """
     Calculate the two parts of the expression for the optical density of the 
     ocular media as function of age.
-
     Parameters
     ----------
     ocular_sum_32 : ndarray
         Sum of two ocular functions
     docul2 : ndarray
-
     Returns
     -------
     docul1_fine : ndarray
@@ -101,7 +89,6 @@ def docul_fine(ocular_sum_32, docul2):
 class VisualData:
     """
     Class containing all visual data input to the computations.
-    
     """
     absorbance = read_csv_file('data/absorbances0_1nm.csv')[:, [0, 2, 3, 4]]
     macula_2 = read_csv_file('data/absorbances0_1nm.csv')[:, [0, 6]]
@@ -123,24 +110,20 @@ class VisualData:
     VλLM_2_log_quantal = read_csv_file('data/logCIE2015v2q_fine_8dp.csv')
     XYZ31 = read_csv_file('data/ciexyz31_1.csv')
     XYZ64 = read_csv_file('data/ciexyz64_1.csv')
-
-    
 #=============================================================================  
 #  Basic colorimetrically related functions
 #=============================================================================
-
+    
 def chrom_coords_µ(tristimulus_µ):
     """
     Compute list of chromaticity coordinates of spectral/purple-line
     stimuli from corresponding tristimulus values as parameterized by
     wavelength/complementary wavelength.
-
     Parameters
     ----------
     tristimulus_µ : ndarray
         The tristimulus values for a given set of spectral/purple-line
         stimuli; wavelength/complementary wavelength in first column.
-
     Return
     ------
     cc_µ : ndarray
@@ -148,24 +131,19 @@ def chrom_coords_µ(tristimulus_µ):
         wavelength/complementary wavelength in first column.
     """
     # µ denotes wavelength/complementary wavelength
-
     (µ, A_µ, B_µ, C_µ) = tristimulus_µ.T
     sumABC_µ = A_µ + B_µ + C_µ
     cc_µ = np.array([µ, A_µ / sumABC_µ, B_µ / sumABC_µ, C_µ / sumABC_µ]).T
     return cc_µ
-
-
 def chrom_coords_E(tristimulus_λ):
     """
     Compute the chromaticity coordinates of Illuminant E from
     given set of spectral tristimulus values.
-
     Parameters
     ----------
     tristimulus_λ : ndarray
         The tristimulus values for the given set of spectral
         stimuli; wavelength in first column.
-
     Return
     ------
     cc_E : ndarray
@@ -176,13 +154,10 @@ def chrom_coords_E(tristimulus_λ):
     sumABC_E = A_E + B_E + C_E
     cc_E = np.array([A_E / sumABC_E, B_E / sumABC_E, C_E / sumABC_E]).T
     return cc_E
-
-
 def linear_transformation_λ(trans_mat, tristimulus_λ):
     """
     Transformation of a set of spectral tristimulus values by linear
     transformation,
-
     Parameters
     ----------
     trans_mat : ndarray
@@ -190,7 +165,6 @@ def linear_transformation_λ(trans_mat, tristimulus_λ):
     tristimulus_λ : ndarray
         The initial spectral tristimulus values; wavelengths in first
         column.
-
     Return
     ------
     ABC : ndarray
@@ -204,18 +178,14 @@ def linear_transformation_λ(trans_mat, tristimulus_λ):
 #==============================================================================
 #  Functions of age and/or field size
 #==============================================================================
-
 def d_ocular(age):
     """
     Compute the optical density of the ocular media for given age.
-
     Computes a weighted average of docul1 and docul2.
-
     Parameters
     ----------
     age : float
         Age in years.
-
     Returns
     -------
     docul : ndarray
@@ -231,36 +201,28 @@ def d_ocular(age):
                        VisualData.docul1_fine[:, 1] +
                        VisualData.docul2_fine[:, 1])
     return docul
-
-
 def d_mac_max(field_size):
     """
     Compute the maximum optical density of the macular pigment for given field
     size.
-
     Parameters
     ----------
     field_size : float
         Field size in degrees.
-
     Returns
     -------
     d_mac_max : float
         The computed maximum optical density of the macular pigment.
     """
     return my_round(0.485*np.exp(-field_size/6.132), 3)
-
-
 def d_LM_max(field_size):
     """
     Compute the maximum optical density of the L- and M-cone photopigments for
     given field size.
-
     Parameters
     ----------
     field_size : float
         Field size in degrees.
-
     Returns
     -------
     d_LM_max : float
@@ -268,36 +230,28 @@ def d_LM_max(field_size):
         photopigments
     """
     return my_round(0.38 + 0.54*np.exp(-field_size/1.333), 3)
-
-
 def d_S_max(field_size):
     """
     Compute the maximum optical density of the S-cone photopigment for given
     field size.
-
     Parameters
     ----------
     field_size : float
         Field size in degrees.
-
     Returns
     -------
     d_S_max : float
         The computed maximum optical density of the S-cone visual pigment
     """
     return my_round(0.30 + 0.45*np.exp(-field_size/1.333), 3)
-
-
 def absorptance(field_size):
     """
     Compute the quantal absorptance of the L, M and S cones for given field
     size.
-
     Parameters
     ----------
     field_size : float
         Field size in degrees.
-
     Returns
     -------
     absorpt : ndarray
@@ -312,20 +266,16 @@ def absorptance(field_size):
     absorpt[:, 3] = 1 - 10**(-d_S_max(field_size) *
                              10**(VisualData.absorbance[:, 3]))  # S
     return absorpt
-
-
 def LMS_quantal(field_size, age):
     """
     Compute the quantum_based LMS cone fundamentals for given field size and
     age.
-
     Parameters
     ----------
     field_size : float
         Field size in degrees.
     age : float
         Age in years.
-
     Returns
     -------
     LMSq : ndarray
@@ -341,13 +291,10 @@ def LMS_quantal(field_size, age):
                            VisualData.macula_rel[:, 1] - docul[:, 1]))
         LMSq[:, i] = LMSq[:, i] / (LMSq[:, i].max())
     return LMSq
-
-
 def LMS_energy(field_size, age, base=False):
     """
     Compute the energy-based LMS cone fundamentals for given field size and
     age, with either 9 (base) or 6 (standard) number of significant figures.
-
     Parameters
     ----------
     field_size : float
@@ -358,7 +305,6 @@ def LMS_energy(field_size, age, base=False):
         The returned energy-based LMS cone fundamentals given to the
         precision of 9 sign. figs. if 'True', and to the precision of
         6 sign. figs. if 'False'.
-
     Returns
     -------
     LMS : ndarray
@@ -392,13 +338,10 @@ def LMS_energy(field_size, age, base=False):
                     np.array([Lo / Lo_max, Mo / Mo_max, So / So_max]), 6)
         LMS = np.array([λ, L, M, S]).T
     return (LMS, (Lo_max, Mo_max, So_max))
-
-
 def relative_L_cone_weight_Vλ_quantal(field_size, age, strategy_2=True):
     """
     Compute the weighting factor of the quantal L-cone fundamental in the
     synthesis of the cone-fundamental-based quantal V(λ) function.
-
     Parameters
     ----------
     field_size : float
@@ -408,7 +351,6 @@ def relative_L_cone_weight_Vλ_quantal(field_size, age, strategy_2=True):
     strategy_2 : bool
         Use strategy 2 in github issue #121 for computing the weighting factor.
         If false, strategy 3 is applied.
-
     Returns
     -------
     kLq, : float
@@ -428,21 +370,17 @@ def relative_L_cone_weight_Vλ_quantal(field_size, age, strategy_2=True):
                   (abt_2[0, 2] * LMSq_2_32[0, 1]))
     kLq_rel = 1.89 * const_fs_age / const_2_32
     return kLq_rel
-
-
 def Vλ_energy_and_LM_weights(field_size, age):
     """
     Compute the energy-based V(λ) function (starting from energy-based LMS).
     Return both V(λ) and the corresponding L and M cone weights used
     in the synthesis.
-
     Parameters
     ----------
     field_size : float
         Field size in degrees.
     age : float
         Age in years.
-
     Returns
     -------
     Vλ : ndarray
@@ -470,14 +408,11 @@ def Vλ_energy_and_LM_weights(field_size, age):
         V = sign_figs(a21 * L + a22 * M, 7)
         Vλ = np.array([λ, V]).T
     return (Vλ, (a21, a22))
-
-
 def xyz_interpolated_reference_system(field_size, XYZ31_std, XYZ64_std):
     """
     Compute the spectral chromaticity coordinates of the reference system
     by interpolation between correspoding spectral chromaticity coordinates
     of the CIE 1931 XYZ systems and the CIE 1964 XYZ systems.
-
     Parameters
     ----------
     field_size : float
@@ -488,7 +423,6 @@ def xyz_interpolated_reference_system(field_size, XYZ31_std, XYZ64_std):
     XYZ64_std : ndarray
         The CIE 1964 XYZ colour-matching functions (10°), given at 1 nm
         steps from 360 nm to 830 nm; wavelengths in first column._λ
-
     Returns
     -------
     chromaticity : ndarray
@@ -542,19 +476,15 @@ def xyz_interpolated_reference_system(field_size, XYZ31_std, XYZ64_std):
     # z values
     z_values = 1 - x_values - y_values
     return np.array([λ31, x_values, y_values, z_values]).T
-
-
 # =============================================================================
 # Minimisation function
 # =============================================================================
-
 def square_sum(a13, a21, a22, a33, L_spline, M_spline, S_spline, V_spline,
                λ, λ_ref_min, xyz_ref, full_results=False):
     """
     Function to be optimised for determination of element a13 in
     the (non-renormalized) transformation matrix of the linear
     transformation LMS --> XYZ.
-
     Parameters
     ----------
     a13 : ndarray
@@ -571,7 +501,6 @@ def square_sum(a13, a21, a22, a33, L_spline, M_spline, S_spline, V_spline,
         Reference xyz chromaticity coordinates at 1 nm steps.
     full_results : bool
         Return all results or just the computed error.
-
     Returns
     -------
     err : float
@@ -626,19 +555,15 @@ def square_sum(a13, a21, a22, a33, L_spline, M_spline, S_spline, V_spline,
         return (err, trans_mat, λ_test_min, ok)
     else:
         return err
-
-
 # =============================================================================
 # Specific functions concerning purple-line stimuli
 # =============================================================================
-
 def tangent_points_purple_line(chrom_coords_λ, MacLeod_Boynton=False,
                                tristimulus_λ=None,):
     """
     Compute the chromaticity coordinates and, optionally, also the
     tristimulus values of the stimuli represented at the purple line's
     points of tangency with the spectrum locus.
-
     Parameters
     ----------
     chrom_coord_λ : ndarray
@@ -650,7 +575,6 @@ def tangent_points_purple_line(chrom_coords_λ, MacLeod_Boynton=False,
     MacLeod_Boynton : boolean
         If 'True', the parameter chrom_coord_λ is an array of spectral
         MacLeod_Boynton chromaticity coordinates.
-
     Returns
     -------
     cc_tg_purple : ndarray
@@ -688,13 +612,10 @@ def tangent_points_purple_line(chrom_coords_λ, MacLeod_Boynton=False,
         ts_tg_purple[0, :4] = ts[delaunay.convex_hull[ind, 0], :4]
         ts_tg_purple[1, :3] = ts[delaunay.convex_hull[ind, 1], :3]
         return (cc_tg_purple, ts_tg_purple)
-
-
 def XYZ_purples(xyz_λ, xyz_E, XYZ_tg_purple_line):
     """
     Compute the cone-fundamental-based tristimulus XYZ values of purple-line
     stimuli as parameterized by complementary wavelengths.
-
     Parameters
     ----------
     xyz_λ : ndarray
@@ -706,7 +627,6 @@ def XYZ_purples(xyz_λ, xyz_E, XYZ_tg_purple_line):
     XYZ_tg_purple_line : ndarray
         The cone-fundamental-based XYZ tristimulus values of the stimuli
         represented at the purple-line termini; wavelengths in first column.
-
     Return
     -------
     XYZ_λc : ndarray
@@ -741,12 +661,9 @@ def XYZ_purples(xyz_λ, xyz_E, XYZ_tg_purple_line):
             elif inside:
                 break
     return np.array(XYZ_λc)
-
-
 # =============================================================================
 # Functions for calculation of the items listed in the GUI drop-down menu
 # =============================================================================
-
 #    The functions are given to different precicions, at different 
 #    wavelength steps, within different wavelength domains. 
 #    For the variable names, the following nomenclature is used:
@@ -764,13 +681,10 @@ def XYZ_purples(xyz_λ, xyz_E, XYZ_tg_purple_line):
 #    '_main'        : values given at 1 nm steps from 390 nm to 830 nm
 #    '_spec'        : values given at specified wavelengths
 #    '_plot'        : values given at 0.1 nm steps within specified domain
-
-
 def compute_LMS(λ, L_spline, M_spline, S_spline, base=False):
     """
     Compute the LMS cone fundamentals for given wavelengths, both as
     linear and logarithmic values to respective specified precisions.
-
     Parameters
     ----------
     λ : ndarray
@@ -783,7 +697,6 @@ def compute_LMS(λ, L_spline, M_spline, S_spline, base=False):
         The returned energy-based LMS values are given to the precision of
         9 sign. figs. / 8 decimal points if 'True', and to the precision of
         6 sign. figs. / 5 decimal points if 'False'.
-
     Returns
     -------
     LMS : ndarray
@@ -793,7 +706,6 @@ def compute_LMS(λ, L_spline, M_spline, S_spline, base=False):
         The computed Briggsian logarithms (of the LMS cone fundamentals;
         wavelengths in first column.
     """
-
     if base:
         LMS_sf = 9
         logLMS_dp = 8
@@ -811,15 +723,12 @@ def compute_LMS(λ, L_spline, M_spline, S_spline, base=False):
     logLMS[:, 1:][logLMS[:, 1:] > 0] = my_round(
         np.log10(logLMS[:, 1:][logLMS[:, 1:] > 0]), logLMS_dp)
     return (LMS, logLMS)
-
-
 def compute_MacLeod_Boynton_diagram(LMS_spec, LMS_plot, LMS_all,
                                     Vλ_all, Vλ_spec, LM_weights):
     """
     Compute the MacLeod‒Boynton chromaticity cooordinates for the spectral
     stimuli, Illuminant E and the stimuli represented at the purple line's
     points of tangency with the spectrum locus.
-
     Parameters
     ----------
     LMS_spec : ndarray
@@ -845,7 +754,6 @@ def compute_MacLeod_Boynton_diagram(LMS_spec, LMS_plot, LMS_all,
     LM_weights : ndarray
         The weighting factors kL and kM in the synthesis of the cone-
         fundamental-based V(λ)-function, i.e. V(λ) = kL*l_bar(λ) + kM*m_bar(λ).
-
     Returns
     -------
     κL, κM, κS : ndarray
@@ -876,13 +784,11 @@ def compute_MacLeod_Boynton_diagram(LMS_spec, LMS_plot, LMS_all,
     lms_mb_tg_purple_plot : ndarray
         The MacLeod‒Boynton lms chromaticity coordinates at the purple line's
         points of tangency with the spectrum locus (for plot).
-
     """
     # '_mb'   : MacLeod‒Boynton
     # '_all'  : values given at 0.1 nm steps from 390 nm to 830 nm
     # '_spec' : values given at specified wavelengths
     # '_plot' : values given at 0.1 nm steps within specified domain
-    
     (λ_spec, L_spec, M_spec, S_spec) = LMS_spec.T
     (λ_plot, L_plot, M_plot, S_plot) = LMS_plot.T 
     S_all = (LMS_all.T)[3]
@@ -920,14 +826,11 @@ def compute_MacLeod_Boynton_diagram(LMS_spec, LMS_plot, LMS_all,
     return (np.array([κL, κM, κS]),
             lms_mb_spec, lms_mb_E, lms_mb_tg_purple,
             lms_mb_plot, lms_mb_E_plot, lms_mb_tg_purple_plot)
-
-
 def compute_Maxwellian_diagram(LMS_spec, LMS_plot):
     """
     Compute the Maxwellian chromaticity cooordinates for the spectral
     stimuli, Illuminant E and the stimuli represented at the purple
     line's points of tangency with the spectrum locus.
-
     Parameters
     ----------
     LMS_spec : ndarray
@@ -937,7 +840,6 @@ def compute_Maxwellian_diagram(LMS_spec, LMS_plot):
         Table of LMS values at 0.1 nm steps within the specified wavelength
         domain, given to base-value precision (i.e. 9 sign. figs.);
         wavelengths in first column.
-
     Returns
     -------
     kL, kM, kS : ndarray
@@ -973,7 +875,6 @@ def compute_Maxwellian_diagram(LMS_spec, LMS_plot):
     # '_mw'   : Maxwellian
     # '_spec' : values given at specified wavelengths
     # '_plot' : values given at 0.1 nm steps within specified domain
-    
     (λ_spec, L_spec, M_spec, S_spec) = LMS_spec.T
     (λ_plot, L_plot, M_plot, S_plot) = LMS_plot.T
     # Compute spectral chromaticity coordinates (for table)
@@ -996,14 +897,11 @@ def compute_Maxwellian_diagram(LMS_spec, LMS_plot):
     return (np.array([kL, kM, kS]),
             lms_mw_spec, lms_mw_E, lms_mw_tg_purple,
             lms_mw_plot, lms_mw_E_plot, lms_mw_tg_purple_plot)
-
-
 def compute_XYZ(L_spline, M_spline, S_spline, V_spline,
                 LMS_spec, LMS_plot, LMS_all,
                 LM_weights, xyz_reference):
     """
     Compute the CIE cone-fundamental-based XYZ tristimulus functions.
-
     Parameters
     ----------
     L_spline, M_spline, S_spline :
@@ -1031,7 +929,6 @@ def compute_XYZ(L_spline, M_spline, S_spline, V_spline,
         The spectral chromaticity coordinates of the reference system
         (obtained by shape-morphing (interpolation) between the CIE 1931
         standard and the CIE 1964 standard).
-
     Returns
     -------
     trans_mat : ndarray
@@ -1065,7 +962,6 @@ def compute_XYZ(L_spline, M_spline, S_spline, V_spline,
     # '_main' : values given at 1 nm steps from 390 nm to 830 nm
     # '_spec' : values given at specified wavelengths
     # '_plot' : values given at 0.1 nm steps within specified domain
-
     xyz_ref = xyz_reference
     (a21, a22) = LM_weights
     LMS_main = LMS_all[::10]
@@ -1123,14 +1019,11 @@ def compute_XYZ(L_spline, M_spline, S_spline, V_spline,
     XYZ_plot_N[:, 1:] = sign_figs(XYZ_plot_N[:, 1:], 7) 
     return (trans_mat, XYZ_spec, XYZ_plot, 
             trans_mat_N, XYZ_spec_N, XYZ_plot_N)
-
-
 def compute_xy_diagram(XYZ_spec, XYZ_plot, XYZ_spec_N, XYZ_plot_N):
     """
     Compute the CIE cone-fundamental-based xyz chromaticity cooordinates for
     the spectral stimuli, Illuminant E and the stimuli represented at the
     purple line's points of tangency with the spectrum locus.
-
     Parameters
     ----------
     XYZ_spec : ndarray
@@ -1150,7 +1043,6 @@ def compute_xy_diagram(XYZ_spec, XYZ_plot, XYZ_spec_N, XYZ_plot_N):
         The renormalized CIE cone-fundamental-based XYZ spectral tristimulus
         values at 0.1 nm steps within the specified wavelength domain, given
         to the precision of 7 sign. figs.; wavelengths in first column.
-
     Returns
     -------
     xyz_spec : ndarray
@@ -1222,7 +1114,6 @@ def compute_xy_diagram(XYZ_spec, XYZ_plot, XYZ_spec_N, XYZ_plot_N):
     """
     # '_spec' : values given at specified wavelengths
     # '_plot' : values given at 0.1 nm steps within specified domain
-
     # Compute spectral chromaticity coordinates (for table)
     # non-renormalized:
     xyz_spec = chrom_coords_µ(XYZ_spec)
@@ -1268,8 +1159,6 @@ def compute_xy_diagram(XYZ_spec, XYZ_plot, XYZ_spec_N, XYZ_plot_N):
             xyz_spec_N, xyz_E_N, xyz_tg_purple_N, XYZ_tg_purple_N,
             xyz_plot_N, xyz_E_plot_N, xyz_tg_purple_plot_N,
             XYZ_tg_purple_plot_N)
-
-
 def compute_XYZ_purples(xyz_spec, xyz_E, XYZ_tg_purple,
                         xyz_plot, xyz_E_plot, XYZ_tg_purple_plot,
                         xyz_spec_N, xyz_E_N, XYZ_tg_purple_N,
@@ -1277,7 +1166,6 @@ def compute_XYZ_purples(xyz_spec, xyz_E, XYZ_tg_purple,
     """
     Compute the XYZ cone-fundamental-based tristimulus functions of purple-
     line stimuli as parameterized by complementary wavelengths.
-
     Parameters
     ----------
     xyz_spec : ndarray
@@ -1322,7 +1210,6 @@ def compute_XYZ_purples(xyz_spec, xyz_E, XYZ_tg_purple,
         The renormalized XYZ cone-fundamental-based tristimulus values (non-
         rounded) of the stimuli represented at the purple-line termini;
         corresponding wavelengths in first column.
-
     Returns
     -------
     XYZ_purples : ndarray
@@ -1338,7 +1225,6 @@ def compute_XYZ_purples(xyz_spec, xyz_E, XYZ_tg_purple,
     #           for specified wavelength steps
     # '_plot' : values as parameterized by complementary wavelength,
     #           for 0.1 nm wavelength steps
-
     # Compute tristimulus functions for purple-line stimuli (for table)
     # non-renormalized:
     XYZ_purples_spec = XYZ_purples(xyz_spec, xyz_E, XYZ_tg_purple)
@@ -1353,14 +1239,11 @@ def compute_XYZ_purples(xyz_spec, xyz_E, XYZ_tg_purple,
             xyz_plot_N, xyz_E_plot_N, XYZ_tg_purple_plot_N)
     return (XYZ_purples_spec, XYZ_purples_plot,
             XYZ_purples_spec_N, XYZ_purples_plot_N)
-
-
 def compute_xyz_purples(XYZ_purples_spec, XYZ_purples_plot,
                         XYZ_purples_spec_N, XYZ_purples_plot_N):
     """
     Compute the xyz cone-fundamental-based tristimulus values of
     purple-line stimuli as parameterized by complementary wavelength.
-
     Parameters
     ----------
     XYZ_purples_spec : ndarray
@@ -1383,7 +1266,6 @@ def compute_xyz_purples(XYZ_purples_spec, XYZ_purples_plot,
         tristimulus values of stimuli represented on the purple line,
         parameterized by complementary wavelengths, at 0.1 nm steps;
         complementary wavelength in first column.
-
     Returns
     -------
     xyz_purples_spec : ndarray
@@ -1413,7 +1295,6 @@ def compute_xyz_purples(XYZ_purples_spec, XYZ_purples_plot,
     #          at specified wavelength intervals
     # '_plot' : values as parameterized by complementary wavelength,
     #          at 0.1 nm wavelength intervals
-
     # Compute chromaticity coordinates of purple-line stimuli (for table)
     # non-renormalized:
     xyz_purples_spec = chrom_coords_µ(XYZ_purples_spec)
@@ -1428,12 +1309,9 @@ def compute_xyz_purples(XYZ_purples_spec, XYZ_purples_plot,
     xyz_purples_plot_N = chrom_coords_µ(XYZ_purples_plot_N) 
     return (xyz_purples_spec, xyz_purples_plot, 
             xyz_purples_spec_N, xyz_purples_plot_N)
-           
-           
 def compute_CIE_standard_XYZ(XYZ31_standard, XYZ64_standard):
     """
     Pass the CIE standard colour-matching functions as given in database.
-
     Parameters
     ----------         
     XYZ31_standard : ndarray
@@ -1444,7 +1322,6 @@ def compute_CIE_standard_XYZ(XYZ31_standard, XYZ64_standard):
         The CIE 1964 XYZ colour-matching functions (10°), given to the 
         precision of 7 sign. figs., at 1 nm steps from 360 nm to 830 nm;
         wavelengths in first column.   
-   
     Returns     
     -------       
     XYZ31_standard : ndarray
@@ -1466,7 +1343,6 @@ def compute_CIE_standard_XYZ(XYZ31_standard, XYZ64_standard):
     """ 
     # '_main' : values given at 1 nm steps from 360 nm to 830 nm.    NB!
     # '_plot' : values given at 0.1 nm steps from 360 nm to 830 nm.  NB! 
-    
     (λ_main, X31_main, Y31_main, Z31_main) = XYZ31_standard.T
     (X64_main, Y64_main, Z64_main) = (XYZ64_standard.T)[1:]
     # Create spline functions
@@ -1488,15 +1364,12 @@ def compute_CIE_standard_XYZ(XYZ31_standard, XYZ64_standard):
                            Z64_spline(λ_plot)]).T
     return (XYZ31_standard, XYZ31_plot,
             XYZ64_standard, XYZ64_plot)
-
-
 def compute_CIE_std_xy_diagram(XYZ31_standard, XYZ31_plot,
                                XYZ64_standard, XYZ64_plot):
     """
     Compute the CIE 1931 and CIE 1964 chromaticity cooordinates for the
     spectral stimuli, Illuminant E and the stimuli represented at the purple
     line's points of tangency with the spectrum locus.
-
     Parameters
     ----------    
     XYZ31_standard : ndarray
@@ -1515,7 +1388,6 @@ def compute_CIE_std_xy_diagram(XYZ31_standard, XYZ31_plot,
         The non-rounded interpolated CIE 1964 XYZ colour-matching functions
         (10°) given at 0.1 nm step from 360 nm to 830 nm;
         wavelengths in first column.
-   
     Returns     
     -------       
     xyz31_main : ndarray
@@ -1559,7 +1431,6 @@ def compute_CIE_std_xy_diagram(XYZ31_standard, XYZ31_plot,
     """
     # '_main' : values given at 1 nm steps from 360 nm to 830 nm.    NB!
     # '_plot'   values given at 0.1 nm steps from 360 nm to 830 nm.  NB! 
-    
     # Spectral chromaticity coordinates (for table and plot) 
     xyz31_main = chrom_coords_µ(XYZ31_standard)     
     xyz31_main[:,1:] = my_round(xyz31_main[:,1:], 5)
@@ -1581,15 +1452,11 @@ def compute_CIE_std_xy_diagram(XYZ31_standard, XYZ31_plot,
             xyz31_plot, xyz31_tg_purple_plot, 
             xyz64_main, xyz64_E, xyz64_tg_purple, 
             xyz64_plot, xyz64_tg_purple_plot)       
-
 # main function
-
-
 def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
     """
     Compute tabulated quantities for given field size and age, at specified
     wavlength steps, within specified wavelength domain.
-
     Parameters
     ----------
     field_size : float
@@ -1602,7 +1469,6 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
         Upper limit of wavelength domain.
     λ_step : float
         steps of tabulated results in nm.
-
     Returns
     -------
     results : dict
@@ -1627,52 +1493,40 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
         age, λ_min, λ_max, λ_step, λ_purple_min, λ_purple_max,
         λ_purple_min_N, λ_purple_max_N
     """
-
     # =======================================================================
     # Initialise result and plot directories for stacking of computed values
     # =======================================================================
-
     results = dict()
     plots = dict()
-
     # =======================================================================
     # Create initial data arrays
     # =======================================================================
-
     # '_base' : 9 sign. figs.
     # '_std'  : standard number of sign. figs./decimal places
     # '_all'  : values given at 0.1 nm steps from 390 nm to 830 nm
     # '_main' : values given at 1 nm steps from 390 nm to 830 nm
     # '_spec' : values given at specified wavelengths
     # '_plot' : values given at 0.1 nm steps within specified domain
-
     # wavelength arrays:
-
     λ_all = my_round(np.arange(390., 830. + .01, .1), 1)
     λ_spec = np.arange(λ_min, λ_max + .01, λ_step)
     λ_max = λ_spec[-1]
     λ_plot = my_round(np.arange(λ_min, λ_max + .01, .1), 1)
-
     # LMS arrays:
-
     # LMS-base values (9 sign.figs.) at 0.1 nm steps from 390 nm to 830 nm;
     # wavelengths in first column
     LMS_base_all = LMS_energy(field_size, age, base=True)[0]
     # LMS values (6 sign.figs.) at 0.1 nm steps from 390 nm to 830 nm;
     # wavelengths in first column
     LMS_std_all = LMS_energy(field_size, age)[0]
-
     # Vλ and weighting factors of the L and M cone fundamentals:
-
     # - Cone-fundamental-based V(λ) values (7 sign. figs.) at 0.1 nm steps
     #   from 390 nm to 830 nm; wavelengths in first column
     # - Weights of L and M cone fundamentals in V(λ) synthesis
     (Vλ_std_all, LM_weights) = Vλ_energy_and_LM_weights(field_size, age)
-
     # =======================================================================
     # Create spline functions
     # =======================================================================
-
     # base:
     (λ_all, L_base_all, M_base_all, S_base_all) = LMS_base_all.T
     L_base_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, L_base_all)
@@ -1685,20 +1539,16 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
     M_std_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, M_std_all)
     S_std_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, S_std_all)
     V_std_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, V_std_all)
-
     # =======================================================================
     # Compute the cone-fundamental-based spectral luminous efficiency
     # functions (cone-fundamental-based V(λ)-function)
     # =======================================================================
-
     # - Cone-fundamental-based V(λ) values (7 sign. figs.) for specified
     #   wavelengths; wavelengths in first column.
     Vλ_std_spec = np.array([λ_spec, V_std_spline(λ_spec)]).T
-
     # =======================================================================
     # Compute the LMS cone fundamentals (linear and logarithmic values)
     #=======================================================================
-    
     # - LMS values (7 number of sign. figs.) for specified wavelengths; 
     #   wavelengths in first column 
     # - Briggsian logarithm of LMS values (5 decimal places)
@@ -1709,16 +1559,13 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
     (LMS_std_plot,
      logLMS_std_plot) = compute_LMS(
          λ_plot, L_std_spline, M_std_spline, S_std_spline)
-
     results['LMS'] = chop(LMS_std_spec)
     results['logLMS'] = chop(logLMS_std_spec)
     plots['LMS'] = chop(LMS_std_plot)
     plots['logLMS'] = chop(logLMS_std_plot)
-
     # =======================================================================
     # Compute the LMS-base cone fundamentals (linear and logarithmic values)
     # =======================================================================
-
     # - LMS-base values (9 sign. figs) for specified wavelengths;
     #   wavelengths in first column
     # - Briggsian logarithm of LMS-base values (8 decimal places)
@@ -1730,18 +1577,14 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
     (LMS_base_plot,
      logLMS_base_plot) = compute_LMS(
          λ_plot, L_base_spline, M_base_spline, S_base_spline, base=True)
-
     results['LMS_base'] = chop(LMS_base_spec)
     results['logLMS_base'] = chop(logLMS_base_spec)
     plots['LMS_base'] = chop(LMS_base_plot)
     plots['logLMS_base'] = chop(logLMS_base_plot)
-
     # =======================================================================
     # Compute the MacLeod‒Boynton ls chromaticity diagram
     # =======================================================================
-
     # 'mb' denotes MacLeod‒Boynton
-
     # - normalization coefficients (scaling factor) for calculation of
     #   the MacLeod‒Boynton lms coordinates
     # - MacLeod‒Boynton lms values (6 decimal places) for specified
@@ -1766,13 +1609,10 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
     plots['lms_mb'] = chop(lms_mb_plot)
     plots['lms_mb_white'] = lms_mb_E_plot
     plots['lms_mb_tg_purple'] = chop(lms_mb_tg_purple_plot)
-
     # =======================================================================
     # Compute the Maxwellian lm chromaticity diagram
     # =======================================================================
-
     # 'mw' denotes Maxwellian
-
     # - normalization coefficients (scaling factors) for calculation of the
     #   Maxwellian lms coordinates
     # - Maxwellian lms values (6 decimal places) for specified wavelengths;
@@ -1789,7 +1629,6 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
      lms_mw_E_plot,
      lms_mw_tg_purple_plot) = compute_Maxwellian_diagram(
          results['LMS_base'], plots['LMS_base'])
-
     results['norm_coeffs_lms_mw'] = chop(norm_coeffs_lms_mw)
     results['lms_mw'] = chop(lms_mw_std_spec)
     results['lms_mw_white'] = lms_mw_std_E
@@ -1797,15 +1636,12 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
     plots['lms_mw'] = chop(lms_mw_plot)
     plots['lms_mw_white'] = lms_mw_E_plot
     plots['lms_mw_tg_purple'] = chop(lms_mw_tg_purple_plot)
-
     # =======================================================================
     # Compute the cone-fundamental-based XYZ tristimulus functions
     # =======================================================================
-
     #  Determine reference diagram
     xyz_reference = xyz_interpolated_reference_system(
             field_size, VisualData.XYZ31.copy(), VisualData.XYZ64.copy())
-
     # - Non-renormalised tranformation matrix (8 decimal placed)
     # - Non-renormalised CIE cone-fundamental-based XYZ tristimulus
     #   values (7 sign. figs) for specified wavelengths; wavelengths
@@ -1821,18 +1657,15 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
          L_base_spline, M_base_spline, S_base_spline, V_std_spline,
          results['LMS_base'], plots['LMS_base'], LMS_base_all,
          LM_weights, xyz_reference)
-
     results['trans_mat'] = chop(trans_mat_std)
     results['XYZ'] = chop(XYZ_std_spec)
     results['trans_mat_N'] = chop(trans_mat_std_N)
     results['XYZ_N'] = chop(XYZ_std_spec_N)
     plots['XYZ'] = chop(XYZ_plot)
     plots['XYZ_N'] = chop(XYZ_plot_N)
-
     # =======================================================================
     # Compute the cone-fundamental-based xy chromaticity diagram
     # =======================================================================
-
     # - Non-renormalised xyz chromaticity coordinates (5 decimal places)
     #   for specified wavelengths;
     #   wavelengths in first column
@@ -1863,7 +1696,6 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
      xyz_tg_purple_plot_N,
      XYZ_tg_purple_plot_N) = compute_xy_diagram(
          results['XYZ'], plots['XYZ'], results['XYZ_N'], plots['XYZ_N'])
-
     results['xyz'] = chop(xyz_std_spec)
     results['xyz_white'] = xyz_std_E
     results['xyz_tg_purple'] = chop(xyz_std_tg_purple)
@@ -1880,12 +1712,10 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
     plots['xyz_white_N'] = xyz_E_plot_N
     plots['xyz_tg_purple_N'] = chop(xyz_tg_purple_plot_N)
     plots['XYZ_tg_purple_N'] = chop(XYZ_tg_purple_plot_N)
-
     # =======================================================================
     # Compute the cone-fundamental-based XYZ tristimulus functions for
     # purple-line stimuli, as parameterized by complementary wavelength
     # =======================================================================
-
     # - non-renormalized cone-fundamental-based XYZ tristimulus values
     #   (7 sign. figs.) of stimuli represented on the purple line,
     #   parameterized by complementary wavelength;
@@ -1902,17 +1732,14 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
          results['xyz_N'], results['xyz_white_N'],
          results['XYZ_tg_purple_N'],
          plots['xyz_N'], plots['xyz_white_N'], plots['XYZ_tg_purple_N'])
-
     results['XYZ_purples'] = chop(XYZ_purples_std_spec)
     results['XYZ_purples_N'] = chop(XYZ_purples_std_spec_N)
     plots['XYZ_purples'] = chop(XYZ_purples_plot)
     plots['XYZ_purples_N'] = chop(XYZ_purples_plot_N)
-
     # =======================================================================
     # Compute cone-fundamental-based xyz chromaticity coordinates for
     # purple-line stimuli, as parameterized by complementary wavelength
     # =======================================================================
-
     # - non-renormalized cone-fundamental-based xyz chromaticity
     #   coordinates (5 decimal places) of stimuli represented on
     #   the purple line, parameterized by complementary wavelength;
@@ -1925,20 +1752,16 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
      xyz_purples_plot_N) = compute_xyz_purples(
          results['XYZ_purples'], plots['XYZ_purples'],
          results['XYZ_purples_N'], plots['XYZ_purples_N'])
-
     results['xyz_purples'] = chop(xyz_purples_std_spec)
     results['xyz_purples_N'] = chop(xyz_purples_std_spec_N)
     plots['xyz_purples'] = chop(xyz_purples_plot)
     plots['xyz_purples_N'] = chop(xyz_purples_plot_N)
-
     # =======================================================================
     # Compute the CIE standard XYZ colour-matching functions
     # =======================================================================
-
     # NB!
     # '_main  here means values given at 1 nm steps from 360 nm to 830 nm.
     # '_plot' here means values given at 0.1 nm steps from 360 nm to 830 nm.
-
     # - CIE 1931 standard XYZ spectral tristimulus values (7 sign.figs.);
     #   wavelengths in first column
     # - CIE 1964 standard XYZ spectral tristimulus values (7 sign.figs.);
@@ -1948,16 +1771,13 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
      XYZ64_std_main,
      XYZ64_plot) = compute_CIE_standard_XYZ(
          VisualData.XYZ31.copy(), VisualData.XYZ64.copy())
-
     results['XYZ31'] = chop(XYZ31_std_main)
     results['XYZ64'] = chop(XYZ64_std_main)
     plots['XYZ31'] = chop(XYZ31_plot)
     plots['XYZ64'] = chop(XYZ64_plot)
-
     # =======================================================================
     # Compute the CIE standard xy diagrams
     # =======================================================================
-
     # - CIE 1931 standard xyz spectral chromaticity
     #   coordinates (5 decimal places);
     #   wavelengths in first column
@@ -1975,7 +1795,6 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
     #   for the purple line's points of tangency with the spectrum locus;
     #   wavelengths in first column
     # - Versions for plotting
-
     (xyz31_std,
      xyz31_E,
      xyz31_tg_purple,
@@ -1988,7 +1807,6 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
      xyz64_tg_purple_plot) = compute_CIE_std_xy_diagram(
          results['XYZ31'], results['XYZ31'],
          plots['XYZ31'], plots['XYZ64'])
-
     results['xyz31'] = chop(xyz31_std)
     results['xyz31_white'] = xyz31_E
     results['xyz31_tg_purple'] = chop(xyz31_tg_purple)
@@ -1999,13 +1817,10 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
     plots['xyz31_tg_purple'] = chop(xyz31_tg_purple_plot)
     plots['xyz64'] = chop(xyz64_plot)
     plots['xyz64_tg_purple'] = chop(xyz64_tg_purple_plot) 
-    
-    
     #=======================================================================
     # Stack all parameters for results and plots (values from spinboxes,
     # and computed values for purples) in respective directories
     # =======================================================================
-
     # Assign parameter values for plots
     if np.round(field_size, 5) == np.round(field_size):
         plots['field_size'] = '%.0f' % field_size
@@ -2022,7 +1837,6 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
         plots['λ_purple_max'] = '%.0f' % plots['XYZ_purples'][-1, 0]
         plots['λ_purple_min_N'] = '%.0f' % plots['XYZ_purples_N'][0, 0]
         plots['λ_purple_max_N'] = '%.0f' % plots['XYZ_purples_N'][-1, 0]
-
     else:
         plots['λ_min'] = '%.1f' % λ_min
         plots['λ_max'] = '%.1f' % λ_max
@@ -2031,7 +1845,6 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
         plots['λ_purple_max'] = '%.1f' % plots['XYZ_purples'][-1, 0]
         plots['λ_purple_min_N'] = '%.1f' % plots['XYZ_purples_N'][0, 0]
         plots['λ_purple_max_N'] = '%.1f' % plots['XYZ_purples_N'][-1, 0]
-
     # Format parameter-string representations (for description)
     if np.round(field_size, 5) == np.round(field_size):
         results['field_size'] = '%.0f' % field_size
@@ -2056,12 +1869,7 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
         results['λ_purple_max'] = '%.1f' % results['XYZ_purples'][-1, 0]
         results['λ_purple_min_N'] = '%.1f' % results['XYZ_purples_N'][0, 0]
         results['λ_purple_max_N'] = ('%.1f' % results['XYZ_purples_N'][-1, 0])
-
     # =======================================================================
     # Return all results (for tables, plots and descriptions)
     # =======================================================================
-    results = {
-        # Example structure, replace with actual computed values
-        "example_key": "example_value"
-    }
-    return results
+    return (results, plots)

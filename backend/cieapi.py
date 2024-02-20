@@ -1,28 +1,46 @@
 from flask import Flask, request, jsonify
-
-app = Flask(__name__)
+from compute import compute_tabulated
+api = Flask(__name__)
 
 class VisualDataAPI:
     def __init__(self):
-        self.computation = VisualDataComputation()
+        pass
     
     def compute_visual_data(self, data):
-        # Use self.computation methods to compute and return results
-        # Example: result = self.computation.chop(data)
-        # return result
+        if 'type' in data and data['type'] == 'specific_computation':
+            result = self.compute_tabulated(data)
+        else:
+            result = self.compute_default_tabulated(data)
+        return result
+    
+    
+    def compute_tabulated(self, data):
+        return {'status': 'success', 'message': 'Computation not implemented yet'}
+    
+    def compute_default_tabulated(self, data):
+        return {'status': 'success', 'message': 'Deafult computation not implemented yet'}
+    
 
-@api.route('/compute_visual_data', methods=['POST'])
-def compute_visual_data_endpoint():
+
+
+
+
+
+
+@api.route('/compute_default_visual_data', methods=['POST'])
+def compute_default_visual_data_endpoint():
+    data_api = VisualDataAPI()
+    data = {'type': 'default_computation'}
+    result = data_api.compute_visual_data(data)
+    return jsonify(result)
+
+@api.route('/compute_specific_visual_data', methods=['POST'])
+def compute_specific_visual_data_endpoint():
     data_api = VisualDataAPI()
     data = request.json
-    # Extract necessary inputs from data
-    field_size = data.get('field_size')
-    age = data.get('age')
-    # Add more parameters as needed
-
-    # Call the compute method and return its result
+    data['type'] = 'specific_computation'
     result = data_api.compute_visual_data(data)
     return jsonify(result)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    api.run(debug=True)
