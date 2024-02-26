@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from compute import compute_tabulated
 import numpy as np
+import json
 
 api = Flask(__name__)
 CORS(api)
@@ -131,6 +132,29 @@ def compute_LMS_results_default_data():
     results, _ = data_api.compute_default()
     lms_results = results.get('LMS', [])
     return jsonify({'results': lms_results})
+
+@api.route('/LMS_results', methods=['GET'])
+def LMS_results():
+    file_path = 'lms_default_data.json'
+    
+    # Open and load the JSON file
+    with open(file_path, 'r') as file:
+        lms_results = json.load(file)
+    lms_plots = lms_results.get('results', [])
+    # Return the LMS results in the response
+    return jsonify({'results': lms_plots})
+
+@api.route('/LMS_plots', methods=['GET'])
+def LMS_plots():
+    file_path = 'lms_default_data.json'
+    
+    # Open and load the JSON file
+    with open(file_path, 'r') as file:
+        lms_plots = json.load(file)
+    lms_pl = lms_plots.get('plots', [])
+    # Return the LMS results in the response
+    return jsonify({'plots': lms_pl})
+
 
 if __name__ == '__main__':
     api.run(debug=True)
