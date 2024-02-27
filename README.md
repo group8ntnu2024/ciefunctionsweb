@@ -1,8 +1,9 @@
 # Frontend setup
 1. navigate to frontend/cie-react
 2. npm install
-3. npm install recharts
-4. npm run dev 
+3. npm i -D @types/react
+4. npm install recharts
+5. npm run dev 
 
 Accessible at http://localhost:5173/
 
