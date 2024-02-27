@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
-from compute import compute_tabulated
+from compute import compute_tabulated, compute_LMS1
 import numpy as np
 import json
 
@@ -65,27 +65,43 @@ class VisualDataAPI:
 
 # Computes the default tabulated data
     def compute_default(self):
+        """
+        This function computes the plots and table results for 
+        for all the colour functions. 
+        This funciton calaculates the results based on the default values.
+        Change what is computed by changing the invoced to function in this line:
+        results, plots = compute_LMS1(field_size, age, λ_min, λ_max, λ_step)
+        """
         field_size, age, λ_min, λ_max, λ_step = 2.0, 32, 390.0, 830.0, 1.0
-        results, plots = compute_tabulated(field_size, age, λ_min, λ_max, λ_step)
+        # N.B! Change the invoced to function to compute_tabulated
+        results, plots = compute_LMS1(field_size, age, λ_min, λ_max, λ_step)
         convert_to_json_serializable(results)
         convert_to_json_serializable(plots)
         return results, plots
 
 # Computes the tabulated data
     def compute(self, data):
+        """
+        This function computes the plots and table results for 
+        for all the colour functions. 
+        This funciton calaculates the results based parameters specified by the user.
+        Change what is computed by changing the invoced to function in this line:
+        results, plots = compute_LMS1(field_size, age, λ_min, λ_max, λ_step)
+        """
         field_size = float(data.get('field_size', 0))
         age = float(data.get('age', 0))
         λ_min = float(data.get('min', 390))
         λ_max = float(data.get('max', 830))
         λ_step = float(data.get('step', 1))
-        results, plots = compute_tabulated(field_size, age, λ_min, λ_max, λ_step)
+        # N.B! Change the invoced to function to compute_tabulated
+        results, plots = compute_LMS1(field_size, age, λ_min, λ_max, λ_step)
         convert_to_json_serializable(results)
         convert_to_json_serializable(plots)
         return results, plots
 
 
 
-# Endpoint to computes and return all the specific data
+# Endpoint that computes and return all the specific data
 @api.route('/compute_all_specific_data', methods=['POST'])
 def compute_all_specific_data():
     data_api = VisualDataAPI()
@@ -94,7 +110,7 @@ def compute_all_specific_data():
     
     return jsonify({'results': results, 'plots': plots})
 
-# Endpoint to computes and retruns all the default data
+# Endpoint that computes and retruns all the default data
 @api.route('/compute_all_default_data', methods=['GET'])
 def compute_all_default_data():
     data_api = VisualDataAPI()
@@ -160,19 +176,21 @@ if __name__ == '__main__':
     api.run(debug=True)
 
 
+     
+     
+"""   
+========================================
+===============JSON BODY================
+   {
+    "field_size": 1,
+    "age": 99,
+    "min": 390,
+    "max": 830,
+    "step": 1,
+    "type": "specific_computation"
+   }
 
-#========================================
-#===============JSON BODY================
-#   {
-#    "field_size": 1,
-#    "age": 99,
-#    "min": 390,
-#    "max": 830,
-#    "step": 1,
-#    "type": "specific_computation"
-#   }
-#
-#
-#==================Header=================
-#   key: content-type
-#   value: application/json
+==================Header=================
+   key: content-type
+   value: application/json
+"""

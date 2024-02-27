@@ -1927,3 +1927,123 @@ def compute_tabulated(field_size, age, λ_min=390, λ_max=830, λ_step=1):
     # Return all results (for tables, plots and descriptions)
     # =======================================================================
     return (results, plots)
+
+
+
+
+def compute_LMS1(field_size, age, λ_min=390, λ_max=830, λ_step=1):
+    """
+    Compute tabulated quantities for given field size and age, at specified
+    wavlength steps, within specified wavelength domain.
+    Parameters
+    ----------
+    field_size : float
+        Field size in degrees.
+    age : float
+        Age in years.
+    λ_min : float
+        Lower limit of wavelength domain.
+    λ_max : float
+        Upper limit of wavelength domain.
+    λ_step : float
+        steps of tabulated results in nm.
+    Returns
+    -------
+    results : dict
+        All results: LMS, logLMS, LMS_base, logLMS_base,
+        norm_coeffs_lms_mb, lms_mb, lms_mb_white, lms_mb_tg_purple,
+        norm_coeffs_lms_mw, lms_mw, lms_mw_white, lms_mw_tg_purple,
+        trans_mat, XYZ, trans_mat_N, XYZ_N, xyz, xyz_white,
+        xyz_tg_purple, XYZ_tg_purple, xyz_N, xyz_white_N,
+        xyz_tg_purple_N, XYZ_tg_purple_N, XYZ_purples, XYZ_purples_N,
+        xyz_purples, xyz_purples_N, XYZ31, XYZ64, xyz31, xyz31_white,
+        xyz31_tg_purple, xyz64, xyz64_white, xyz64_tg_purple,
+        field_size, age, λ_min, λ_max, λ_step, λ_purple_min,
+        λ_purple_max, λ_purple_min_N, λ_purple_max_N
+    plots : dict
+        Versions for plotting: LMS_base, logLMS_base, lms_mb,
+        lms_mb_white, lms_mb_tg_purple, lms_mw, lms_mw_white,
+        lms_mw_tg_purple, XYZ, XYZ_N, xyz, xyz_white,
+        xyz_tg_purple, XYZ_tg_purple, xyz_N, xyz_white_N,
+        xyz_tg_purple_N, XYZ_tg_purple_N, XYZ_purples,
+        XYZ_purples_N, xyz_purples, xyz_purples_N, XYZ31, XYZ64,
+        xyz31, xyz31_tg_purple, xyz64, xyz64_tg_purple, field_size,
+        age, λ_min, λ_max, λ_step, λ_purple_min, λ_purple_max,
+        λ_purple_min_N, λ_purple_max_N
+    """
+    # =======================================================================
+    # Initialise result and plot directories for stacking of computed values
+    # =======================================================================
+    results = dict()
+    plots = dict()
+    # =======================================================================
+    # Create initial data arrays
+    # =======================================================================
+    # '_base' : 9 sign. figs.
+    # '_std'  : standard number of sign. figs./decimal places
+    # '_all'  : values given at 0.1 nm steps from 390 nm to 830 nm
+    # '_main' : values given at 1 nm steps from 390 nm to 830 nm
+    # '_spec' : values given at specified wavelengths
+    # '_plot' : values given at 0.1 nm steps within specified domain
+    # wavelength arrays:
+    λ_all = my_round(np.arange(390., 830. + .01, .1), 1)
+    λ_spec = np.arange(λ_min, λ_max + .01, λ_step)
+    λ_max = λ_spec[-1]
+    λ_plot = my_round(np.arange(λ_min, λ_max + .01, .1), 1)
+    # LMS arrays:
+    # LMS-base values (9 sign.figs.) at 0.1 nm steps from 390 nm to 830 nm;
+    # wavelengths in first column
+    LMS_base_all = LMS_energy(field_size, age, base=True)[0]
+    # LMS values (6 sign.figs.) at 0.1 nm steps from 390 nm to 830 nm;
+    # wavelengths in first column
+    LMS_std_all = LMS_energy(field_size, age)[0]
+    # Vλ and weighting factors of the L and M cone fundamentals:
+    # - Cone-fundamental-based V(λ) values (7 sign. figs.) at 0.1 nm steps
+    #   from 390 nm to 830 nm; wavelengths in first column
+    # - Weights of L and M cone fundamentals in V(λ) synthesis
+    (Vλ_std_all, LM_weights) = Vλ_energy_and_LM_weights(field_size, age)
+    # =======================================================================
+    # Create spline functions
+    # =======================================================================
+    # base:
+    (λ_all, L_base_all, M_base_all, S_base_all) = LMS_base_all.T
+    L_base_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, L_base_all)
+    M_base_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, M_base_all)
+    S_base_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, S_base_all)
+    # std:
+    (λ_all, L_std_all, M_std_all, S_std_all) = LMS_std_all.T
+    (λ_all, V_std_all) = Vλ_std_all.T
+    L_std_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, L_std_all)
+    M_std_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, M_std_all)
+    S_std_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, S_std_all)
+    V_std_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, V_std_all)
+    # =======================================================================
+    # Compute the cone-fundamental-based spectral luminous efficiency
+    # functions (cone-fundamental-based V(λ)-function)
+    # =======================================================================
+    # - Cone-fundamental-based V(λ) values (7 sign. figs.) for specified
+    #   wavelengths; wavelengths in first column.
+    Vλ_std_spec = np.array([λ_spec, V_std_spline(λ_spec)]).T
+    # =======================================================================
+    # Compute the LMS cone fundamentals (linear and logarithmic values)
+    #=======================================================================
+    # - LMS values (7 number of sign. figs.) for specified wavelengths; 
+    #   wavelengths in first column 
+    # - Briggsian logarithm of LMS values (5 decimal places)
+    #   for specified wavelengths; wavelengths in first column
+    (LMS_std_spec,
+     logLMS_std_spec) = compute_LMS(
+         λ_spec, L_std_spline, M_std_spline, S_std_spline)
+    (LMS_std_plot,
+     logLMS_std_plot) = compute_LMS(
+         λ_plot, L_std_spline, M_std_spline, S_std_spline)
+    results['LMS'] = chop(LMS_std_spec)
+
+    plots['LMS'] = chop(LMS_std_plot)
+
+
+    
+    
+    
+
+    return (results, plots)
