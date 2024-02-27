@@ -1,8 +1,8 @@
 # Frontend setup
 1. navigate to frontend/cie-react
 2. npm install
-3. npm i -D @types/react
 4. npm install recharts
+5. npm install react-router-dom
 5. npm run dev 
 
 Accessible at http://localhost:5173/
