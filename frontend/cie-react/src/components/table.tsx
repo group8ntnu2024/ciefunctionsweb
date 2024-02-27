@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import './app-content.css'
 
 const FetchedTable = () => {
   const [tableData, setTableData] = useState<number[][]>([]);

@@ -1,53 +1,43 @@
-import { useState } from 'react';
-import './App.css';
-import FetchedChart from './components/chart';
-import FetchedTable from './components/table';
+import {createHashRouter, Outlet, RouteObject, RouterProvider} from "react-router-dom";
+import Navbar from "./components/navbar/navbar";
+import { PLOT_ROUTE, TABLE_ROUTE } from "./utils/router-urls";
+import PlotContent from "./components/plot-content";
+import TableContent from "./components/table-content";
+
+const routes: RouteObject[] = [
+    {
+        path: "/",
+        element: (
+            <div>
+                <Navbar/>
+               <Outlet />
+            </div>
+            
+               
+        ),
+        children: [
+            {
+                path: PLOT_ROUTE,
+                element: <PlotContent/>,
+            },
+            {
+                path: TABLE_ROUTE,
+                element: <TableContent/>
+            }
+        ]
+        
+    }
+]
+
+const Router = () => {
+    return <RouterProvider router={createHashRouter(routes)}/>;
+};
+
 
 function App() {
-  const [activeTab, setActiveTab] = useState('Plot');
-  const [selectedLibrary, setSelectedLibrary] = useState('Recharts');
-
-  return (
-    <div className="App">
-      <div className="tabs">
-        <button
-          className={`tab-button ${activeTab === 'Plot' ? 'active' : ''}`}
-          onClick={() => setActiveTab('Plot')}
-        >
-          Plot
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'Table' ? 'active' : ''}`}
-          onClick={() => setActiveTab('Table')}
-        >
-          Table
-        </button>
-      </div>
-      <div className="content-container">
-        {activeTab === 'Plot' && (
-          <>
-            <div className="chart-selection">
-              <label htmlFor="chart-library">Select plot library: </label>
-              <select
-                id="chart-library"
-                value={selectedLibrary}
-                onChange={(event) => setSelectedLibrary(event.target.value)}
-              >
-                <option value="Recharts">Recharts</option>
-                <option value="Chartjs">Plot Lib 2</option>
-              </select>
-            </div>
-            {selectedLibrary === 'Recharts' ? (
-              <FetchedChart />
-            ) : (
-              <div className='centered-content'>Plot 2 will show here</div>
-            )}
-          </>
-        )}
-        {activeTab === 'Table' && <FetchedTable />}
-      </div>
-    </div>
-  );
+    return (
+        <Router />
+    );
 }
 
 export default App;

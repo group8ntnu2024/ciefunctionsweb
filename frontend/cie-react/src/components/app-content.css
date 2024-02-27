@@ -21,7 +21,6 @@
   align-items: center;
   height: 100%;
 }
-
 .scrollable-table {
   flex-grow: 1;
   min-height: 0; 
@@ -42,6 +41,8 @@
 .scrollable-table th {
   background-color: #a5a5a5;
 }
+
+
 
 .tabs {
   display: flex;

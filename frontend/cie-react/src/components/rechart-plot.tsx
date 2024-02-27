@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 //Function for fetching data from backend endpoint and plotting the data
-const FetchedChart = () => {
+const RechartPlot = () => {
   const [chartData, setChartData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+
+  //TODO: implementere hooks for useeffect
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,7 +50,6 @@ const FetchedChart = () => {
 
   return (
     <LineChart width={800} height={600} data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-      <CartesianGrid strokeDasharray="3 3" />
       <XAxis dataKey="xValue" />
       <YAxis />
       <Tooltip />
@@ -60,4 +61,4 @@ const FetchedChart = () => {
   );
 };
 
-export default FetchedChart;
+export default RechartPlot;
