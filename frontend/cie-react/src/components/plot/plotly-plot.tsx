@@ -1,7 +1,7 @@
 import{ useState, useEffect } from 'react';
 import Plot from 'react-plotly.js';
 
-type MyPlotData = {
+type PlotlyPlot = {
     x: any[];
     y: any[];
     type: 'scatter';
@@ -11,7 +11,7 @@ type MyPlotData = {
   }[];
   
   const PlotlyPlot = () => {
-    const [chartData, setChartData] = useState<MyPlotData>([]);
+    const [chartData, setChartData] = useState<PlotlyPlot>([]);
     const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -53,6 +53,10 @@ type MyPlotData = {
         title: 'LMS',
         xaxis: { title: 'Wavelength (nm)' },
         yaxis: { title: 'Relative energy sensitivities' }
+      }}
+      config={{
+        scrollZoom: true,
+        displaylogo: false
       }}
     />
   );
