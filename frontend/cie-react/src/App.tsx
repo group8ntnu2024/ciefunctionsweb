@@ -1,8 +1,10 @@
 import {createHashRouter, Outlet, RouteObject, RouterProvider} from "react-router-dom";
 import Navbar from "./components/navbar/navbar";
 import { PLOT_ROUTE, TABLE_ROUTE } from "./utils/router-urls";
-import PlotContent from "./components/plot-content";
-import TableContent from "./components/table-content";
+import PlotContent from "./components/plot/plot-content";
+import TableContent from "./components/table/table-content";
+import { ParametersProvider } from './context/parameter-context';
+import Layout from "./components/parameters/parameters-layout";
 
 const routes: RouteObject[] = [
     {
@@ -18,11 +20,11 @@ const routes: RouteObject[] = [
         children: [
             {
                 path: PLOT_ROUTE,
-                element: <PlotContent/>,
+                element: <Layout><PlotContent/></Layout>,
             },
             {
                 path: TABLE_ROUTE,
-                element: <TableContent/>
+                element: <Layout><TableContent/></Layout>,
             }
         ]
         
@@ -36,7 +38,9 @@ const Router = () => {
 
 function App() {
     return (
-        <Router />
+        <ParametersProvider>
+            <Router/>
+        </ParametersProvider>
     );
 }
 

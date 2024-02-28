@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import './app-content.css';
+import '../app-content.css';
 import RechartPlot from './rechart-plot';
 
 function PlotContent() {
@@ -24,6 +24,7 @@ function PlotContent() {
             ) : (
               <div className='centered-content'>Plot 2 will show here</div>
             )}
+            
           </>
       </div> 
   );

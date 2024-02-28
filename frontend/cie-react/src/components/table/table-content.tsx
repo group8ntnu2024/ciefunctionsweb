@@ -1,5 +1,5 @@
 
-import './app-content.css';
+import '../app-content.css';
 import FetchedTable from './table';
 
 function TableContent() {
@@ -7,11 +7,10 @@ function TableContent() {
   return (
       <div className="content-container">
           <>
-          
               <FetchedTable />
-            
           </>
       </div> 
+      
   );
 }
 

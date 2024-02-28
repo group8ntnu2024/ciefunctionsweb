@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 
 //Function for fetching data from backend endpoint and plotting the data
 const RechartPlot = () => {
@@ -11,7 +11,7 @@ const RechartPlot = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:5000//LMS_plots');
+        const response = await fetch('http://127.0.0.1:5000/LMS_plots');
         const json = await response.json();
         
         // Parse and transform 
