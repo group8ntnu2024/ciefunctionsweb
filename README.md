@@ -3,6 +3,7 @@
 2. npm install
 4. npm install recharts
 5. npm install react-router-dom
+5. npm install react-plotly.js plotly.js
 5. npm run dev 
 
 Accessible at http://localhost:5173/

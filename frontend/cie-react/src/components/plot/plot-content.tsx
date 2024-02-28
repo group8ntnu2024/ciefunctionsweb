@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import '../app-content.css';
 import RechartPlot from './rechart-plot';
+import PlotlyPlot from './plotly-plot';
 
 function PlotContent() {
   const [selectedLibrary, setSelectedLibrary] = useState('Recharts');
@@ -16,12 +17,15 @@ function PlotContent() {
                 onChange={(event) => setSelectedLibrary(event.target.value)}
               >
                 <option value="Recharts">Recharts</option>
-                <option value="Chartjs">Plot Lib 2</option>
+                <option value="Plotly">Plotly</option>
               </select>
             </div>
             {selectedLibrary === 'Recharts' ? (
               <RechartPlot />
-            ) : (
+
+            ) : selectedLibrary === 'Plotly' ? (
+              <PlotlyPlot/>
+            ) : ( 
               <div className='centered-content'>Plot 2 will show here</div>
             )}
             
