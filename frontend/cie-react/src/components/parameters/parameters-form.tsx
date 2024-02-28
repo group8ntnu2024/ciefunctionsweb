@@ -30,14 +30,14 @@ const ParametersForm = () => {
       
       const result = await response.json();
       console.log(result);
-      // Handle the response data as needed
+      
+      const updateEvent = new CustomEvent('updateTableData', { detail: result.results.LMS });
+      window.dispatchEvent(updateEvent);
+
     } catch (error) {
       console.error('Error during fetch operation:', error);
     }
 
-      //Event for updating table and 
-      const event = new Event('dataUpdated');
-      window.dispatchEvent(event);
   };
 
 
@@ -64,11 +64,11 @@ const ParametersForm = () => {
         />
       </div>
       <div className="parameter-control">
-        <label htmlFor="domain_start">Domain:</label>
+        <label htmlFor="domain_min">Domain:</label>
         <input
           type="number"
-          id="domain_start"
-          name="domain_start"
+          id="domain_min"
+          name="min"
           value={parameters.min}
           onChange={handleParameterChange}
         />
@@ -78,7 +78,7 @@ const ParametersForm = () => {
         <input
           type="number"
           id="domain_max"
-          name="domain_max"
+          name="max"
           value={parameters.max}
           onChange={handleParameterChange}
         />

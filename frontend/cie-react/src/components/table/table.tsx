@@ -1,25 +1,25 @@
 import { useState, useEffect } from 'react';
-import '../app-content.css'
+import '../app-content.css';
+
+
+type data = number[][];
 
 const FetchedTable = () => {
-  const [tableData, setTableData] = useState<number[][]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [tableData, setTableData] = useState<data>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/LMS_results');
-        const json = await response.json();
-        
-        setTableData(json.results);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }finally{
-        setIsLoading(false);
-      }
+    
+    const handleDataUpdate = (event: CustomEvent<data>) => {
+      setTableData(event.detail); 
+      setIsLoading(false);
     };
 
-    fetchData();
+    window.addEventListener('updateTableData', handleDataUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('updateTableData', handleDataUpdate as EventListener);
+    };
   }, []);
 
   if (isLoading) {
