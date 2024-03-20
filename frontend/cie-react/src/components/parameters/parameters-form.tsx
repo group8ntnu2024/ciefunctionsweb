@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParameters } from '../../context/parameter-context';
+import { fetchCalculationResults } from '../../utils/ApiService';
 
 const ParametersForm = () => {
   const { parameters, setParameters } = useParameters();
@@ -10,34 +11,19 @@ const ParametersForm = () => {
   };
 
   const handleComputeClick = async () => {
-    const computationParams = {
-      ...parameters,
-      type: "specific_computation"
-    };
-
     try {
-      const response = await fetch('http://127.0.0.1:5000/compute_all_specific_data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(computationParams),
+      const resultData = await fetchCalculationResults({
+        ...parameters,
+        type: "specific_computation",
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log(result);
-      
-      const updateEvent = new CustomEvent('updateTableData', { detail: result.results.LMS });
+      console.log(resultData);
+      const updateEvent = new CustomEvent('updateTableData', { detail: resultData });
       window.dispatchEvent(updateEvent);
 
     } catch (error) {
-      console.error('Error during fetch operation:', error);
+      console.error('Error:', error);
     }
-
   };
 
 
