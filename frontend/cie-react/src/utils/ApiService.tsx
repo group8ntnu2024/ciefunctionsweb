@@ -1,13 +1,6 @@
-import { ALL_SPECIFIC_DATA, BASE_URL } from "./ApiUrls";
+import { ALL_SPECIFIC_DATA, BASE_URL, DEFAULT_DATA } from "./ApiUrls";
+import { paramProps } from "./propTypes";
 
-type paramProps = {
-    type: string,
-    field_size: number,
-    age: number,
-    min: number,
-    max: number,
-    step: number
-}
 
 
 async function fetchCalculationResults(params: paramProps) {
@@ -30,6 +23,22 @@ async function fetchCalculationResults(params: paramProps) {
       console.error('Error during fetch operation:', error);
       throw error;
     }
-  }
+}
   
-  export { fetchCalculationResults };
+async function fetchDefaultData() {
+  try {
+      const response = await fetch(`${BASE_URL}${DEFAULT_DATA}`, {
+          method: 'GET',
+      });
+      if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const result = await response.json();
+      return result.results.LMS;
+  } catch (error) {
+      console.error('Error fetching default data:', error);
+      throw error;
+  }
+}
+  
+  export { fetchCalculationResults, fetchDefaultData };
