@@ -97,9 +97,6 @@ Endpoints:
     Examples:
         /LMS-MW?mode=result&field_size=2.0&age=12&min=390.0&max=830.0&step-size=1.0&norm
         /LMS-MW?mode=plot&field_size=2.0&age=12&min=390.0&max=830.0&step-size=1.0
-    
-Note: Endpoints may display floating point error for wavelengths when having mode=plot. Other than that,
-it should display every correctly on mode=result. This will of course be fixed in the future.
 
 -   Testing Endpoint
     Path: /testing
@@ -265,6 +262,9 @@ def wrapperDictionary(calculation, parameters):
     In addition, it also sets the pandas settings to have higher precision, as pandas tends to round down
     any floating values over a specific limit - these settings ensure that this doesn't happen, and that the
     data is untampered.
+    Beware: "double_precision" cannot be too high nor too low. Too high will cause wavelengths to have
+    floating point precision problems (example, 390.99999999999999 == 391) - but too low will cause
+    the other values to start experiencing it. If it happens again, experiment with this value first.
 
     Parameters
     ----------
@@ -281,9 +281,13 @@ def wrapperDictionary(calculation, parameters):
     # a problem the Pandas DataFrames sometimes have is that their DataFrames cannot support
     # something over a given specific precision (and rounds it down, creating wrong results in endpoints)
     # the following options fixes that problem
-    pd.set_option("display.precision", 12)
-    pd.set_option("styler.format.precision", 12)
-    dataframe = pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=15)
+    pd.set_option("display.precision", 15)
+    pd.set_option("styler.format.precision", 15)
+    if parameters['base']:
+        dataframe = pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=15)
+    else:
+        dataframe = pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=15)
+
     return dataframe
 
 """
@@ -443,19 +447,21 @@ def endpointsTest():
 
 def endpointsTesting():
     testingResults = dict()
-    # creates a list of tuples in the form of (endpoint, filename of truth)
-    endpoints = [('LMS', 'CIE-lms.csv'), ('LMS', 'CIE-LMS-LOG.csv'),
-                 ('LMS-MB', 'LMS-MB.csv'), ('LMS-MW', 'CIE-MW.csv')]
+    # creates a list of tuples in the form of (key, endpoint url, file)
+    endpoints = [
+        ('LMS', '/LMS?mode=result&field_size=2.0&age=20&min=390.0&max=830.0&step-size=1.0', 'CIE-LMS.csv'),
+        ('LMS-LOG10', '/LMS?mode=result&field_size=2.5&age=52&min=390.0&max=828.0&step-size=1.5&log10', 'CIE-LMS-LOG.csv'),
+        ('LMS-BASE', '/LMS?mode=result&field_size=1.5&age=70&min=400.0&max=700.0&step-size=1.0&base', 'CIE-LMS-BASE.csv'),
+        ('LMS-PLOT', '/LMS?mode=plot&field_size=1.0&age=30&min=400.0&max=700.0&step-size=1.0', 'CIE-LMS-PLOT.csv'),
+        ('MB', '/LMS-MB?mode=result&field_size=2.0&age=69&min=390.0&max=810.0&step-size=1.2', 'CIE-LMS-MB.csv'),
+        ('MB-PLOT', '/LMS-MB?mode=plot&field_size=1.0&age=45&min=400.0&max=700.0&step-size=1.2', 'CIE-LMS-MB-PLOT.csv'),
+        ('MW', '/LMS-MW?mode=result&field_size=1.5&age=71&min=399.0&max=702.5&step-size=0.5', 'CIE-LMS-MW.csv'),
+        ('MW-PLOT', '/LMS-MW?mode=plot&field_size=2.9&age=80&min=400.0&max=700.0&step-size=0.5', 'CIE-LMS-MW-PLOT.csv')
+    ]
     # for each of these in the list ...
-    for (endpoint, file) in endpoints:
-        # make the request to the url properly; the URL parameters are absolute like this
-        # to have the same parameters as the csv files
-        url = "http://localhost:5000/" + endpoint + \
-              "?mode=result&field_size=2.0&age=32&min=390.0&max=830.0&step-size=1.0"
-        if "LOG" in file:
-            url += "&log10"
-            endpoint = "LMS-log10"
+    for (name, endpoint, file) in endpoints:
         # get the connection, see if successful
+        url = "http://localhost:5000" + endpoint
         response = requests.get(url)
         if response.status_code == 200:
             # if it is successful, load the JSON data and create it into a DataFrame
@@ -466,18 +472,22 @@ def endpointsTesting():
             # float_precision is high to ensure that *all* float decimals are included
             #  (as pandas likes to sometimes round it off at 10 decimals)
             # header=None as there are no headers in the csv file
-            original = pd.read_csv(file, float_precision="high", header=None)
+            filepath = "./data/tests/" + file
+            original = pd.read_csv(filepath, float_precision="high", header=None)
             # some CIE functions (like log LMS) confuse the DataFrame by having a column
             # with both floats AND not-a-numerical-numbers that it cannot read as floats
             #  to ensure this won't happen, the original data is treated to numerics
             original = original.apply(pd.to_numeric, errors='coerce')
             # last, the dictionary for current endpoint uses pandas equals to
             # see if original csv DataFrame is equal to the DataFrame from endpoint
-            testingResults[endpoint] = (testingDF.equals(original))
+            # debugging tester, shows differences between dataframes to easier
+            # see the cause of unequalness
+            # tester = testingDF.compare(original)
+            testingResults[name] = (testingDF.equals(original))
         else:
             # if connection fails, it'll show up here
             # (though this won't happen probably)
-            testingResults[endpoint] = "Connection failed. "
+            testingResults[name] = "-"
     return testingResults
 
 
