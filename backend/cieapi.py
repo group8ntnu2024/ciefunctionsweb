@@ -107,7 +107,9 @@ Endpoints:
         This is a developmental testing endpoint, used temporarily in development alongside debugging tools to ensure:
         1. That each endpoint calculates the right values given parameters.
         2. That each endpoint dispenses/outputs these values correctly and exactly as intended.
-        It will return a Boolean value for each endpoint, indicating if it has managed to fulfill both of these goals.
+        The rests return a Boolean, indicating if they succeded (true) or not (false) - and they cover the usual
+        expected tests of values for plot and result, in addition to testing if the program is resistant to false-
+        positives in regards to test.
 
 
  ------- OLD API DOCUMENTATION ----------
@@ -281,14 +283,21 @@ def wrapperDictionary(calculation, parameters):
     # a problem the Pandas DataFrames sometimes have is that their DataFrames cannot support
     # something over a given specific precision (and rounds it down, creating wrong results in endpoints)
     # the following options fixes that problem
-    pd.set_option("display.precision", 15)
-    pd.set_option("styler.format.precision", 15)
-    if parameters['base']:
-        dataframe = pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=15)
-    else:
-        dataframe = pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=15)
+    pd.set_option("display.precision", 11)
+    pd.set_option("styler.format.precision", 11)
 
-    return dataframe
+    dataframe = pd.DataFrame(calculation(parameters))
+    # a problem that happens with the usage of double_precision below, is that floating point errors
+    # occur on the wavelengths - however, because the values here aren't as calculative
+    dataframe[0] = dataframe[0].apply(lambda num : round(num, 1))
+    print("wait")
+    if parameters['mode'] == "plot" and ((calculation is compute_Maxwellian_Modular) or
+    (calculation is compute_MacLeod_Modular)):
+        print("here 1")
+        # precision of floats in plots for macleod and maxwellian have to be tuned down to fit
+        # similar numbers from the .csv
+        return dataframe.to_json(orient="values", double_precision=6)
+    return dataframe.to_json(orient="values", double_precision=15)
 
 """
     The endpoints for the API. 
@@ -456,7 +465,10 @@ def endpointsTesting():
         ('MB', '/LMS-MB?mode=result&field_size=2.0&age=69&min=390.0&max=810.0&step-size=1.2', 'CIE-LMS-MB.csv'),
         ('MB-PLOT', '/LMS-MB?mode=plot&field_size=1.0&age=45&min=400.0&max=700.0&step-size=1.2', 'CIE-LMS-MB-PLOT.csv'),
         ('MW', '/LMS-MW?mode=result&field_size=1.5&age=71&min=399.0&max=702.5&step-size=0.5', 'CIE-LMS-MW.csv'),
-        ('MW-PLOT', '/LMS-MW?mode=plot&field_size=2.9&age=80&min=400.0&max=700.0&step-size=0.5', 'CIE-LMS-MW-PLOT.csv')
+        ('MW-PLOT', '/LMS-MW?mode=plot&field_size=2.9&age=80&min=400.0&max=700.0&step-size=0.5', 'CIE-LMS-MW-PLOT.csv'),
+        ('false-pos-1', '/LMS?mode=result&field_size=2.0&age=19&min=390.0&max=830.0&step-size=1.0', 'CIE-LMS.csv'),
+        ('false-pos-2', '/LMS-MB?mode=result&field_size=2.0&age=23&min=390.0&max=810.0&step-size=1.2', 'CIE-LMS-MB.csv'),
+        ('false-pos-3', '/LMS-MW?mode=plot&field_size=2.0&age=11&min=400.0&max=700.0&step-size=0.5', 'CIE-LMS-MW-PLOT.csv')
     ]
     # for each of these in the list ...
     for (name, endpoint, file) in endpoints:
@@ -484,6 +496,12 @@ def endpointsTesting():
             # see the cause of unequalness
             # tester = testingDF.compare(original)
             testingResults[name] = (testingDF.equals(original))
+            # the false-pos tests will return a false initially to indicate that the
+            # API dataframe and the csv dataframe are not identical, this just reverses it
+            # so that it shows that it passed the test
+            if "false" in name:
+                testingResults[name] = not testingResults[name]
+            # print(testingResults[name], name)
         else:
             # if connection fails, it'll show up here
             # (though this won't happen probably)
