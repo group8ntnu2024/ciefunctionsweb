@@ -400,17 +400,17 @@ def compute_XY_modular(parameters):
         if not parameters['white']:
             xyz_spec_N = chrom_coords_µ(xyz)
             if parameters['mode'] == "plot":
-                return xyz_spec_N
+                return chop(xyz_spec_N)
             else:
                 xyz_spec_N[:, 1:] = my_round(xyz_spec_N[:, 1:], 5)
-                return xyz_spec_N
+                return chop(xyz_spec_N)
         else:
             xyz_E_plot_N = chrom_coords_E(xyz)
             if parameters['mode'] == "plot":
-                return xyz_E_plot_N
+                return chop(xyz_E_plot_N)
             else:
                 xyz_E_N = my_round(xyz_E_plot_N, 5)
-                return xyz_E_N
+                return chop(xyz_E_N)
     else:
         if parameters['mode'] is not "plot":
             temp['mode'] = "plot"
@@ -421,17 +421,17 @@ def compute_XY_modular(parameters):
         (xyz_purple_plot, XYZ_purple_plot) = tangent_points_purple_line(XYZ, False, xyz)
         if parameters['mode'] == "plot":
             if parameters['XYZ']:
-                return XYZ_purple_plot
+                return chop(XYZ_purple_plot)
             else:
-                return xyz_purple_plot
+                return chop(xyz_purple_plot)
         else:
             if parameters['XYZ']:
                 # compute.py, lines 1198-1200
                 XYZ_purple_plot[:, 0] = my_round(XYZ_purple_plot[:, 0], 1)
                 XYZ_purple_plot[:, 1:] = my_round(XYZ_purple_plot[:, 1:], 7)
-                return XYZ_purple_plot
+                return chop(XYZ_purple_plot)
             else:
                 # compute.py, lines 1195-1197
                 xyz_purple_plot[:, 0] = my_round(xyz_purple_plot[:, 0], 1)
                 xyz_purple_plot[:, 1:] = my_round(xyz_purple_plot[:, 1:], 5)
-                return xyz_purple_plot
+                return chop(xyz_purple_plot)
