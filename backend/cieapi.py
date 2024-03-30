@@ -14,7 +14,8 @@ from array import array
 import base64
 import sqlite3
 
-from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Modular, compute_LMS_Modular
+from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Modular, compute_LMS_Modular, \
+    compute_XYZ_Modular, compute_XY_modular
 
 api = Flask(__name__)
 CORS(api)
@@ -55,6 +56,7 @@ Endpoints:
         'step_size': The size of steps for each computation
         'log10': Optional with no value needed; gives logarithmic values of function
         'base': Optional with no value needed; gives 9 significant figures
+        The optional parameters above can be used together and combined.
     Examples:
         /LMS?mode=result&field_size=2.0&age=32&min=390.0&max=830.0&step-size=1.0
         /LMS?mode=plot&field_size=2.0&age=19&min=390.0&max=830.0&step-size=1.0&log10
@@ -97,6 +99,36 @@ Endpoints:
     Examples:
         /LMS-MW?mode=result&field_size=2.0&age=12&min=390.0&max=830.0&step-size=1.0&norm
         /LMS-MW?mode=plot&field_size=2.0&age=12&min=390.0&max=830.0&step-size=1.0
+
+-   CIE cone-fundamental-based XYZ tristimulus functions
+    Path: /XYZ
+    Method: GET
+    Parameters:
+        'mode': Either 'plot' or 'result' for the type of return
+        'field_size': A float number for the field size wished
+        'age': An integer detailing the age wished for computation
+        'min': Minimum value of domain
+        'max': Maximum value of domain
+        'step_size': The size of steps for each computation
+        'norm': Optional with no value needed, gives renormalized values
+        'trans': Optional with no value needed, gives the transformation matrix of linear transformation LMS --> XYZ.
+        The optional parameters above can be used together and combined.
+        
+-   CIE cone-fundamental-based xyz chromaticity coordinates
+    Path: /XY
+    Method: GET
+    Parameters:
+        'mode': Either 'plot' or 'result' for the type of return
+        'field_size': A float number for the field size wished
+        'age': An integer detailing the age wished for computation
+        'min': Minimum value of domain
+        'max': Maximum value of domain
+        'step_size': The size of steps for each computation
+        'white': Optional with no value needed; gives values for Illuminant E. Cannot be used with 'purple' activated.
+        'purple': Optional with no value needed; gives values for purple line's point of tangency with spectrum locus. Cannot be used when 'white' is activated.
+        'norm': Optional with no value needed, gives renormalized values. Can be used with all other optional parameters.
+        'XYZ': Optional with no value needed, provides values with precision of 7 sign. figs. Otherwise, provides
+        precision of 5 sign. figs. Can only be used when parameter 'purple' is activated.
 
 -   Testing Endpoint
     Path: /testing
@@ -285,19 +317,14 @@ def wrapperDictionary(calculation, parameters):
     # the following options fixes that problem
     pd.set_option("display.precision", 11)
     pd.set_option("styler.format.precision", 11)
-
-    dataframe = pd.DataFrame(calculation(parameters))
-    # a problem that happens with the usage of double_precision below, is that floating point errors
-    # occur on the wavelengths - however, because the values here aren't as calculative
-    dataframe[0] = dataframe[0].apply(lambda num : round(num, 1))
-    print("wait")
     if parameters['mode'] == "plot" and ((calculation is compute_Maxwellian_Modular) or
     (calculation is compute_MacLeod_Modular)):
-        print("here 1")
         # precision of floats in plots for macleod and maxwellian have to be tuned down to fit
         # similar numbers from the .csv
-        return dataframe.to_json(orient="values", double_precision=6)
-    return dataframe.to_json(orient="values", double_precision=15)
+        return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=6)
+    if calculation is compute_MacLeod_Modular:
+        return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=6)
+    return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=13)
 
 """
     The endpoints for the API. 
@@ -309,7 +336,7 @@ def wrapperDictionary(calculation, parameters):
 
 @api.route('/LMS', methods=['GET'])
 def LMS():
-    parameterCheck = createAndCheckParameters(True)
+    parameterCheck = createAndCheckParameters(True, compute_LMS_Modular)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
     # or a Response object (which means that a mandatory parameter is not filled, so calculations
     # cannot proceed further).
@@ -318,12 +345,12 @@ def LMS():
 
     return Response(
         wrapperDictionary(compute_LMS_Modular,
-                          createAndCheckParameters(True)),
+                          createAndCheckParameters(True, compute_LMS_Modular)),
         mimetype='application/json')
 
 @api.route('/LMS-MB', methods=['GET'])
 def MB():
-    parameterCheck = createAndCheckParameters(True)
+    parameterCheck = createAndCheckParameters(True, compute_MacLeod_Modular)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
     # or a Response object (which means that a mandatory parameter is not filled, so calculations
     # cannot proceed further).
@@ -332,12 +359,12 @@ def MB():
 
     return Response(
         wrapperDictionary(compute_MacLeod_Modular,
-                          createAndCheckParameters(True)),
+                          createAndCheckParameters(True, compute_MacLeod_Modular)),
         mimetype='application/json')
 
 @api.route('/LMS-MW', methods=['GET'])
 def maxwellian():
-        parameterCheck = createAndCheckParameters(True)
+        parameterCheck = createAndCheckParameters(True, compute_Maxwellian_Modular)
         # parameterCheck may either be a dictionary (which means that all parameters are alright),
         # or a Response object (which means that a mandatory parameter is not filled, so calculations
         # cannot proceed further).
@@ -346,10 +373,39 @@ def maxwellian():
 
         return Response(
             wrapperDictionary(compute_Maxwellian_Modular,
-                              createAndCheckParameters(True)),
+                              createAndCheckParameters(True, compute_Maxwellian_Modular)),
                                 mimetype='application/json')
 
-def createAndCheckParameters(disabled):
+@api.route('/XYZ', methods=['GET'])
+def xyz():
+        parameterCheck = createAndCheckParameters(True, compute_XYZ_Modular)
+        # parameterCheck may either be a dictionary (which means that all parameters are alright),
+        # or a Response object (which means that a mandatory parameter is not filled, so calculations
+        # cannot proceed further).
+        if isinstance(parameterCheck, Response):
+            return parameterCheck
+
+        return Response(
+            wrapperDictionary(compute_XYZ_Modular,
+                              createAndCheckParameters(True, compute_XYZ_Modular)),
+                                mimetype='application/json')
+
+@api.route('/XY', methods=['GET'])
+def xy():
+    parameterCheck = createAndCheckParameters(True, compute_XY_modular)
+    # parameterCheck may either be a dictionary (which means that all parameters are alright),
+    # or a Response object (which means that a mandatory parameter is not filled, so calculations
+    # cannot proceed further).
+    if isinstance(parameterCheck, Response):
+        return parameterCheck
+
+    return Response(
+        wrapperDictionary(compute_XY_modular,
+                          createAndCheckParameters(True, compute_XY_modular)),
+        mimetype='application/json')
+
+
+def createAndCheckParameters(disabled, calculation):
 
     """
 
@@ -357,6 +413,8 @@ def createAndCheckParameters(disabled):
     ----------
     disabled: A boolean which will enable/disable the checking of most parameters except for field_size
     (which is necessary for CIE XYZ std colour-matching funcs and CIE xy std cromaticity diagram).
+    calculation: The calculation function that the parameters are to be used on; mostly included for
+    the sake of optional parameter management.
 
     Returns
     -------
@@ -410,30 +468,59 @@ def createAndCheckParameters(disabled):
         return Response("ERROR: Parameter 'age' is invalid; please input values between 1-99.", status=400)
     if parameters['λ_min'] >= parameters['λ_max']:
         return Response("ERROR: Invalid nm values for min and max domain; min cannot be lower than max.", status=400)
-    if parameters['λ_min'] < 390:
-        return Response("ERROR: Minimum domain cannot be lower than 390 nm. "
-                        "Please change the value input.", status=400)
-    if parameters['λ_max'] > 830:
-        return Response("ERROR: Maximum domain cannot be higher than 830 nm. "
+    if parameters['λ_min'] < 390 or parameters['λ_min'] > 400:
+        return Response("ERROR: Minimum domain must be between 390 and 400 nm. "
+                        "Please change the min domain input.", status=400)
+    if parameters['λ_max'] > 830 or parameters['λ_max'] < 700:
+        return Response("ERROR: Maximum domain must be between 700 and 830 nm. "
                         "Please change the max domain input. ", status=400)
     if parameters['λ_step'] > 5 or parameters['λ_step'] < 0.1:
         return Response("ERROR: Invalid step size. Please input a value of nm between 0.1 and 5.0.", status=400)
 
+    # adjusting parameter maximum domain in accordance to step-size
+    if (parameters['λ_max'] - parameters['λ_min']) % parameters['λ_step'] is not 0:
+        parameters['λ_max'] = parameters['λ_min'] + ((parameters['λ_max'] - parameters['λ_min']) -
+                                                     ((parameters['λ_max'] - parameters['λ_min']))
+                                                     % parameters['λ_step'])
+
     # Now, adding optional/specific parameters
-    parameters['log'] = True if request.args.get('log10') is not None else False
-    parameters['base'] = True if request.args.get('base') is not None else False
-    parameters['white'] = True if request.args.get('white') is not None else False
-    parameters['purple'] = True if request.args.get('purple') is not None else False
+    parameters['log'] = True if request.args.get('log10') is not None else False # only for LMS to activate log lms
+    parameters['base'] = True if request.args.get('base') is not None else False # only for LMS for base lms
+    parameters['white'] = True if request.args.get('white') is not None else False # for MacLeod, Maxwellian, XY
+    parameters['purple'] = True if request.args.get('purple') is not None else False # for MacLeod, Maxwellian, XY
+    parameters['norm'] = True if request.args.get('norm') is not None else False # for MacLeod, Maxwellian, XYZ, XY
+    parameters['trans'] = True if request.args.get('trans') is not None else False # for XYZ
+    parameters['XYZ'] = True if request.args.get('XYZ') is not None else False  # for XY-diagram
 
+    # really specific endpoint optional parameter checking now
     if parameters['purple'] and parameters['white']:
-        return Response("ERROR: Cannot have purple line points of tangency activated as parameter alongside"
-                        " actviated parameter for Illuminant E. Please deactivate one of them.", status=400)
+        return Response("ERROR: Cannot have parameters 'white' and 'purple' activated at the same time. Please, "
+                        "disable one of them. ", status=400)
+    if calculation is not compute_LMS_Modular:
+        if parameters['log']: return Response("ERROR: Log10 parameter is exclusive to /LMS endpoint, and is not supported"
+                                              " on your current endpoint; please disable it. ", status=400)
+        if parameters['base']: return Response("ERROR: Base parameter is exclusive to /LMS endpoint, and is not supported "
+                                               "on your current endpoint; please disable it.", status=400)
+    if calculation is not compute_XYZ_Modular:
+        if parameters['trans']: return Response("ERROR: Parameter 'trans' for transformational matrix of linear transformation "
+                                                "LMS -> XYZ is exclusive to the /XYZ endpoint; please disable it. ", status=400)
 
-    parameters['norm'] = True if request.args.get('norm') is not None else False
+    if (calculation is not compute_Maxwellian_Modular) and (calculation is not compute_MacLeod_Modular)\
+            and (calculation is not compute_XY_modular) and (calculation is not compute_XYZ_Modular) :
+        if (parameters['purple'] or parameters['white'] or parameters['norm']):
+            return Response("ERROR: Parameters 'purple', 'white' and 'norm' cannot be used with your current endpoint. "
+                            "Please, remove them from the URL and try again. ", status=400)
 
-    if (parameters['norm'] and parameters['purple']) or (parameters['norm'] and parameters['white']):
-        return Response("ERROR: Cannot have normalization coefficients alongside either purple line points of"
-                        " tangency nor/or activated parameter for Illuminant E. PLease, disable one of them. ", status=400)
+    if calculation is not compute_XY_modular:
+        if parameters['XYZ']: return Response("ERROR: Parameter 'XYZ' is exclusive to the /XY endpoint. Please, disable it.",
+                                              status=400)
+    else:
+        if parameters['XYZ'] and not parameters['purple']: return Response("ERROR: Parameter 'XYZ' can only be used when parameter 'purple'"
+                                                                           "is activated. Please, enable it. ", status=400)
+    if calculation is compute_MacLeod_Modular or calculation is compute_Maxwellian_Modular:
+        if (parameters['norm'] and parameters['purple']) or (parameters['norm'] and parameters['white']):
+            return Response("ERROR: Parameter 'norm' does not work alongside parameters 'white' nor 'purple' for the"
+                            " Macleod-Boyton and Maxwellian CIE functions. Please, disable one. ", status=400)
 
     return parameters
 
@@ -466,6 +553,9 @@ def endpointsTesting():
         ('MB-PLOT', '/LMS-MB?mode=plot&field_size=1.0&age=45&min=400.0&max=700.0&step-size=1.2', 'CIE-LMS-MB-PLOT.csv'),
         ('MW', '/LMS-MW?mode=result&field_size=1.5&age=71&min=399.0&max=702.5&step-size=0.5', 'CIE-LMS-MW.csv'),
         ('MW-PLOT', '/LMS-MW?mode=plot&field_size=2.9&age=80&min=400.0&max=700.0&step-size=0.5', 'CIE-LMS-MW-PLOT.csv'),
+        ('XYZ', '/XYZ?mode=result&field_size=2.0&age=36&min=390.0&max=830.0&step-size=0.8', 'CIE-XYZ.csv'),
+        ('XYZ-NORM', '/XYZ?mode=result&field_size=2.5&age=20&min=390.0&max=829.6&step-size=1.4&norm', 'CIE-XYZ-NORM.csv'),
+        ('XYZ-PLOT', '/XYZ?mode=plot&field_size=4.0&age=38&min=400.0&max=700.0&step-size=0.1&norm', 'CIE-XYZ-PLOT.csv'),
         ('false-pos-1', '/LMS?mode=result&field_size=2.0&age=19&min=390.0&max=830.0&step-size=1.0', 'CIE-LMS.csv'),
         ('false-pos-2', '/LMS-MB?mode=result&field_size=2.0&age=23&min=390.0&max=810.0&step-size=1.2', 'CIE-LMS-MB.csv'),
         ('false-pos-3', '/LMS-MW?mode=plot&field_size=2.0&age=11&min=400.0&max=700.0&step-size=0.5', 'CIE-LMS-MW-PLOT.csv')
