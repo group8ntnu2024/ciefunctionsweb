@@ -183,6 +183,8 @@ def compute_MacLeod_Modular(parameters):
                 return chop(lms_mb_tg_purple)
             # compute.py, lines 858
             lms_mb_spec[:, 1:] = my_round(lms_mb_spec[:, 1:], 6)
+            # combats floating point error in wavelength
+            lms_mb_spec[:, 0] = my_round(lms_mb_spec[:, 0], 1)
             return chop(lms_mb_spec)
     else:
         if parameters['white']:
@@ -202,6 +204,8 @@ def compute_MacLeod_Modular(parameters):
                 lms_mb_tg_purple_plot = tangent_points_purple_line(
                     lms_mb_plot, MacLeod_Boynton=True)
                 return chop(lms_mb_tg_purple_plot)
+            # combats floating point error in wavelength
+            lms_mb_plot[:, 0] = my_round(lms_mb_plot[:, 0], 1)
             return chop(lms_mb_plot)
 
 def compute_Maxwellian_Modular(parameters):
@@ -259,6 +263,8 @@ def compute_Maxwellian_Modular(parameters):
             # compute.py, lines 937-938
             lms_mw_spec = chrom_coords_µ(LMS_spec_N)
             lms_mw_spec[:, 1:] = my_round(lms_mw_spec[:, 1:], 6)
+            # combats floating point error in wavelength
+            lms_mw_spec[:, 0] = my_round(lms_mw_spec[:, 0], 1)
             return chop(lms_mw_spec)
     else:
         if parameters['purple']:
@@ -271,7 +277,9 @@ def compute_Maxwellian_Modular(parameters):
             return chop(chrom_coords_E(LMS_spec_N))
         else:
             # compute.py, line 942
-            return chop(chrom_coords_µ(LMS_spec_N))
+            temporary = chrom_coords_µ(LMS_spec_N)
+            temporary[:, 0] = my_round(temporary[:, 0], 1)
+            return chop(temporary)
 
 def compute_XYZ_Modular(parameters):
     """
@@ -371,10 +379,12 @@ def compute_XYZ_Modular(parameters):
     if parameters['norm']:
         XYZ_normalized = linear_transformation_λ(trans_mat_N, LMS_base_result)
         XYZ_normalized[:, 1:] = sign_figs(XYZ_normalized[:, 1:], 7)
+        XYZ_normalized[:, 0] = my_round(XYZ_normalized[:, 0], 1)
         return chop(XYZ_normalized)
     else:
         XYZ = linear_transformation_λ(trans_mat, LMS_base_result)
         XYZ[:, 1:] = sign_figs(XYZ[:, 1:], 7)
+        XYZ[:, 0] = my_round(XYZ[:, 0], 1)
         return chop(XYZ)
 
 def compute_XY_modular(parameters):

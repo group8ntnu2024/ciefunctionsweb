@@ -190,14 +190,19 @@ def wrapperDictionary(calculation, parameters):
     # the following options fixes that problem
     pd.set_option("display.precision", 11)
     pd.set_option("styler.format.precision", 11)
+
     if parameters['mode'] == "plot" and ((calculation is compute_Maxwellian_Modular) or
     (calculation is compute_MacLeod_Modular)):
         # precision of floats in plots for macleod and maxwellian have to be tuned down to fit
         # similar numbers from the .csv
         return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=6)
+    if calculation is compute_XY_modular and parameters['mode'] == "plot":
+        return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=5)
     if calculation is compute_XYZ_purples_modular:
-        return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=11)
-    return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=13)
+        return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=12)
+    if calculation is compute_XYZ_standard_modular or calculation is compute_xyz_standard_modular:
+        return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=12)
+    return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=15)
 
 """
     The endpoints for the API. 
@@ -408,12 +413,6 @@ def createAndCheckParameters(disabled, calculation):
         if parameters['λ_step'] > 5 or parameters['λ_step'] < 0.1:
             return Response("ERROR: Invalid step size. Please input a value of nm between 0.1 and 5.0.", status=400)
 
-        # adjusting parameter maximum domain in accordance to step-size
-        if (parameters['λ_max'] - parameters['λ_min']) % parameters['λ_step'] is not 0:
-            parameters['λ_max'] = parameters['λ_min'] + ((parameters['λ_max'] - parameters['λ_min']) -
-                                                         ((parameters['λ_max'] - parameters['λ_min']))
-                                                         % parameters['λ_step'])
-
         # Now, adding optional/specific parameters
         parameters['log'] = True if request.args.get('log10') is not None else False # only for LMS to activate log lms
         parameters['base'] = True if request.args.get('base') is not None else False # only for LMS for base lms
@@ -513,6 +512,11 @@ def endpointsTesting():
         ('XYZ', '/XYZ?mode=result&field_size=2.0&age=36&min=390.0&max=830.0&step-size=0.8', 'CIE-XYZ.csv'),
         ('XYZ-NORM', '/XYZ?mode=result&field_size=2.5&age=20&min=390.0&max=829.6&step-size=1.4&norm', 'CIE-XYZ-NORM.csv'),
         ('XYZ-PLOT', '/XYZ?mode=plot&field_size=4.0&age=38&min=400.0&max=700.0&step-size=0.1&norm', 'CIE-XYZ-PLOT.csv'),
+        ('XY', '/XY?mode=result&field_size=2.3&age=25&min=391.7&max=829.1&step-size=0.6', 'CIE-XY.csv'),
+        ('XY-PLOT', '/XY?mode=plot&field_size=1.5&age=35&min=390.0&max=829.2&step-size=0.1', 'CIE-XY-PLOT.csv'), # needs less precision, 0.xxxxx
+        ('XY-P', '/XY-P?mode=result&field_size=3.4&age=45&min=390.0&max=829.8&step-size=0.6', 'CIE-XY-P.csv'),
+        ('XYZ-STD', '/XYZ-STD?mode=result&field_size=2', 'CIE-XYZ-STD.csv'), # needs less precision
+        ('XY-STD', '/XY-STD?mode=plot&field_size=10', 'CIE-XY-STD.csv'),
         ('false-pos-1', '/LMS?mode=result&field_size=2.0&age=19&min=390.0&max=830.0&step-size=1.0', 'CIE-LMS.csv'),
         ('false-pos-2', '/LMS-MB?mode=result&field_size=2.0&age=23&min=390.0&max=810.0&step-size=1.2', 'CIE-LMS-MB.csv'),
         ('false-pos-3', '/LMS-MW?mode=plot&field_size=2.0&age=11&min=400.0&max=700.0&step-size=0.5', 'CIE-LMS-MW-PLOT.csv')
@@ -548,7 +552,10 @@ def endpointsTesting():
             # so that it shows that it passed the test
             if "false" in name:
                 testingResults[name] = not testingResults[name]
-            # print(testingResults[name], name)
+
+            if not testingResults[name]:
+                print("wait.")
+            print(testingResults[name], name)
         else:
             # if connection fails, it'll show up here
             # (though this won't happen probably)
