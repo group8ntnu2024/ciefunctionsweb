@@ -1,0 +1,165 @@
+Welcome to the CIE colour match API. Use the endpoints listed below to interact with the API.
+Endpoints:
+
+-   CIE LMS cone fundamentals with optional logarithmic values and 9 significant figures
+    Path: /LMS
+    Method: GET
+    Parameters:
+        'mode': Either 'plot' or 'result' for the type of return
+        'field_size': A float number for the field size wished
+        'age': An integer detailing the age wished for computation
+        'min': Minimum value of domain
+        'max': Maximum value of domain
+        'step_size': The size of steps for each computation
+        'log10': Optional with no value needed; gives logarithmic values of function
+        'base': Optional with no value needed; gives 9 significant figures
+        The optional parameters above can be used together and combined.
+    Examples:
+        /LMS?mode=result&field_size=2.0&age=32&min=390.0&max=830.0&step-size=1.0
+        /LMS?mode=plot&field_size=2.0&age=19&min=390.0&max=830.0&step-size=1.0&log10
+        /LMS?mode=result&field_size=3.0&age=56&min=390.0&max=810.0&step-size=1.0&base
+
+-   MacLeod-Boynton ls chromaticity diagram
+    Path: /LMS-MB
+    Method: GET
+    Parameters:
+        'mode': Either 'plot' or 'result' for the type of return
+        'field_size': A float number for the field size wished
+        'age': An integer detailing the age wished for computation
+        'min': Minimum value of domain
+        'max': Maximum value of domain
+        'step_size': The size of steps for each computation
+        'norm': Optional with no value needed; gives normalization coefficients
+        'white': Optional with no value needed; gives values for Illuminant E
+        'purple': Optional with no value needed; gives values for purple line's point of tangency with spectrum locus
+        The optional parameters above cannot be used with each other, and will result in an Error Response.
+    Examples:
+        /LMS-MB?mode=result&field_size=2.0&age=32&min=390.0&max=830.0&step-size=1.0
+        /LMS-MB?mode=plot&field_size=2.0&age=19&min=390.0&max=830.0&step-size=1.0
+        /LMS-MB?mode=result&field_size=2.0&age=32&min=390.0&max=830.0&step-size=1.0&norm
+
+-   Maxwellian lm chromacity diagram
+    Path: /LMS-MW
+    Method: GET
+    Parameters:
+        'mode': Either 'plot' or 'result' for the type of return
+        'field_size': A float number for the field size wished
+        'age': An integer detailing the age wished for computation
+        'min': Minimum value of domain
+        'max': Maximum value of domain
+        'step_size': The size of steps for each computation
+        'norm': Optional with no value needed; gives normalization coefficients
+        'white': Optional with no value needed; gives values for Illuminant E
+        'purple': Optional with no value needed; gives values for purple line's point of tangency with spectrum locus
+        The optional parameters above cannot be used with each other, and will result in an Error Response.
+    Examples:
+        /LMS-MW?mode=result&field_size=2.0&age=12&min=390.0&max=830.0&step-size=1.0&norm
+        /LMS-MW?mode=plot&field_size=2.0&age=12&min=390.0&max=830.0&step-size=1.0
+
+-   CIE cone-fundamental-based XYZ tristimulus functions
+    Path: /XYZ
+    Method: GET
+    Parameters:
+        'mode': Either 'plot' or 'result' for the type of return
+        'field_size': A float number for the field size wished
+        'age': An integer detailing the age wished for computation
+        'min': Minimum value of domain
+        'max': Maximum value of domain
+        'step_size': The size of steps for each computation
+        'norm': Optional with no value needed, gives renormalized values
+        'trans': Optional with no value needed, gives the transformation matrix of linear transformation LMS --> XYZ.
+        The optional parameters above can be used together and combined.
+        
+-   CIE cone-fundamental-based xyz chromaticity coordinates
+    Path: /XY
+    Method: GET
+    Parameters:
+        'mode': Either 'plot' or 'result' for the type of return
+        'field_size': A float number for the field size wished
+        'age': An integer detailing the age wished for computation
+        'min': Minimum value of domain
+        'max': Maximum value of domain
+        'step_size': The size of steps for each computation
+        'white': Optional with no value needed; gives values for Illuminant E. Cannot be used with 'purple' activated.
+        'purple': Optional with no value needed; gives values for purple line's point of tangency with spectrum locus. Cannot be used when 'white' is activated.
+        'norm': Optional with no value needed, gives renormalized values. Can be used with all other optional parameters.
+        'XYZ': Optional with no value needed, provides values with precision of 7 sign. figs. Otherwise, provides
+        precision of 5 sign. figs. Can only be used when parameter 'purple' is activated.
+
+-   CIE cone-fundamental-based tristimulus functions for purple-line stimuli
+    Path: /XYZ-P
+    Method: GET
+    Parameters:
+        'mode': Either 'plot' or 'result' for the type of return
+        'field_size': A float number for the field size wished
+        'age': An integer detailing the age wished for computation
+        'min': Minimum value of domain
+        'max': Maximum value of domain
+        'step_size': The size of steps for each computation
+	'norm': Optional with no value needed; gives the renormalized values for the functions.
+
+-   CIE xy cone-fundamental-based chromaticity diagram (purple-line stimuli)
+    Path: /XY-P
+    Method: GET
+    Parameters:
+        'mode': Either 'plot' or 'result' for the type of return
+        'field_size': A float number for the field size wished
+        'age': An integer detailing the age wished for computation
+        'min': Minimum value of domain
+        'max': Maximum value of domain
+        'step_size': The size of steps for each computation
+	'norm': Optional with no value needed; gives the renormalized values for the functions.
+
+-   CIE XYZ standard colour-matching functions
+    Path: /XYZ-STD
+    Method: GET
+    Parameters:
+	'field_size': An integer that is either 2 (for 1931) or 10 (for 1964).
+	'mode': Either 'plot' or 'result' for the type of return.
+
+-   CIE XY standard chromaticity diagram
+    Path: /XY-STD
+    Method: GET
+    Parameters:
+	'field_size': An integer that is either 2 (for 1931) or 10 (for 1964).
+	'mode': Either 'plot' or 'result' for the type of return.
+	'purple': Optional with no value needed; gives chromaticity coordinates at purple line's points of tangency with spectrum locus.
+	'white': Optional with no value needed; gives chromaticity coordinates of Illuminant E.
+	The optional parameters above cannot be combined.
+
+-   Testing Endpoint
+    Path: /testing
+    Method: GET
+    Parameters:
+        NONE
+    Note: 
+        This is a developmental testing endpoint, used temporarily in development alongside debugging tools to ensure:
+        1. That each endpoint calculates the right values given parameters.
+        2. That each endpoint dispenses/outputs these values correctly and exactly as intended.
+        The rests return a Boolean, indicating if they succeded (true) or not (false) - and they cover the usual
+        expected tests of values for plot and result, in addition to testing if the program is resistant to false-
+        positives in regards to test.
+
+
+ ------- OLD API DOCUMENTATION ----------
+ 
+
+1. Path: /compute_all_specific_data
+   Method: POST
+   Description: Computes specific visual data based on the provided parameters (field_size, age, min, max, step). Returns both results and plots.
+
+2. Path: /compute_all_default_data
+   Method: GET
+   Description: Computes default visual data for all color functions. Returns both results and plots.
+
+3. Path: /compute_LMS_default_data
+   Method: GET
+   Description: Computes default visual data specifically for the LMS color function. Returns both results and plots.
+
+4. Path: /compute_LMS_plots_default_data
+   Method: GET
+   Description: Computes default visual data specifically for the LMS color function. Returns only plots.
+
+5. Path: /compute_LMS_results_default_data
+   Method: GET
+   Description: Computes default visual data specifically for the LMS color function. Returns only results.

@@ -2,7 +2,7 @@ import warnings
 
 from compute import my_round, sign_figs, chrom_coords_µ, LMS_energy, chop, Vλ_energy_and_LM_weights, \
     tangent_points_purple_line, chrom_coords_E, VisualData, xyz_interpolated_reference_system, linear_transformation_λ, \
-    square_sum, compute_XYZ, compute_LMS, compute_MacLeod_Boynton_diagram, compute_Maxwellian_diagram
+    square_sum, XYZ_purples, compute_CIE_standard_XYZ
 import numpy as np
 import scipy.optimize
 import scipy.interpolate
@@ -73,8 +73,10 @@ def compute_LMS_Modular(parameters):
         LMS[:, 1:][LMS[:, 1:] == 0] = -np.inf
         LMS[:, 1:][LMS[:, 1:] > 0] = my_round(
             np.log10(LMS[:, 1:][LMS[:, 1:] > 0]), logLMS_dp)
+        LMS[:, 0] = my_round(LMS[:, 0], 1)
         return chop(LMS)
     else:
+        LMS[:, 0] = my_round(LMS[:, 0], 1)
         # compute.py line 779
         return chop(LMS)
 
@@ -385,7 +387,10 @@ def compute_XY_modular(parameters):
 
     Returns
     -------
-    A ndarray of CIE cone-fundamental-based xyz chromaticity coordinates given the parameters.
+    Either:
+        A ndarray of CIE cone-fundamental-based xyz chromaticity coordinates given the parameters, if and only
+        if the 'purples' parameter is set to False.
+        Otherwise, it'll output three ndarrays representing xyz, xyz_E and xyz_tg_purple.
 
     """
 
@@ -395,43 +400,210 @@ def compute_XY_modular(parameters):
 
     # no checking for normalization; calculations for renormalized and non-renormalized
     # remain the same
-    if not parameters['purple']:
-        # compute.py, lines 1173-1189
-        if not parameters['white']:
-            xyz_spec_N = chrom_coords_µ(xyz)
-            if parameters['mode'] == "plot":
-                return chop(xyz_spec_N)
-            else:
-                xyz_spec_N[:, 1:] = my_round(xyz_spec_N[:, 1:], 5)
-                return chop(xyz_spec_N)
+
+    # a slighly more optimized approach for when XYZ-purple endpoint requires calculations
+    # from this function - reduces it to two calls to XYZ_modular than three
+    if parameters['xyz-purple']:
+        # compute.py, line 1173
+        xyz_spec_N = chrom_coords_µ(xyz)
+        if parameters['mode'] == "plot":
+            a = xyz_spec_N
         else:
-            xyz_E_plot_N = chrom_coords_E(xyz)
-            if parameters['mode'] == "plot":
-                return chop(xyz_E_plot_N)
-            else:
-                xyz_E_N = my_round(xyz_E_plot_N, 5)
-                return chop(xyz_E_N)
-    else:
+            # compute.py, line 1174
+            xyz_spec_N[:, 1:] = my_round(xyz_spec_N[:, 1:], 5)
+            a = xyz_spec_N
+        # compute.py, line 1185
+        xyz_E_plot_N = chrom_coords_E(xyz)
+
+        if parameters['mode'] == "plot":
+            b = xyz_E_plot_N
+        else:
+            # compute.py, line 1186
+            xyz_E_N = my_round(xyz_E_plot_N, 5)
+            b = xyz_E_N
+
+        # requires plotted version of XYZ with same parameters
+        # in order to do tangent_points_purple_line exactly as done in
+        # compute.py
         if parameters['mode'] is not "plot":
             temp['mode'] = "plot"
-            xyz = compute_XYZ_Modular(temp)
-        # compute.py, line 1180
-        XYZ = chrom_coords_µ(xyz)
-        # compute.py, lines 1193
-        (xyz_purple_plot, XYZ_purple_plot) = tangent_points_purple_line(XYZ, False, xyz)
+            xyz2 = compute_XYZ_Modular(temp)
+
+        # compute.py, line 1173
+        xyz_other = chrom_coords_µ(xyz2)
+        # compute.py, line 1193
+        (asda, XYZ_purple) = tangent_points_purple_line(xyz_other, False, xyz2)
+
         if parameters['mode'] == "plot":
-            if parameters['XYZ']:
-                return chop(XYZ_purple_plot)
-            else:
-                return chop(xyz_purple_plot)
+            return (chop(a), b, chop(XYZ_purple))
         else:
-            if parameters['XYZ']:
-                # compute.py, lines 1198-1200
-                XYZ_purple_plot[:, 0] = my_round(XYZ_purple_plot[:, 0], 1)
-                XYZ_purple_plot[:, 1:] = my_round(XYZ_purple_plot[:, 1:], 7)
-                return chop(XYZ_purple_plot)
+            # compute.py, lines 1198-1200
+            XYZ_purple_plot = XYZ_purple.copy()
+            XYZ_purple_plot[:, 0] = my_round(XYZ_purple_plot[:, 0], 1)
+            XYZ_purple_plot[:, 1:] = my_round(XYZ_purple_plot[:, 1:], 7)
+            return (chop(a), b, chop(XYZ_purple_plot))
+    else:
+        if not parameters['purple']:
+            # compute.py, lines 1173-1189
+            if not parameters['white']:
+                xyz_spec_N = chrom_coords_µ(xyz)
+                if parameters['mode'] == "plot":
+                    return chop(xyz_spec_N)
+                else:
+                    xyz_spec_N[:, 1:] = my_round(xyz_spec_N[:, 1:], 5)
+                    return chop(xyz_spec_N)
             else:
-                # compute.py, lines 1195-1197
-                xyz_purple_plot[:, 0] = my_round(xyz_purple_plot[:, 0], 1)
-                xyz_purple_plot[:, 1:] = my_round(xyz_purple_plot[:, 1:], 5)
-                return chop(xyz_purple_plot)
+                xyz_E_plot_N = chrom_coords_E(xyz)
+                if parameters['mode'] == "plot":
+                    return chop(xyz_E_plot_N)
+                else:
+                    xyz_E_N = my_round(xyz_E_plot_N, 5)
+                    return chop(xyz_E_N)
+        else:
+            if parameters['mode'] is not "plot":
+                temp['mode'] = "plot"
+                xyz = compute_XYZ_Modular(temp)
+            # compute.py, line 1180
+            XYZ = chrom_coords_µ(xyz)
+            # compute.py, lines 1193
+            (xyz_purple_plot, XYZ_purple_plot) = tangent_points_purple_line(XYZ, False, xyz)
+            if parameters['mode'] == "plot":
+                if parameters['XYZ']:
+                    return chop(XYZ_purple_plot)
+                else:
+                    return chop(xyz_purple_plot)
+            else:
+                if parameters['XYZ']:
+                    # compute.py, lines 1198-1200
+                    XYZ_purple_plot[:, 0] = my_round(XYZ_purple_plot[:, 0], 1)
+                    XYZ_purple_plot[:, 1:] = my_round(XYZ_purple_plot[:, 1:], 7)
+                    return chop(XYZ_purple_plot)
+                else:
+                    # compute.py, lines 1195-1197
+                    xyz_purple_plot[:, 0] = my_round(xyz_purple_plot[:, 0], 1)
+                    xyz_purple_plot[:, 1:] = my_round(xyz_purple_plot[:, 1:], 5)
+                    return chop(xyz_purple_plot)
+
+def compute_XYZ_purples_modular(parameters):
+    """
+    compute_XYZ_purples_modular is a modularized version of the compute_XYZ_purples(...) function from compute.py,
+    made to fit the parameters dictionary system. There isn't much modularization here though, as XYZ_purples(...)
+    requires three versions of compute_XY_modular(...) to work properly.
+
+    Parameters
+    ----------
+    parameters: A dictionary containing the treated URL parameters.
+
+    Returns
+    -------
+    A ndarray of the XYZ cone-fundamental-based tristimulus function of purple-line stimuli, given parameters.
+    """
+    parameters['xyz-purple'] = True
+    xyz, xyz_E, xyz_purple = compute_XY_modular(parameters)
+    # compute.py, line 1284
+    result = XYZ_purples(xyz, xyz_E, xyz_purple)
+    return chop(result)
+
+def compute_xyz_purples_modular(parameters):
+    """
+    compute_xyz_purples_modular(...) is a modularized version of compute_xyz_purples(...) from compute.py, made to
+    fit the parameters dictionary system.
+
+    Parameters
+    ----------
+    parameters: A dictionary containing the treated URL parameters.
+
+    Returns
+    -------
+    A ndarray of xyz cone-fundamental-based tristimulus values of purple-line stimuli, given parameters.
+    """
+    temp = parameters.copy()
+    temp['xyz-purple'] = True
+    # compute.py, line 1354
+    xyz = chrom_coords_µ(compute_XYZ_purples_modular(temp))
+    if parameters['mode'] == "result":
+        # trying to combat floating point errors
+        xyz[:, 0] = my_round(xyz[:, 0], 1)
+        # compute.py, line 1355
+        xyz[:, 1:] = my_round(xyz[:, 1:], 5)
+    return chop(xyz)
+
+def compute_XYZ_standard_modular(parameters):
+    """
+    compute_XYZ_standard_modular(...) is a modularized version of compute_CIE_standard_XYZ(...) from compute.py,
+    made to fit the parameters dictionary system. Possible to modularize and optimize further, but it is
+    minimal to change.
+
+    Parameters
+    ----------
+    parameters: A dictionary containing treated URL parameters.
+
+    Returns
+    -------
+    A ndarray of CIE XYZ colour-matching functions given field-size.
+    """
+    # compute.py, line 1826
+    (XYZ31_std_main,
+     XYZ31_plot,
+     XYZ64_std_main,
+     XYZ64_plot) = compute_CIE_standard_XYZ(
+        VisualData.XYZ31.copy(), VisualData.XYZ64.copy())
+    # parameter treatment
+    if parameters['mode'] == "result":
+        if parameters['field_size'] == 2:
+            return chop(XYZ31_std_main)
+        else:
+            return chop(XYZ64_std_main)
+    else:
+        if parameters['field_size'] == 2:
+            return chop(XYZ31_plot)
+        else:
+            return chop(XYZ64_plot)
+
+def compute_xyz_standard_modular(parameters):
+    """
+    compute_xyz_standard_modular(...) is the modularized version of compute_CIE_std_xy_diagram(...) from compute.py,
+    fit to take in the parameter system we have in place.
+
+    Parameters
+    ----------
+    parameters: A dictionary of URL parameters.
+
+    Returns
+    -------
+    A ndarray of computated CIE chromaticity coordinates for spectral stimuli, etc.
+    """
+
+    if parameters['white']:
+        if parameters['field_size'] == 2:
+            # compute.py, line 1469
+            xyz31_E = np.array([0.33331, 0.33329, 0.33340])
+            return xyz31_E
+        else:
+            # compute.py, line 1497
+            xyz64_E = np.array([0.33330, 0.33333, 0.33337])
+            return xyz64_E
+
+    relevant = compute_XYZ_standard_modular(parameters)
+
+    if not parameters['purple']:
+        # compute.py, line 1489
+        current = chrom_coords_µ(relevant)
+        if parameters['mode'] == "plot":
+            return current
+        else:
+            # compute.py, line 1490
+            current[:, 1:] = my_round(current[:, 1:], 5)
+            return current
+    else:
+        temp = parameters.copy()
+        temp['mode'] = "plot"
+        relevant = compute_XYZ_standard_modular(temp)
+        # compute.py, line 1499
+        current = tangent_points_purple_line(chrom_coords_µ(relevant))
+        if parameters['mode'] == "plot":
+            return current
+        else:
+            # compute.py, line 1504
+            current[:, 1:] = my_round(current[:, 1:], 5)
+            return current
