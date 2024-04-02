@@ -34,13 +34,19 @@
 }
 
 .scrollable-table th, .scrollable-table td {
-  border: 1px solid #000000;
+  border: 2px solid white;
   padding: 8px;
 }
 
-.scrollable-table th {
-  background-color: #a5a5a5;
+.scrollable-table tbody tr:nth-child(even) {
+  background-color: #dac4c4a1;
 }
+
+.scrollable-table tbody tr:hover {
+  background-color: #c04600bb;
+  color: white;
+}
+
 
 .parameters-form {
   display: flex;
