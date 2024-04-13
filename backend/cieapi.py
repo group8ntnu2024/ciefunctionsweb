@@ -1,3 +1,5 @@
+import math
+
 import requests
 from flask import Flask, request, jsonify, make_response, Response
 from flask_cors import CORS
@@ -160,49 +162,74 @@ def LMS_plots():
     # Return the LMS results in the response
     return jsonify({'plots': lms_pl})
 
-def wrapperDictionary(calculation, parameters):
 
+def JSON_writer(results, formatting):
     """
-    wrapperDictionary is a higher-order function that retrieves the result from calculation given parameters,
-    and packages it in a DataFrame (to make it resistant to floating point errors), before it is then
-    made into a JSON string and returned.
-    In addition, it also sets the pandas settings to have higher precision, as pandas tends to round down
-    any floating values over a specific limit - these settings ensure that this doesn't happen, and that the
-    data is untampered.
-    Beware: "double_precision" cannot be too high nor too low. Too high will cause wavelengths to have
-    floating point precision problems (example, 390.99999999999999 == 391) - but too low will cause
-    the other values to start experiencing it. If it happens again, experiment with this value first.
-
+    A function which takes in a results ndarray as well as an expected format to output the JSON string.
     Parameters
     ----------
-    calculation: An endpoint's modularized compute function (from computemodularization.py).
-    parameters: A dictionary representing the URL parameters.
+    results
+    format
 
     Returns
     -------
-    A JSON string from a DataFrame with the results from the modularized compute function 'calculation',
-    given the parameters of 'parameters'.
 
     """
 
-    # a problem the Pandas DataFrames sometimes have is that their DataFrames cannot support
-    # something over a given specific precision (and rounds it down, creating wrong results in endpoints)
-    # the following options fixes that problem
-    pd.set_option("display.precision", 11)
-    pd.set_option("styler.format.precision", 11)
+    result = []
 
-    if parameters['mode'] == "plot" and ((calculation is compute_Maxwellian_Modular) or
-    (calculation is compute_MacLeod_Modular)):
-        # precision of floats in plots for macleod and maxwellian have to be tuned down to fit
-        # similar numbers from the .csv
-        return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=6)
-    if calculation is compute_XY_modular and parameters['mode'] == "plot":
-        return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=5)
-    if calculation is compute_XYZ_purples_modular:
-        return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=12)
-    if calculation is compute_XYZ_standard_modular or calculation is compute_xyz_standard_modular:
-        return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=12)
-    return pd.DataFrame(calculation(parameters)).to_json(orient="values", double_precision=15)
+    for row in results:
+        (w, l, m, s) = row
+        if math.isinf(s):
+            s = "null"
+            format = formatting[:28] + "{s}]"
+            result.append(format.format(w=w, l=l, m=m, s=s))
+        else:
+            result.append(formatting.format(w=w, l=l, m=m, s=s))
+
+    output = ','.join(result)
+    return "[" + output + "]"
+def calculation_to_JSON(calculation, parameters):
+    """
+    calculation_to_JSON is a function that outputs a JSON string based on the result array given and the parameters.
+    While the previous iteration of the API used pandas dataframes to avoid the problem of floating point errors,
+    this was not feasible for results of high precision due to many significant figures.
+
+    This function is the new iteration for the API; it saves the numbers as formatted strings exactly like the
+    original software does - ensuring the exact same numbers as the software.
+    Parameters
+    ----------
+    calculation: The function responsible for the calculations.
+    parameters: A dictionary containing the URL parameters.
+
+    Returns
+    -------
+    A string which acts as a JSON output for an API.
+    """
+
+    if calculation is compute_LMS_Modular:
+        if parameters['base']:
+            if parameters['log']:
+                # log10 base LMS
+                return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.8f}, {m:.8f}, {s:.8f}]")
+            else:
+                # base LMS
+                return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.8e}, {m:.8e}, {s:.8e}]")
+        else:
+                # log10 LMS
+            if parameters['log']:
+                return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.5f}, {m:.5f}, {s:.5f}]")
+            else:
+                # LMS
+                return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.5e}, {m:.5e}, {s:.5e}]")
+
+    # many of these share the same ones
+    if calculation in [compute_Maxwellian_Modular, compute_MacLeod_Modular]:
+        return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.6f}, {m:.6f}, {s:.6f}]")
+    if calculation in [compute_XYZ_Modular, compute_XYZ_purples_modular, compute_XYZ_standard_modular]:
+        return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.6e}, {m:.6e}, {s:.6e}]")
+    else:
+        return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.5f}, {m:.5f}, {s:.5f}]")
 
 """
     The endpoints for the API. 
@@ -222,7 +249,7 @@ def LMS():
         return parameterCheck
 
     return Response(
-        wrapperDictionary(compute_LMS_Modular,
+        calculation_to_JSON(compute_LMS_Modular,
                           createAndCheckParameters(True, compute_LMS_Modular)),
         mimetype='application/json')
 
@@ -236,7 +263,7 @@ def MB():
         return parameterCheck
 
     return Response(
-        wrapperDictionary(compute_MacLeod_Modular,
+        calculation_to_JSON(compute_MacLeod_Modular,
                           createAndCheckParameters(True, compute_MacLeod_Modular)),
         mimetype='application/json')
 
@@ -250,7 +277,7 @@ def maxwellian():
             return parameterCheck
 
         return Response(
-            wrapperDictionary(compute_Maxwellian_Modular,
+            calculation_to_JSON(compute_Maxwellian_Modular,
                               createAndCheckParameters(True, compute_Maxwellian_Modular)),
                                 mimetype='application/json')
 
@@ -264,7 +291,7 @@ def xyz():
             return parameterCheck
 
         return Response(
-            wrapperDictionary(compute_XYZ_Modular,
+            calculation_to_JSON(compute_XYZ_Modular,
                               createAndCheckParameters(True, compute_XYZ_Modular)),
                                 mimetype='application/json')
 
@@ -278,7 +305,7 @@ def xy():
         return parameterCheck
 
     return Response(
-        wrapperDictionary(compute_XY_modular,
+        calculation_to_JSON(compute_XY_modular,
                           createAndCheckParameters(True, compute_XY_modular)),
         mimetype='application/json')
 
@@ -292,7 +319,7 @@ def xyz_p():
         return parameterCheck
 
     return Response(
-        wrapperDictionary(compute_XYZ_purples_modular,
+        calculation_to_JSON(compute_XYZ_purples_modular,
                           createAndCheckParameters(True, compute_XYZ_purples_modular)),
         mimetype='application/json')
 
@@ -306,7 +333,7 @@ def xy_p():
         return parameterCheck
 
     return Response(
-        wrapperDictionary(compute_xyz_purples_modular,
+        calculation_to_JSON(compute_xyz_purples_modular,
                           createAndCheckParameters(True, compute_xyz_purples_modular)),
         mimetype='application/json')
 
@@ -320,7 +347,7 @@ def xyz_std():
         return parameterCheck
 
     return Response(
-        wrapperDictionary(compute_XYZ_standard_modular,
+        calculation_to_JSON(compute_XYZ_standard_modular,
                           createAndCheckParameters(False, compute_XYZ_standard_modular)),
         mimetype='application/json')
 
@@ -334,7 +361,7 @@ def xy_std():
         return parameterCheck
 
     return Response(
-        wrapperDictionary(compute_xyz_standard_modular,
+        calculation_to_JSON(compute_xyz_standard_modular,
                           createAndCheckParameters(False, compute_xyz_standard_modular)),
         mimetype='application/json')
 

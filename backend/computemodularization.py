@@ -2,11 +2,10 @@ import warnings
 
 from compute import my_round, sign_figs, chrom_coords_µ, LMS_energy, chop, Vλ_energy_and_LM_weights, \
     tangent_points_purple_line, chrom_coords_E, VisualData, xyz_interpolated_reference_system, linear_transformation_λ, \
-    square_sum, XYZ_purples, compute_CIE_standard_XYZ
+    square_sum, XYZ_purples, compute_CIE_standard_XYZ, LMS_quantal, compute_tabulated
 import numpy as np
 import scipy.optimize
 import scipy.interpolate
-
 
 """
     This module contains the modularized versions of the CIE functions found in compute.py. These are modularized
@@ -79,8 +78,6 @@ def compute_LMS_Modular(parameters):
         LMS[:, 0] = my_round(LMS[:, 0], 1)
         # compute.py line 779
         return chop(LMS)
-
-
 def compute_MacLeod_Modular(parameters):
 
     """
