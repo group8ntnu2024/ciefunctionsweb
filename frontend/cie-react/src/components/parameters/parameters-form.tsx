@@ -1,9 +1,11 @@
 import React from 'react';
 import { useParameters } from '../../context/parameter-context';
 import { fetchCalculationResults } from '../../utils/ApiService';
+import { useLoading } from '../../hooks/useLoading';
 
 const ParametersForm = () => {
   const { parameters, setParameters } = useParameters();
+  const { startLoading, stopLoading } = useLoading();
 
   const handleParameterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -11,18 +13,17 @@ const ParametersForm = () => {
   };
 
   const handleComputeClick = async () => {
+    startLoading();
     try {
       const resultData = await fetchCalculationResults({
         ...parameters,
         type: "specific_computation",
       });
-
-      console.log(resultData);
-      const updateEvent = new CustomEvent('updateTableData', { detail: resultData });
-      window.dispatchEvent(updateEvent);
-
+      window.dispatchEvent(new CustomEvent('updateTableData', { detail: resultData }));
     } catch (error) {
       console.error('Error:', error);
+    } finally {
+      stopLoading();
     }
   };
 
