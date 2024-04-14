@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react';
 import '../app-content.css';
+import { useLoading } from '../../hooks/useLoading';
+import LoadingIndicator from '../LoadingIndicator';
+
 
 
 type data = number[][];
 
 const FetchedTable = () => {
   const [tableData, setTableData] = useState<data>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const { isLoading, stopLoading } = useLoading();
 
   useEffect(() => {
     
     const handleDataUpdate = (event: CustomEvent<data>) => {
-      setTableData(event.detail); 
-      setIsLoading(false);
+      setTableData(event.detail);
+      stopLoading();
     };
 
     window.addEventListener('updateTableData', handleDataUpdate as EventListener);
@@ -20,20 +23,10 @@ const FetchedTable = () => {
     return () => {
       window.removeEventListener('updateTableData', handleDataUpdate as EventListener);
     };
-  }, []);
+  }, [stopLoading]);
 
   if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '600px', 
-        fontSize: '20px' 
-      }}>
-        Loading ...
-      </div>
-    ); 
+    return <LoadingIndicator />;
   }
 
   return (
