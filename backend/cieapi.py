@@ -1,5 +1,6 @@
 import math
 
+import numpy
 import requests
 from flask import Flask, request, jsonify, make_response, Response
 from flask_cors import CORS
@@ -23,6 +24,49 @@ from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Mo
 
 api = Flask(__name__)
 CORS(api)
+
+calculation_formats = {
+    "LMS-base-log":  {
+        "result": ["{:.1f}", "{:.8f}", "{:.8f}", "{:.8f}"],
+        "plot": ["{:.1f}", "{:.8f}", "{:.8f}", "{:.8f}"],
+    },
+    "LMS-base": {
+        "result": ["{:.1f}", "{:.8e}", "{:.8e}", "{:.8e}"],
+        "plot": ["{:.1f}", "{:.8e}", "{:.8e}", "{:.8e}"],
+    },
+    "LMS-log": {
+        "result": ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+        "plot": ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+    },
+    "LMS": {
+        "result": ["{:.1f}", "{:.5e}", "{:.5e}", "{:.5e}"],
+        "plot": ["{:.1f}", "{:.5e}", "{:.5e}", "{:.5e}"],
+    },
+    "Maxwell-Macleod-resplot": {
+        "result": ["{:.1f}", "{:.6f}", "{:.6f}", "{:.6f}"],
+        "plot": ["{:.1f}", "{:.6f}", "{:.6f}", "{:.6f}"],
+    },
+    "XYZ-XYZP-XYZ-STD": {
+        "result": ["{:.1f}", "{:.6e}", "{:.6e}", "{:.6e}"],
+        "plot": ["{:.1f}", "{:.6e}", "{:.6e}", "{:.6e}"],
+    },
+    "XY-XYP-XY-STD": {
+        "result":  ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+        "plot":  ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+    },
+    "info-1": {
+        "norm": ["{:.8f}", "{:.8f}", "{:.8f}"],
+        "white": ["{:.6f}", "{:.6f}", "{:.6f}"],
+        # "white_plot": ["{:.6f}", "{:.6f}", "{:.6f}"],
+        "tg_purple": ["{:.6f}", "{:.6f}", "{:.6f}"],
+        # "tg_purple_plot": ["{:.6f}", "{:.6f}", "{:.6f}"],
+        "xyz_white": ["{:.5f}", "{:.5f}", "{:.5f}"],
+        "xyz_tg_purple": ["{:.5f}", "{:.5f}", "{:.5f}"],
+        "XYZ_tg_purple": ["{:.5f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+        "trans_mat": ["{:.8f}", "{:.8f}", "{:.8f}"],
+        # "trans_mat_N": ["{:.8f}", "{:.8f}", "{:.8f}"],
+    }
+}
 
 # Convert results and plots to JSON serializable format
 def convert_to_json_serializable(data):
@@ -177,18 +221,34 @@ def JSON_writer(results, formatting):
     """
 
     result = []
+    if type(results) == dict:
+        temp = []
+        # if the dictionary is result/plot, not info
+        if (list(results.keys())) == ["result", "plot"]:
+            for name, body in results.items():
+                start = '"{}":'.format(name)
+                if len(body) == 1:
+                    body = [body]
+                if "white" in name:
+                    start += JSON_writer(body, formatting)
+                else:
+                    start += JSON_writer(chop(body), formatting)
+                temp.append(start)
+            output = ','.join(temp)
+        return "{" + output + "}"
+    else:
+        for row in results:
+            (w, l, m, s) = row
+            if math.isinf(s):
+                s = "null"
+                format = formatting[:28] + "{s}]"
+                result.append(format.format(w=w, l=l, m=m, s=s))
+            else:
+                result.append(formatting.format(w=w, l=l, m=m, s=s))
 
-    for row in results:
-        (w, l, m, s) = row
-        if math.isinf(s):
-            s = "null"
-            format = formatting[:28] + "{s}]"
-            result.append(format.format(w=w, l=l, m=m, s=s))
-        else:
-            result.append(formatting.format(w=w, l=l, m=m, s=s))
+        output = ','.join(result)
+        return "[" + output + "]"
 
-    output = ','.join(result)
-    return "[" + output + "]"
 def calculation_to_JSON(calculation, parameters):
     """
     calculation_to_JSON is a function that outputs a JSON string based on the result array given and the parameters.
@@ -206,6 +266,9 @@ def calculation_to_JSON(calculation, parameters):
     -------
     A string which acts as a JSON output for an API.
     """
+
+    if parameters['info']:
+        return "placeholder"
 
     if calculation is compute_LMS_Modular:
         if parameters['base']:
@@ -231,6 +294,98 @@ def calculation_to_JSON(calculation, parameters):
     else:
         return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.5f}, {m:.5f}, {s:.5f}]")
 
+
+def new_calculation_JSON(calculation, parameters):
+
+    if parameters['info']:
+        return write_to_JSON(calculation(parameters), calculation_formats['info-1'])
+
+    if calculation is compute_LMS_Modular:
+        if parameters['base']:
+            if parameters['log']:
+                # log10 base LMS
+                return write_to_JSON(calculation(parameters), calculation_formats['LMS-base-log'])
+            else:
+                # base LMS
+                return write_to_JSON(calculation(parameters), calculation_formats['LMS-base'])
+        else:
+                # log10 LMS
+            if parameters['log']:
+                return write_to_JSON(calculation(parameters), calculation_formats['LMS-log'])
+            else:
+                # LMS
+                return write_to_JSON(calculation(parameters), calculation_formats['LMS'])
+    # many of these share the same ones
+    if calculation in [compute_Maxwellian_Modular, compute_MacLeod_Modular]:
+        return write_to_JSON(calculation(parameters), calculation_formats["Maxwell-Macleod-resplot"])
+    if calculation in [compute_XYZ_Modular, compute_XYZ_purples_modular, compute_XYZ_standard_modular]:
+        return write_to_JSON(calculation(parameters), calculation_formats["XYZ-XYZP-XYZ-STD"])
+    else:
+        return write_to_JSON(calculation(parameters), calculation_formats["XY-XYP-XY-STD"])
+
+def write_to_JSON(results_dict, json_dict):
+    """
+    Step b, should first get a dictionary of all elements with their JSONified ndarrays,
+    before it then makes *that* dictionary into a JSON string itself.
+
+    Parameters
+    ----------
+    results_dict
+    json_dict
+
+    Returns
+    -------
+
+    """
+    something = {}
+    for (name, body) in results_dict.items():
+        something[name] = ndarray_to_JSON(body, json_dict[name])
+    output = []
+    for (name, body) in something.items():
+        temp = '"{}":'.format(name) + body
+        output.append(temp)
+    fin = ','.join(output)
+    return '{' + fin + '}'
+
+def ndarray_to_JSON(body, formatta):
+    """
+    Should in theory deliver an ndarray formatted to JSON, no matter dimensions - only exception is that
+    the array contents, whatever they are, are the same structure as formatta. So, for example,
+    [[[3, 2, 1]]] needs a formatta of [some, thing, here]. The function won't work on ndarrays that are therefore
+    not structured right and consistent.
+    Parameters
+    ----------
+    body
+    formatta
+
+    Returns
+    -------
+
+    """
+    # for later consideration; have it return a value that is not dict nor array
+    # if (not isinstance(body, dict)) and (not isinstance(body, numpy.ndarray)):
+    if body.ndim == 1:
+        if len(body) == len(formatta):
+            all = []
+            for index in range(len(body)):
+                # for -inf in log10 LMS
+                tempar = chop(body[index])
+                asda = formatta[index]
+                if math.isinf(body[index]):
+                    tempar = "null"
+                    asda = "{}"
+                all.append(asda.format(tempar))
+            output = ','.join(all)
+            return '[' + output + ']'
+        else:
+            return "Something is wrong here ..."
+    else:
+        temp = []
+        for row in body:
+            temp.append(ndarray_to_JSON(row, formatta))
+        output = ','.join(temp)
+        return '[' + output + ']'
+
 """
     The endpoints for the API. 
     
@@ -249,7 +404,7 @@ def LMS():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_LMS_Modular,
+        new_calculation_JSON(compute_LMS_Modular,
                           createAndCheckParameters(True, compute_LMS_Modular)),
         mimetype='application/json')
 
@@ -263,7 +418,7 @@ def MB():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_MacLeod_Modular,
+        new_calculation_JSON(compute_MacLeod_Modular,
                           createAndCheckParameters(True, compute_MacLeod_Modular)),
         mimetype='application/json')
 
@@ -277,7 +432,7 @@ def maxwellian():
             return parameterCheck
 
         return Response(
-            calculation_to_JSON(compute_Maxwellian_Modular,
+            new_calculation_JSON(compute_Maxwellian_Modular,
                               createAndCheckParameters(True, compute_Maxwellian_Modular)),
                                 mimetype='application/json')
 
@@ -291,7 +446,7 @@ def xyz():
             return parameterCheck
 
         return Response(
-            calculation_to_JSON(compute_XYZ_Modular,
+            new_calculation_JSON(compute_XYZ_Modular,
                               createAndCheckParameters(True, compute_XYZ_Modular)),
                                 mimetype='application/json')
 
@@ -305,7 +460,7 @@ def xy():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_XY_modular,
+        new_calculation_JSON(compute_XY_modular,
                           createAndCheckParameters(True, compute_XY_modular)),
         mimetype='application/json')
 
@@ -319,7 +474,7 @@ def xyz_p():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_XYZ_purples_modular,
+        new_calculation_JSON(compute_XYZ_purples_modular,
                           createAndCheckParameters(True, compute_XYZ_purples_modular)),
         mimetype='application/json')
 
@@ -333,7 +488,7 @@ def xy_p():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_xyz_purples_modular,
+        new_calculation_JSON(compute_xyz_purples_modular,
                           createAndCheckParameters(True, compute_xyz_purples_modular)),
         mimetype='application/json')
 
@@ -347,7 +502,7 @@ def xyz_std():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_XYZ_standard_modular,
+        new_calculation_JSON(compute_XYZ_standard_modular,
                           createAndCheckParameters(False, compute_XYZ_standard_modular)),
         mimetype='application/json')
 
@@ -361,7 +516,7 @@ def xy_std():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_xyz_standard_modular,
+        new_calculation_JSON(compute_xyz_standard_modular,
                           createAndCheckParameters(False, compute_xyz_standard_modular)),
         mimetype='application/json')
 
@@ -443,45 +598,12 @@ def createAndCheckParameters(disabled, calculation):
         # Now, adding optional/specific parameters
         parameters['log'] = True if request.args.get('log10') is not None else False # only for LMS to activate log lms
         parameters['base'] = True if request.args.get('base') is not None else False # only for LMS for base lms
-        parameters['white'] = True if request.args.get('white') is not None else False # for MacLeod, Maxwellian, XY
-        parameters['purple'] = True if request.args.get('purple') is not None else False # for MacLeod, Maxwellian, XY
-        parameters['norm'] = True if request.args.get('norm') is not None else False # for MacLeod, Maxwellian, XYZ, XY
-        parameters['trans'] = True if request.args.get('trans') is not None else False # for XYZ
-        parameters['XYZ'] = True if request.args.get('XYZ') is not None else False  # for XY-diagram
 
-        # really specific endpoint optional parameter checking now
-        if parameters['purple'] and parameters['white']:
-            return Response("ERROR: Cannot have parameters 'white' and 'purple' activated at the same time. Please, "
-                            "disable one of them. ", status=400)
-        if calculation is not compute_LMS_Modular:
-            if parameters['log']: return Response("ERROR: Log10 parameter is exclusive to /LMS endpoint, and is not supported"
-                                                  " on your current endpoint; please disable it. ", status=400)
-            if parameters['base']: return Response("ERROR: Base parameter is exclusive to /LMS endpoint, and is not supported "
-                                                   "on your current endpoint; please disable it.", status=400)
-        if calculation is not compute_XYZ_Modular:
-            if parameters['trans']: return Response("ERROR: Parameter 'trans' for transformational matrix of linear transformation "
-                                                    "LMS -> XYZ is exclusive to the /XYZ endpoint; please disable it. ", status=400)
-
-        if (calculation is not compute_Maxwellian_Modular) and (calculation is not compute_MacLeod_Modular)\
-                and (calculation is not compute_XY_modular) and (calculation is not compute_XYZ_Modular) :
-            if (parameters['purple'] or parameters['white'] or parameters['norm']):
-                return Response("ERROR: Parameters 'purple', 'white' and 'norm' cannot be used with your current endpoint. "
-                                "Please, remove them from the URL and try again. ", status=400)
-
-        if calculation is not compute_XY_modular:
-            if parameters['XYZ']: return Response("ERROR: Parameter 'XYZ' is exclusive to the /XY endpoint. Please, disable it.",
-                                                  status=400)
-        else:
-            if parameters['XYZ'] and not parameters['purple']: return Response("ERROR: Parameter 'XYZ' can only be used when parameter 'purple'"
-                                                                               "is activated. Please, enable it. ", status=400)
-        if calculation is compute_MacLeod_Modular or calculation is compute_Maxwellian_Modular:
-            if (parameters['norm'] and parameters['purple']) or (parameters['norm'] and parameters['white']):
-                return Response("ERROR: Parameter 'norm' does not work alongside parameters 'white' nor 'purple' for the"
-                                " Macleod-Boyton and Maxwellian CIE functions. Please, disable one. ", status=400)
-
+        parameters['info'] = True if request.args.get('info') is not None else False
+        parameters['norm'] = True if request.args.get('norm') is not None else False
         # parameter that cannot be triggered by any URL parameter, exclusive to XYZ-purples in usage for compute_xy_modular
         # in order to save time
-        parameters['xyz-purple'] = False
+        parameters['purple'] = False
         # std-xy needs xyz-std, saves time
         parameters['xyz-std'] = False
 
@@ -495,11 +617,7 @@ def createAndCheckParameters(disabled, calculation):
         if parameters['mode'] not in ['plot', 'result']:
             return Response("ERROR: Parameter 'mode' is not properly set. Please use either 'plot' or 'result'.", status=400)
 
-        parameters['white'] = True if request.args.get('white') is not None else False # for XY-std
-        parameters['purple'] = True if request.args.get('purple') is not None else False # for XY-std
-        if parameters['purple'] and parameters['white']:
-            return Response("ERROR: Cannot have parameters 'white' and 'purple' activated at the same time. Please, "
-                            "disable one of them. ", status=400)
+        parameters['info'] = True if request.args.get('info') is not None else False
 
         if parameters['field_size'] == 2 or parameters['field_size'] == 10:
             return parameters
