@@ -471,16 +471,16 @@ def compute_XYZ_standard_modular(parameters):
      XYZ64_plot) = compute_CIE_standard_XYZ(
         VisualData.XYZ31.copy(), VisualData.XYZ64.copy())
     # parameter treatment
-    if parameters['mode'] == "result":
-        if parameters['field_size'] == 2:
-            return chop(XYZ31_std_main)
-        else:
-            return chop(XYZ64_std_main)
+    if parameters['field_size'] == 2:
+        return {
+            "result": XYZ31_std_main,
+            "plot": XYZ31_plot
+        }
     else:
-        if parameters['field_size'] == 2:
-            return chop(XYZ31_plot)
-        else:
-            return chop(XYZ64_plot)
+        return {
+            "result": XYZ64_std_main,
+            "plot": XYZ64_plot
+        }
 
 def compute_xyz_standard_modular(parameters):
     """
@@ -496,36 +496,22 @@ def compute_xyz_standard_modular(parameters):
     A ndarray of computated CIE chromaticity coordinates for spectral stimuli, etc.
     """
 
-    if parameters['white']:
-        if parameters['field_size'] == 2:
-            # compute.py, line 1469
-            xyz31_E = np.array([0.33331, 0.33329, 0.33340])
-            return xyz31_E
-        else:
-            # compute.py, line 1497
-            xyz64_E = np.array([0.33330, 0.33333, 0.33337])
-            return xyz64_E
-
     relevant = compute_XYZ_standard_modular(parameters)
 
-    if not parameters['purple']:
-        # compute.py, line 1489
-        current = chrom_coords_µ(relevant)
-        if parameters['mode'] == "plot":
-            return current
-        else:
-            # compute.py, line 1490
-            current[:, 1:] = my_round(current[:, 1:], 5)
-            return current
-    else:
-        temp = parameters.copy()
-        temp['mode'] = "plot"
-        relevant = compute_XYZ_standard_modular(temp)
-        # compute.py, line 1499
-        current = tangent_points_purple_line(chrom_coords_µ(relevant))
-        if parameters['mode'] == "plot":
-            return current
-        else:
-            # compute.py, line 1504
-            current[:, 1:] = my_round(current[:, 1:], 5)
-            return current
+    if parameters['info']:
+        white = np.array([0.33330, 0.33333, 0.33337])
+        purple_plot = tangent_points_purple_line(chrom_coords_µ(relevant['plot']))
+        purple = purple_plot.copy()
+        purple[:, 1:] = my_round(purple_plot[:, 1:], 5)
+        if parameters['field_size'] == 2:
+            white = np.array([0.33331, 0.33329, 0.33340])
+        return {
+            "white": white,
+            "tg_purple": purple
+        }
+    result = chrom_coords_µ(relevant['result'])
+    result[:, 1:] = my_round(result[:, 1:], 5)
+    return {
+        "result": result,
+        "plot": chrom_coords_µ(relevant['plot'])
+    }

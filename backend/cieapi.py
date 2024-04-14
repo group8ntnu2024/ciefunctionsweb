@@ -502,7 +502,7 @@ def xyz_std():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_XYZ_standard_modular,
+        new_calculation_JSON(compute_XYZ_standard_modular,
                           createAndCheckParameters(False, compute_XYZ_standard_modular)),
         mimetype='application/json')
 
@@ -516,7 +516,7 @@ def xy_std():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_xyz_standard_modular,
+        new_calculation_JSON(compute_xyz_standard_modular,
                           createAndCheckParameters(False, compute_xyz_standard_modular)),
         mimetype='application/json')
 
@@ -617,11 +617,7 @@ def createAndCheckParameters(disabled, calculation):
         if parameters['mode'] not in ['plot', 'result']:
             return Response("ERROR: Parameter 'mode' is not properly set. Please use either 'plot' or 'result'.", status=400)
 
-        parameters['white'] = True if request.args.get('white') is not None else False # for XY-std
-        parameters['purple'] = True if request.args.get('purple') is not None else False # for XY-std
-        if parameters['purple'] and parameters['white']:
-            return Response("ERROR: Cannot have parameters 'white' and 'purple' activated at the same time. Please, "
-                            "disable one of them. ", status=400)
+        parameters['info'] = True if request.args.get('info') is not None else False
 
         if parameters['field_size'] == 2 or parameters['field_size'] == 10:
             return parameters
