@@ -541,7 +541,7 @@ def createAndCheckParameters(disabled, calculation):
         URL input/parameters.
 
     """
-    def checkArgument(arga, theirType):
+    def checkArgument(arga, theirType, error):
         # a try-except clause to stop potential other errors that may arise from parameters
         try:
             if request.args.get(arga) is None:
@@ -565,9 +565,6 @@ def createAndCheckParameters(disabled, calculation):
             "field_size": checkArgument('field_size', float),
             "mode": checkArgument('mode', str),
             "age": checkArgument('age', int),
-            "λ_min": checkArgument('min', float),
-            "λ_max": checkArgument('max', float),
-            "λ_step": checkArgument('step-size', float),
         }
 
         # goes through all of the mandatory parameters; if any of them are a Response object,
@@ -577,11 +574,16 @@ def createAndCheckParameters(disabled, calculation):
             if isinstance(value, Response):
                 return value
 
+
+        #             "λ_min": checkArgument('min', float),
+        #             "λ_max": checkArgument('max', float),
+        #             "λ_step": checkArgument('step-size', float),
+
+
+
         # Doing mandatory parameter-specific error handling
         if parameters['field_size'] > 10 or parameters['field_size'] < 1:
             return Response("ERROR: Invalid field size. Please input a value of degree between 1.0 and 10.0.", status=400)
-        if parameters['mode'] not in ['plot', 'result']:
-            return Response("ERROR: Parameter 'mode' is not properly set. Please use either 'plot' or 'result'.", status=400)
         if parameters['age'] <= 0 or parameters['age'] > 99:
             return Response("ERROR: Parameter 'age' is invalid; please input values between 1-99.", status=400)
         if parameters['λ_min'] >= parameters['λ_max']:
@@ -610,12 +612,8 @@ def createAndCheckParameters(disabled, calculation):
         return parameters
     else:
         parameters = {
-            "mode": checkArgument('mode', str),
             "field_size": checkArgument('field_size', int)
         }
-
-        if parameters['mode'] not in ['plot', 'result']:
-            return Response("ERROR: Parameter 'mode' is not properly set. Please use either 'plot' or 'result'.", status=400)
 
         parameters['info'] = True if request.args.get('info') is not None else False
 

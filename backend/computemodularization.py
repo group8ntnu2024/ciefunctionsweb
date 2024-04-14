@@ -13,7 +13,7 @@ import scipy.interpolate
     unlike the original ones which give several ndarrays for all at once.
     Endpoint testing shows that there is a noticable speedup in request handling time when using these functions
     contrast of using their corresponding originals from compute.py, cutting time for some from 215~ ms to 42~ ms
-    as an example.
+    as an example. merge
 """
 
 def compute_LMS_Modular(parameters):
