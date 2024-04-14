@@ -474,7 +474,7 @@ def xyz_p():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_XYZ_purples_modular,
+        new_calculation_JSON(compute_XYZ_purples_modular,
                           createAndCheckParameters(True, compute_XYZ_purples_modular)),
         mimetype='application/json')
 
@@ -488,7 +488,7 @@ def xy_p():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_xyz_purples_modular,
+        new_calculation_JSON(compute_xyz_purples_modular,
                           createAndCheckParameters(True, compute_xyz_purples_modular)),
         mimetype='application/json')
 
@@ -603,7 +603,7 @@ def createAndCheckParameters(disabled, calculation):
         parameters['norm'] = True if request.args.get('norm') is not None else False
         # parameter that cannot be triggered by any URL parameter, exclusive to XYZ-purples in usage for compute_xy_modular
         # in order to save time
-        parameters['xyz-purple'] = False
+        parameters['purple'] = False
         # std-xy needs xyz-std, saves time
         parameters['xyz-std'] = False
 

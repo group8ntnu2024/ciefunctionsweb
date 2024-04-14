@@ -342,7 +342,8 @@ def compute_XY_modular(parameters):
     XYZ = compute_XYZ_Modular(temp)
     XYZ_spec = XYZ['result']
     XYZ_plot = XYZ['plot']
-    if not parameters['info']:
+
+    def resplot():
         xyz_spec = chrom_coords_µ(XYZ_spec)
         xyz_spec[:, 1:] = my_round(xyz_spec[:, 1:], 5)
         # returns xyz_spec, xyz_plot, xyz_spec_N, xyz_plot_N
@@ -350,7 +351,8 @@ def compute_XY_modular(parameters):
             "result": xyz_spec,
             "plot": chrom_coords_µ(XYZ_plot)
         }
-    else:
+
+    def info():
         xyz_E_plot = chrom_coords_E(XYZ_spec)
         xyz_E = my_round(xyz_E_plot, 5)
 
@@ -364,11 +366,26 @@ def compute_XY_modular(parameters):
         XYZ_tg_purple[:, 0] = my_round(XYZ_tg_purple[:, 0], 1)  # tg XYZ-space
         XYZ_tg_purple[:, 1:] = my_round(XYZ_tg_purple[:, 1:], 7)  # tg XYZ-space
 
-        return {
+        output = {
             "xyz_white": xyz_E,
             "xyz_tg_purple": xyz_tg_purple,
-            "XYZ_tg_purple": XYZ_tg_purple
+            "XYZ_tg_purple": XYZ_tg_purple,
         }
+        if parameters['purple']:
+            output.update({
+                "xyz_white_plot": xyz_E_plot,
+                "xyz_tg_purple_plot": xyz_tg_purple_plot,
+                "XYZ_tg_purple_plot": XYZ_tg_purple_plot
+            })
+        return output
+
+    if parameters['purple']:
+        asd = {**info(), **resplot()}
+        return asd
+
+    if parameters['info']:
+        return info()
+    return resplot()
 
 
 def compute_XYZ_purples_modular(parameters):
@@ -385,11 +402,18 @@ def compute_XYZ_purples_modular(parameters):
     -------
     A ndarray of the XYZ cone-fundamental-based tristimulus function of purple-line stimuli, given parameters.
     """
-    parameters['xyz-purple'] = True
-    xyz, xyz_E, xyz_purple = compute_XY_modular(parameters)
-    # compute.py, line 1284
-    result = XYZ_purples(xyz, xyz_E, xyz_purple)
-    return chop(result)
+
+    if parameters['info']:
+        return compute_XYZ_Modular(parameters)
+    else:
+        temp = parameters.copy()
+        temp['purple'] = True
+        xy_dict = compute_XY_modular(temp)
+        # compute.py, line 1284
+        return {
+            "result": XYZ_purples(xy_dict["result"], xy_dict["xyz_white"], xy_dict["XYZ_tg_purple"]),
+            "plot": XYZ_purples(xy_dict["plot"], xy_dict["xyz_white_plot"], xy_dict["XYZ_tg_purple_plot"]),
+        }
 
 def compute_xyz_purples_modular(parameters):
     """
@@ -404,6 +428,17 @@ def compute_xyz_purples_modular(parameters):
     -------
     A ndarray of xyz cone-fundamental-based tristimulus values of purple-line stimuli, given parameters.
     """
+    XYZ = compute_XYZ_purples_modular(parameters)
+    if parameters['info']:
+        return XYZ
+    else:
+        result = chrom_coords_µ(XYZ['result'])
+        result[:, 1:] = my_round(result[:, 1:], 5)
+        return {
+            "result": result,
+            "plot": chrom_coords_µ(XYZ['plot'])
+        }
+
     temp = parameters.copy()
     temp['xyz-purple'] = True
     # compute.py, line 1354
