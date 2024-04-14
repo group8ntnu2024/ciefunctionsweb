@@ -61,6 +61,10 @@ calculation_formats = {
         "tg_purple": ["{:.6f}", "{:.6f}", "{:.6f}"],
         # "tg_purple_plot": ["{:.6f}", "{:.6f}", "{:.6f}"],
         "xyz_white": ["{:.5f}", "{:.5f}", "{:.5f}"],
+        "xyz_tg_purple": ["{:.5f}", "{:.5f}", "{:.5f}"],
+        "XYZ_tg_purple": ["{:.5f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+        "trans_mat": ["{:.8f}", "{:.8f}", "{:.8f}"],
+        # "trans_mat_N": ["{:.8f}", "{:.8f}", "{:.8f}"],
     }
 }
 
@@ -442,7 +446,7 @@ def xyz():
             return parameterCheck
 
         return Response(
-            calculation_to_JSON(compute_XYZ_Modular,
+            new_calculation_JSON(compute_XYZ_Modular,
                               createAndCheckParameters(True, compute_XYZ_Modular)),
                                 mimetype='application/json')
 
@@ -456,7 +460,7 @@ def xy():
         return parameterCheck
 
     return Response(
-        calculation_to_JSON(compute_XY_modular,
+        new_calculation_JSON(compute_XY_modular,
                           createAndCheckParameters(True, compute_XY_modular)),
         mimetype='application/json')
 
@@ -596,6 +600,7 @@ def createAndCheckParameters(disabled, calculation):
         parameters['base'] = True if request.args.get('base') is not None else False # only for LMS for base lms
 
         parameters['info'] = True if request.args.get('info') is not None else False
+        parameters['norm'] = True if request.args.get('norm') is not None else False
         # parameter that cannot be triggered by any URL parameter, exclusive to XYZ-purples in usage for compute_xy_modular
         # in order to save time
         parameters['xyz-purple'] = False

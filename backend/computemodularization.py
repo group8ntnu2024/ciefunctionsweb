@@ -227,39 +227,35 @@ def compute_XYZ_Modular(parameters):
 
     """
     # XYZ uses LMS-base for calculations, needs that
+    # parameter adjustment for LMS-base
     parameters['base'] = True
     parameters['log'] = False
+    # specific results are dependent on other plot/result values
 
-    temp = parameters.copy()
-    temp['mode'] = "result"
-    LMS_base_result = compute_LMS_Modular(temp)
+    LMS_results = compute_LMS_Modular(parameters)
+    LMS_spec = LMS_results['result']
+    LMS_plot = LMS_results['plot']
 
-    # compute.py, line 1697
-    xyz_reference = xyz_interpolated_reference_system(
-        parameters['field_size'], VisualData.XYZ31.copy(), VisualData.XYZ64.copy())
-
-    # compute.py, line 1580
+    LMS_all = LMS_energy(parameters['field_size'], parameters['age'], base=True)[0]
     (Vλ_std_all, LM_weights) = Vλ_energy_and_LM_weights(parameters['field_size'], parameters['age'])
-
-    # compute.py line 1575
-    LMS_base_all = LMS_energy(parameters['field_size'], parameters['age'], base=True)[0]
-    # compute.py line 1585
-    (λ_all, L, M, S) = LMS_base_all.T
-
+    (λ_all, L_base_all, M_base_all, S_base_all) = LMS_all.T
     (λ_all, V_std_all) = Vλ_std_all.T
-    # compute.py lines 1586-1588
-    L_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, L)
-    M_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, M)
-    S_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, S)
+    L_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, L_base_all)
+    M_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, M_base_all)
+    S_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, S_base_all)
     V_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, V_std_all)
 
-    # compute.py, lines 1019-1060
+    xyz_reference = xyz_interpolated_reference_system(
+            parameters['field_size'], VisualData.XYZ31.copy(), VisualData.XYZ64.copy())
+
+    # parameters above
     xyz_ref = xyz_reference
     (a21, a22) = LM_weights
-    LMS_main = LMS_base_all[::10]
+    LMS_main = LMS_all[::10]
     (λ_main, L_main, M_main, S_main) = LMS_main.T
     V_main = sign_figs(a21 * L_main + a22 * M_main, 7)
     a33 = my_round(V_main.sum() / S_main.sum(), 8)
+    # Compute optimised non-renormalised transformation matrix
     λ_x_min_ref = 502
     ok = False
     while not ok:
@@ -271,21 +267,21 @@ def compute_XYZ_Modular(parameters):
                                    V_spline,
                                    λ_main, λ_x_min_ref,
                                    xyz_ref, False),
-                xtol=10 ** (-(10)), disp=False)  # exp: -(mat_dp + 2) = -10
+                xtol=10**(-(10)), disp=False)  # exp: -(mat_dp + 2) = -10
         trans_mat, λ_x_min_ref, ok = (
             square_sum(a13, a21, a22, a33,
                        L_spline, M_spline, S_spline,
                        V_spline,
                        λ_main, λ_x_min_ref,
                        xyz_ref, True)[1:])
-        # Compute renormalized transformation matrix
+    # Compute renormalized transformation matrix
     (λ_spec,
      X_exact_spec,
      Y_exact_spec,
-     Z_exact_spec) = linear_transformation_λ(trans_mat, LMS_base_result).T
+     Z_exact_spec) = linear_transformation_λ(trans_mat, LMS_spec).T
     if ((λ_spec[0] == 390. and λ_spec[-1] == 830.) and
-            (my_round(λ_spec[1] - λ_spec[0], 1) ==
-             1.0)):
+        (my_round(λ_spec[1] - λ_spec[0], 1) ==
+         1.0)):
         trans_mat_N = trans_mat
     else:
         (X_exact_sum, Y_exact_sum, Z_exact_sum) = (np.sum(X_exact_spec),
@@ -294,30 +290,33 @@ def compute_XYZ_Modular(parameters):
         trans_mat_N = my_round(trans_mat * ([Y_exact_sum / X_exact_sum],
                                             [1],
                                             [Y_exact_sum / Z_exact_sum]), 8)
-    # parameter treatment
-    if parameters['trans']:
-        if parameters['norm']:
-            return chop(trans_mat_N)
+    if not parameters['norm']:
+        if parameters['info']:
+            return {
+                "trans_mat": trans_mat
+            }
         else:
-            return chop(trans_mat)
+            XYZ_spec = linear_transformation_λ(trans_mat, LMS_spec)
+            XYZ_spec[:, 1:] = sign_figs(XYZ_spec[:, 1:], 7)
+            XYZ_plot = linear_transformation_λ(trans_mat, LMS_plot)
+            XYZ_plot[:, 1:] = sign_figs(XYZ_plot[:, 1:], 7)
+            return {
+                "result": XYZ_spec,
+                "plot": XYZ_plot
+            }
 
-    # calculations for plot and result in XYZ are mostly the same, just
-    # a difference in what LMS result they use for linear_transformation_λ(...) below
-    # changing this should work fine
-    if parameters['mode'] == "plot":
-        LMS_base_result = compute_LMS_Modular(parameters)
-
-    # compute.py, lines 1060-1075
-    if parameters['norm']:
-        XYZ_normalized = linear_transformation_λ(trans_mat_N, LMS_base_result)
-        XYZ_normalized[:, 1:] = sign_figs(XYZ_normalized[:, 1:], 7)
-        XYZ_normalized[:, 0] = my_round(XYZ_normalized[:, 0], 1)
-        return chop(XYZ_normalized)
-    else:
-        XYZ = linear_transformation_λ(trans_mat, LMS_base_result)
-        XYZ[:, 1:] = sign_figs(XYZ[:, 1:], 7)
-        XYZ[:, 0] = my_round(XYZ[:, 0], 1)
-        return chop(XYZ)
+    if parameters['info']:
+        return {
+            "trans_mat": trans_mat_N
+        }
+    XYZ_spec_N = linear_transformation_λ(trans_mat_N, LMS_spec)
+    XYZ_spec_N[:, 1:] = sign_figs(XYZ_spec_N[:, 1:], 7)
+    XYZ_plot_N = linear_transformation_λ(trans_mat_N, LMS_plot)
+    XYZ_plot_N[:, 1:] = sign_figs(XYZ_plot_N[:, 1:], 7)
+    return {
+        "result": XYZ_spec_N,
+        "plot": XYZ_plot_N
+    }
 
 def compute_XY_modular(parameters):
     """
@@ -337,94 +336,40 @@ def compute_XY_modular(parameters):
     """
 
     temp = parameters.copy()
+    temp['info'] = False
     # requires XYZ for calculations, uses function above alongside the same parameters
-    xyz = compute_XYZ_Modular(temp)
 
-    # no checking for normalization; calculations for renormalized and non-renormalized
-    # remain the same
-
-    # a slighly more optimized approach for when XYZ-purple endpoint requires calculations
-    # from this function - reduces it to two calls to XYZ_modular than three
-    if parameters['xyz-purple']:
-        # compute.py, line 1173
-        xyz_spec_N = chrom_coords_µ(xyz)
-        if parameters['mode'] == "plot":
-            a = xyz_spec_N
-        else:
-            # compute.py, line 1174
-            xyz_spec_N[:, 1:] = my_round(xyz_spec_N[:, 1:], 5)
-            a = xyz_spec_N
-        # compute.py, line 1185
-        xyz_E_plot_N = chrom_coords_E(xyz)
-
-        if parameters['mode'] == "plot":
-            b = xyz_E_plot_N
-        else:
-            # compute.py, line 1186
-            xyz_E_N = my_round(xyz_E_plot_N, 5)
-            b = xyz_E_N
-
-        # requires plotted version of XYZ with same parameters
-        # in order to do tangent_points_purple_line exactly as done in
-        # compute.py
-        if parameters['mode'] is not "plot":
-            temp['mode'] = "plot"
-            xyz2 = compute_XYZ_Modular(temp)
-
-        # compute.py, line 1173
-        xyz_other = chrom_coords_µ(xyz2)
-        # compute.py, line 1193
-        (asda, XYZ_purple) = tangent_points_purple_line(xyz_other, False, xyz2)
-
-        if parameters['mode'] == "plot":
-            return (chop(a), b, chop(XYZ_purple))
-        else:
-            # compute.py, lines 1198-1200
-            XYZ_purple_plot = XYZ_purple.copy()
-            XYZ_purple_plot[:, 0] = my_round(XYZ_purple_plot[:, 0], 1)
-            XYZ_purple_plot[:, 1:] = my_round(XYZ_purple_plot[:, 1:], 7)
-            return (chop(a), b, chop(XYZ_purple_plot))
+    XYZ = compute_XYZ_Modular(temp)
+    XYZ_spec = XYZ['result']
+    XYZ_plot = XYZ['plot']
+    if not parameters['info']:
+        xyz_spec = chrom_coords_µ(XYZ_spec)
+        xyz_spec[:, 1:] = my_round(xyz_spec[:, 1:], 5)
+        # returns xyz_spec, xyz_plot, xyz_spec_N, xyz_plot_N
+        return {
+            "result": xyz_spec,
+            "plot": chrom_coords_µ(XYZ_plot)
+        }
     else:
-        if not parameters['purple']:
-            # compute.py, lines 1173-1189
-            if not parameters['white']:
-                xyz_spec_N = chrom_coords_µ(xyz)
-                if parameters['mode'] == "plot":
-                    return chop(xyz_spec_N)
-                else:
-                    xyz_spec_N[:, 1:] = my_round(xyz_spec_N[:, 1:], 5)
-                    return chop(xyz_spec_N)
-            else:
-                xyz_E_plot_N = chrom_coords_E(xyz)
-                if parameters['mode'] == "plot":
-                    return chop(xyz_E_plot_N)
-                else:
-                    xyz_E_N = my_round(xyz_E_plot_N, 5)
-                    return chop(xyz_E_N)
-        else:
-            if parameters['mode'] is not "plot":
-                temp['mode'] = "plot"
-                xyz = compute_XYZ_Modular(temp)
-            # compute.py, line 1180
-            XYZ = chrom_coords_µ(xyz)
-            # compute.py, lines 1193
-            (xyz_purple_plot, XYZ_purple_plot) = tangent_points_purple_line(XYZ, False, xyz)
-            if parameters['mode'] == "plot":
-                if parameters['XYZ']:
-                    return chop(XYZ_purple_plot)
-                else:
-                    return chop(xyz_purple_plot)
-            else:
-                if parameters['XYZ']:
-                    # compute.py, lines 1198-1200
-                    XYZ_purple_plot[:, 0] = my_round(XYZ_purple_plot[:, 0], 1)
-                    XYZ_purple_plot[:, 1:] = my_round(XYZ_purple_plot[:, 1:], 7)
-                    return chop(XYZ_purple_plot)
-                else:
-                    # compute.py, lines 1195-1197
-                    xyz_purple_plot[:, 0] = my_round(xyz_purple_plot[:, 0], 1)
-                    xyz_purple_plot[:, 1:] = my_round(xyz_purple_plot[:, 1:], 5)
-                    return chop(xyz_purple_plot)
+        xyz_E_plot = chrom_coords_E(XYZ_spec)
+        xyz_E = my_round(xyz_E_plot, 5)
+
+        (xyz_tg_purple_plot,
+         XYZ_tg_purple_plot) = tangent_points_purple_line(
+            chrom_coords_µ(XYZ_plot), False, XYZ_plot)
+        xyz_tg_purple = xyz_tg_purple_plot.copy()
+        xyz_tg_purple[:, 0] = my_round(xyz_tg_purple[:, 0], 1)
+        xyz_tg_purple[:, 1:] = my_round(xyz_tg_purple[:, 1:], 5)
+        XYZ_tg_purple = XYZ_tg_purple_plot.copy()  # tg XYZ-space
+        XYZ_tg_purple[:, 0] = my_round(XYZ_tg_purple[:, 0], 1)  # tg XYZ-space
+        XYZ_tg_purple[:, 1:] = my_round(XYZ_tg_purple[:, 1:], 7)  # tg XYZ-space
+
+        return {
+            "xyz_white": xyz_E,
+            "xyz_tg_purple": xyz_tg_purple,
+            "XYZ_tg_purple": XYZ_tg_purple
+        }
+
 
 def compute_XYZ_purples_modular(parameters):
     """
