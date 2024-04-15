@@ -76,8 +76,8 @@ def compute_LMS_Modular(parameters):
         return LMS
 
     dict = {
-        "result": inner_LMS(np.arange(parameters['λ_min'], parameters['λ_max'] + .01, parameters['λ_step'])),
-        "plot": inner_LMS(my_round(np.arange(parameters['λ_min'], parameters['λ_max'] + .01, .1), 1))
+        "result": inner_LMS(np.arange(parameters['min'], parameters['max'] + .01, parameters['step_size'])),
+        "plot": inner_LMS(my_round(np.arange(parameters['min'], parameters['max'] + .01, .1), 1))
     }
 
     return dict
@@ -428,7 +428,7 @@ def compute_xyz_purples_modular(parameters):
     -------
     A ndarray of xyz cone-fundamental-based tristimulus values of purple-line stimuli, given parameters.
     """
-    XYZ = compute_XYZ_purples_modular(parameters)
+    XYZ = compute_XY_modular(parameters)
     if parameters['info']:
         return XYZ
     else:
@@ -438,17 +438,6 @@ def compute_xyz_purples_modular(parameters):
             "result": result,
             "plot": chrom_coords_µ(XYZ['plot'])
         }
-
-    temp = parameters.copy()
-    temp['xyz-purple'] = True
-    # compute.py, line 1354
-    xyz = chrom_coords_µ(compute_XYZ_purples_modular(temp))
-    if parameters['mode'] == "result":
-        # trying to combat floating point errors
-        xyz[:, 0] = my_round(xyz[:, 0], 1)
-        # compute.py, line 1355
-        xyz[:, 1:] = my_round(xyz[:, 1:], 5)
-    return chop(xyz)
 
 def compute_XYZ_standard_modular(parameters):
     """

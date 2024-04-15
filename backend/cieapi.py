@@ -1,10 +1,8 @@
 import math
 
-import numpy
 import requests
-from flask import Flask, request, jsonify, make_response, Response
+from flask import Flask, request, jsonify, make_response, Response, render_template
 from flask_cors import CORS
-from pandas._testing import assert_frame_equal
 
 from compute import compute_tabulated, compute_LMS1, my_round, compute_LMS, LMS_energy, chop,\
     Vλ_energy_and_LM_weights, compute_MacLeod_Boynton_diagram, compute_Maxwellian_diagram
@@ -13,10 +11,8 @@ import numpy as np
 import pandas as pd
 import json
 from pathlib import Path
-from decimal import Decimal
-from array import array
-import base64
-import sqlite3
+from datetime import datetime
+import time
 
 from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Modular, compute_LMS_Modular, \
     compute_XYZ_Modular, compute_XY_modular, compute_XYZ_purples_modular, compute_xyz_purples_modular, \
@@ -24,6 +20,26 @@ from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Mo
 
 api = Flask(__name__)
 CORS(api)
+
+API_HOMEPAGE = "/API"
+API_VERSION = "V1"
+LMS_ENDPOINT = "LMS"
+LMS_MB_ENDPOINT = "LMS-MB"
+LMS_MW_ENDPOINT = "LMS-MW"
+XYZ_ENDPOINT = "XYZ"
+XY_ENDPOINT = "XY"
+XYZP_ENDPOINT = "XYZ-P"
+XYP_ENDPOINT = "XY-P"
+XYZSTD_ENDPOINT = "XYZ-STD"
+XYSTD_ENDPOINT = "XY-STD"
+STATUS_ENDPOINT = "STATUS"
+
+server_start = time.time()
+
+def endpoint_creator(homepage, version, endpoint=""):
+    all = [homepage, version, endpoint]
+    temp = '/'.join(all)
+    return temp
 
 calculation_formats = {
     "LMS-base-log":  {
@@ -85,12 +101,15 @@ def convert_to_json_serializable(data):
             elif isinstance(item, dict):
                 convert_to_json_serializable(item)
 
+
 @api.route('/')
 def home():
-    endpoints_description = Path('api-page.txt').read_text()
-    response = make_response(endpoints_description, 200)
-    response.mimetype = "text/plain"
-    return response
+    # redo so it serves static html instead of this
+    return render_template('index.html')
+
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION))
+def APIhome():
+    return render_template('api-page.html')
 
 
 class VisualDataAPI:
@@ -105,11 +124,11 @@ class VisualDataAPI:
         for all the colour functions. 
         This funciton calaculates the results based on the default values.
         Change what is computed by changing the invoced to function in this line:
-        results, plots = compute_LMS1(field_size, age, λ_min, λ_max, λ_step)
+        results, plots = compute_LMS1(field_size, age, min, max, step_size)
         """
-        field_size, age, λ_min, λ_max, λ_step = 2.0, 32, 390.0, 830.0, 1.0
+        field_size, age, min, max, step_size = 2.0, 32, 390.0, 830.0, 1.0
         # N.B! Change the invoced to function to compute_tabulated
-        results, plots = compute_LMS1(field_size, age, λ_min, λ_max, λ_step)
+        results, plots = compute_LMS1(field_size, age, min, max, step_size)
         convert_to_json_serializable(results)
         convert_to_json_serializable(plots)
         return results, plots
@@ -121,15 +140,15 @@ class VisualDataAPI:
         for all the colour functions. 
         This funciton calaculates the results based parameters specified by the user.
         Change what is computed by changing the invoced to function in this line:
-        results, plots = compute_LMS1(field_size, age, λ_min, λ_max, λ_step)
+        results, plots = compute_LMS1(field_size, age, min, max, step_size)
         """
         field_size = float(data.get('field_size', 0))
         age = float(data.get('age', 0))
-        λ_min = float(data.get('min', 390))
-        λ_max = float(data.get('max', 830))
-        λ_step = float(data.get('step', 1))
+        min = float(data.get('min', 390))
+        max = float(data.get('max', 830))
+        step_size = float(data.get('step', 1))
         # N.B! Change the invoced to function to compute_tabulated
-        results, plots = compute_LMS1(field_size, age, λ_min, λ_max, λ_step)
+        results, plots = compute_LMS1(field_size, age, min, max, step_size)
         convert_to_json_serializable(results)
         convert_to_json_serializable(plots)
         return results, plots
@@ -205,95 +224,6 @@ def LMS_plots():
     lms_pl = lms_plots.get('plots', [])
     # Return the LMS results in the response
     return jsonify({'plots': lms_pl})
-
-
-def JSON_writer(results, formatting):
-    """
-    A function which takes in a results ndarray as well as an expected format to output the JSON string.
-    Parameters
-    ----------
-    results
-    format
-
-    Returns
-    -------
-
-    """
-
-    result = []
-    if type(results) == dict:
-        temp = []
-        # if the dictionary is result/plot, not info
-        if (list(results.keys())) == ["result", "plot"]:
-            for name, body in results.items():
-                start = '"{}":'.format(name)
-                if len(body) == 1:
-                    body = [body]
-                if "white" in name:
-                    start += JSON_writer(body, formatting)
-                else:
-                    start += JSON_writer(chop(body), formatting)
-                temp.append(start)
-            output = ','.join(temp)
-        return "{" + output + "}"
-    else:
-        for row in results:
-            (w, l, m, s) = row
-            if math.isinf(s):
-                s = "null"
-                format = formatting[:28] + "{s}]"
-                result.append(format.format(w=w, l=l, m=m, s=s))
-            else:
-                result.append(formatting.format(w=w, l=l, m=m, s=s))
-
-        output = ','.join(result)
-        return "[" + output + "]"
-
-def calculation_to_JSON(calculation, parameters):
-    """
-    calculation_to_JSON is a function that outputs a JSON string based on the result array given and the parameters.
-    While the previous iteration of the API used pandas dataframes to avoid the problem of floating point errors,
-    this was not feasible for results of high precision due to many significant figures.
-
-    This function is the new iteration for the API; it saves the numbers as formatted strings exactly like the
-    original software does - ensuring the exact same numbers as the software.
-    Parameters
-    ----------
-    calculation: The function responsible for the calculations.
-    parameters: A dictionary containing the URL parameters.
-
-    Returns
-    -------
-    A string which acts as a JSON output for an API.
-    """
-
-    if parameters['info']:
-        return "placeholder"
-
-    if calculation is compute_LMS_Modular:
-        if parameters['base']:
-            if parameters['log']:
-                # log10 base LMS
-                return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.8f}, {m:.8f}, {s:.8f}]")
-            else:
-                # base LMS
-                return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.8e}, {m:.8e}, {s:.8e}]")
-        else:
-                # log10 LMS
-            if parameters['log']:
-                return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.5f}, {m:.5f}, {s:.5f}]")
-            else:
-                # LMS
-                return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.5e}, {m:.5e}, {s:.5e}]")
-
-    # many of these share the same ones
-    if calculation in [compute_Maxwellian_Modular, compute_MacLeod_Modular]:
-        return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.6f}, {m:.6f}, {s:.6f}]")
-    if calculation in [compute_XYZ_Modular, compute_XYZ_purples_modular, compute_XYZ_standard_modular]:
-        return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.6e}, {m:.6e}, {s:.6e}]")
-    else:
-        return JSON_writer(calculation(parameters), "[{w:.1f}, {l:.5f}, {m:.5f}, {s:.5f}]")
-
 
 def new_calculation_JSON(calculation, parameters):
 
@@ -394,7 +324,7 @@ def ndarray_to_JSON(body, formatta):
     respective endpoint.
 """
 
-@api.route('/LMS', methods=['GET'])
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_ENDPOINT), methods=['GET'])
 def LMS():
     parameterCheck = createAndCheckParameters(True, compute_LMS_Modular)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
@@ -408,7 +338,7 @@ def LMS():
                           createAndCheckParameters(True, compute_LMS_Modular)),
         mimetype='application/json')
 
-@api.route('/LMS-MB', methods=['GET'])
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MB_ENDPOINT), methods=['GET'])
 def MB():
     parameterCheck = createAndCheckParameters(True, compute_MacLeod_Modular)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
@@ -422,7 +352,7 @@ def MB():
                           createAndCheckParameters(True, compute_MacLeod_Modular)),
         mimetype='application/json')
 
-@api.route('/LMS-MW', methods=['GET'])
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MW_ENDPOINT), methods=['GET'])
 def maxwellian():
         parameterCheck = createAndCheckParameters(True, compute_Maxwellian_Modular)
         # parameterCheck may either be a dictionary (which means that all parameters are alright),
@@ -436,7 +366,7 @@ def maxwellian():
                               createAndCheckParameters(True, compute_Maxwellian_Modular)),
                                 mimetype='application/json')
 
-@api.route('/XYZ', methods=['GET'])
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZ_ENDPOINT), methods=['GET'])
 def xyz():
         parameterCheck = createAndCheckParameters(True, compute_XYZ_Modular)
         # parameterCheck may either be a dictionary (which means that all parameters are alright),
@@ -450,7 +380,7 @@ def xyz():
                               createAndCheckParameters(True, compute_XYZ_Modular)),
                                 mimetype='application/json')
 
-@api.route('/XY', methods=['GET'])
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XY_ENDPOINT), methods=['GET'])
 def xy():
     parameterCheck = createAndCheckParameters(True, compute_XY_modular)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
@@ -464,7 +394,7 @@ def xy():
                           createAndCheckParameters(True, compute_XY_modular)),
         mimetype='application/json')
 
-@api.route('/XYZ-P', methods=['GET'])
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZP_ENDPOINT), methods=['GET'])
 def xyz_p():
     parameterCheck = createAndCheckParameters(True, compute_XYZ_purples_modular)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
@@ -478,7 +408,7 @@ def xyz_p():
                           createAndCheckParameters(True, compute_XYZ_purples_modular)),
         mimetype='application/json')
 
-@api.route('/XY-P', methods=['GET'])
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XYP_ENDPOINT), methods=['GET'])
 def xy_p():
     parameterCheck = createAndCheckParameters(True, compute_xyz_purples_modular)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
@@ -492,7 +422,7 @@ def xy_p():
                           createAndCheckParameters(True, compute_xyz_purples_modular)),
         mimetype='application/json')
 
-@api.route('/XYZ-STD', methods=['GET'])
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZSTD_ENDPOINT), methods=['GET'])
 def xyz_std():
     parameterCheck = createAndCheckParameters(False, compute_XYZ_standard_modular)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
@@ -506,7 +436,7 @@ def xyz_std():
                           createAndCheckParameters(False, compute_XYZ_standard_modular)),
         mimetype='application/json')
 
-@api.route('/XY-STD', methods=['GET'])
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XYSTD_ENDPOINT), methods=['GET'])
 def xy_std():
     parameterCheck = createAndCheckParameters(False, compute_xyz_standard_modular)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
@@ -521,6 +451,16 @@ def xy_std():
         mimetype='application/json')
 
 
+
+def errorhandler(title, message, suggestion):
+    now = datetime.now()
+    dict = {
+        "status": title,
+        "message": message,
+        "suggestion": suggestion,
+        "timestamp": str(now)
+    }
+    return json.dumps(dict)
 
 def createAndCheckParameters(disabled, calculation):
 
@@ -541,61 +481,85 @@ def createAndCheckParameters(disabled, calculation):
         URL input/parameters.
 
     """
-    def checkArgument(arga, theirType, error):
-        # a try-except clause to stop potential other errors that may arise from parameters
-        try:
-            if request.args.get(arga) is None:
-                error_message = "ERROR: Value of parameter " + arga + " is not filled."
-                return Response(error_message, status=400)
-            else:
-                return theirType(request.args.get(arga))
-        except:
-            return Response("ERROR: Mandatory parameter " + arga + " not present.", status=400)
 
-    """
-        checkArgument is a simple small internal higher-order function that simply checks if a mandatory
-        parameter is present - and if it is, returns the value with the given expected type of value. Else,
-        it returns the Response error object.
-    """
-
+    # for all functions except standardization functions:
     if disabled:
+
         # uses checkArgument to fill in all mandatory parameters
         parameters = {
             # mostly mandatory parameters
-            "field_size": checkArgument('field_size', float),
-            "mode": checkArgument('mode', str),
-            "age": checkArgument('age', int),
+            "field_size": request.args.get('field_size', type=float, default=None),
+            "age": request.args.get('age', type=float, default=None)
         }
 
-        # goes through all of the mandatory parameters; if any of them are a Response object,
-        # that means at least one of the values aren't filled in properly, so the parameters
-        # cannot be used - hence, the return of Response with error status code
-        for value in parameters.values():
-            if isinstance(value, Response):
-                return value
+        for (name, value) in parameters.items():
+            if value is None:
+                return Response(
+                    errorhandler("Value Error",
+                                 "Invalid input for '{}' due to absence or invalid type.".format(name),
+                                 "Please check if '{}' is present, and is of the 'float' type.".format(name)),
+                    status=400, mimetype="application/json")
+        parameters['age'] = round(parameters['age'])
 
+        # sees if optional parameters present, makes them default to their usual values in the case they are
+        # not present
+        optionals = {
+            "min": request.args.get('min', type=str, default=390.0),
+            "max": request.args.get('max', type=str, default=830.0),
+            "step_size": request.args.get('step_size', type=str, default=1.0)
+        }
+        for (name, value) in optionals.items():
+            if value is None:
+                given = 0
+                if name == "min": given = 390.0
+                if name == "max": given = 830.0
+                if name == "step_size": given = 1.0
+                parameters.update({ name: given })
+            else:
+                try:
+                    parameters.update({name: float(value)})
+                except ValueError:
+                    return Response(
+                    errorhandler("Value Error",
+                                 "Invalid input for '{}' due to invalid type.".format(name),
+                                 "Please check if '{}' is of the 'float' type. Alternatively, "
+                                 "you can remove it to use default values.".format(name)),
+                    status=400, mimetype="application/json")
 
-        #             "λ_min": checkArgument('min', float),
-        #             "λ_max": checkArgument('max', float),
-        #             "λ_step": checkArgument('step-size', float),
-
-
-
-        # Doing mandatory parameter-specific error handling
+        # error handling for the values
         if parameters['field_size'] > 10 or parameters['field_size'] < 1:
-            return Response("ERROR: Invalid field size. Please input a value of degree between 1.0 and 10.0.", status=400)
-        if parameters['age'] <= 0 or parameters['age'] > 99:
-            return Response("ERROR: Parameter 'age' is invalid; please input values between 1-99.", status=400)
-        if parameters['λ_min'] >= parameters['λ_max']:
-            return Response("ERROR: Invalid nm values for min and max domain; min cannot be lower than max.", status=400)
-        if parameters['λ_min'] < 390 or parameters['λ_min'] > 400:
-            return Response("ERROR: Minimum domain must be between 390 and 400 nm. "
-                            "Please change the min domain input.", status=400)
-        if parameters['λ_max'] > 830 or parameters['λ_max'] < 700:
-            return Response("ERROR: Maximum domain must be between 700 and 830 nm. "
-                            "Please change the max domain input. ", status=400)
-        if parameters['λ_step'] > 5 or parameters['λ_step'] < 0.1:
-            return Response("ERROR: Invalid step size. Please input a value of nm between 0.1 and 5.0.", status=400)
+            return Response(
+                errorhandler("Value Error",
+                             "Invalid input for 'field_size'; range is between 1.0-10.0.",
+                             "Please check if your 'field_size' is between 1.0 and 10.0."),
+                status=422, mimetype="application/json")
+        if parameters['age'] < 20 or parameters['age'] > 80:
+            return Response(
+                errorhandler("Value Error",
+                             "Invalid input for 'age': range is between 20-80.",
+                             "Please check if your 'age' is between 20-80."),
+                status=422, mimetype="application/json")
+        if parameters['min'] < 390 or parameters['min'] > 400:
+            return Response(
+                errorhandler("Value Error",
+                             "Invalid input for 'min': range is between 390.0-400.0.",
+                             "Please check if your 'min' is between 390.0-400.0."),
+                status=422, mimetype="application/json")
+        if parameters['max'] > 830 or parameters['max'] < 700:
+            return Response(
+                errorhandler("Value Error",
+                             "Invalid input for 'max': range is between 700.0-830.0.",
+                             "Please check if your 'max' is between 700.0-830.0."),
+                status=422, mimetype="application/json")
+        if parameters['step_size'] > 5 or parameters['step_size'] < 0.1:
+            return Response(
+                errorhandler("Value Error",
+                             "Invalid input for 'step_size': range is between 0.1-5.0.",
+                             "Please check if your 'step_size' is between 0.1-5.0."),
+                status=422, mimetype="application/json")
+
+        # ----------------------
+
 
         # Now, adding optional/specific parameters
         parameters['log'] = True if request.args.get('log10') is not None else False # only for LMS to activate log lms
@@ -603,6 +567,18 @@ def createAndCheckParameters(disabled, calculation):
 
         parameters['info'] = True if request.args.get('info') is not None else False
         parameters['norm'] = True if request.args.get('norm') is not None else False
+
+
+        # specific 'info' parameter handling:
+        if parameters['info'] and (calculation is compute_LMS_Modular or compute_XYZ_standard_modular):
+            return Response(
+                errorhandler("Value Error",
+                             "Invalid usage of 'info' for endpoint. ",
+                             "Please verify if this endpoint supports 'info' parameter, and try again. If not, please remove from URL. "),
+                status=400, mimetype="application/json")
+
+
+
         # parameter that cannot be triggered by any URL parameter, exclusive to XYZ-purples in usage for compute_xy_modular
         # in order to save time
         parameters['purple'] = False
@@ -610,101 +586,31 @@ def createAndCheckParameters(disabled, calculation):
         parameters['xyz-std'] = False
 
         return parameters
+
     else:
-        parameters = {
-            "field_size": checkArgument('field_size', int)
-        }
+        parameters = {"field_size": request.args.get('field_size', type=float, default=None),
+                      'info': True if request.args.get('info') is not None else False
+                      }
 
-        parameters['info'] = True if request.args.get('info') is not None else False
-
-        if parameters['field_size'] == 2 or parameters['field_size'] == 10:
+        if parameters['field_size'] == 2.0 or parameters['field_size'] == 10.0:
             return parameters
 
-        return Response("ERROR: The standard functions only support field sizes of 2° (1931) and 10° (1964). "
-                "Please change your field-size.", status=400)
+        return Response(
+            errorhandler("Value Error",
+                         "Invalid input for 'field_size': Choose between 2.0 or 10.0.",
+                         "This endpoint are for standardization functions only, and supports only 2.0 (1931) and 10.0 (1964). Please,"
+                         " make sure this is the correct endpoint, and control that your value is one of these two. "),
+            status=422, mimetype="application/json")
 
 
-"""
-    Temporary testing endpoint for development. Used to ensure that the finished datapoints give the correct
-    data by comparing requests-to-itself with the "absolute truth" (in the shape of .csv files directly and untampered
-    from the CIE Functions software).
-
-    Gives a application/json as a result with a boolean value for each endpoint (to indicate if they're correct
-    or not correct) - though this will be changed in the future when it is implemented for tests properly. Again,
-    this is merely for developmental reasons.
-"""
-@api.route("/testing", methods=["GET"])
-def endpointsTest():
-    # creates a dict from function below
-    results = endpointsTesting()
-    return Response(json.dumps(results), mimetype="application/json", status=200)
-
-
-def endpointsTesting():
-    testingResults = dict()
-    # creates a list of tuples in the form of (key, endpoint url, file)
-    endpoints = [
-        ('LMS', '/LMS?mode=result&field_size=2.0&age=20&min=390.0&max=830.0&step-size=1.0', 'CIE-LMS.csv'),
-        ('LMS-LOG10', '/LMS?mode=result&field_size=2.5&age=52&min=390.0&max=828.0&step-size=1.5&log10', 'CIE-LMS-LOG.csv'),
-        ('LMS-BASE', '/LMS?mode=result&field_size=1.5&age=70&min=400.0&max=700.0&step-size=1.0&base', 'CIE-LMS-BASE.csv'),
-        ('LMS-PLOT', '/LMS?mode=plot&field_size=1.0&age=30&min=400.0&max=700.0&step-size=1.0', 'CIE-LMS-PLOT.csv'),
-        ('MB', '/LMS-MB?mode=result&field_size=2.0&age=69&min=390.0&max=810.0&step-size=1.2', 'CIE-LMS-MB.csv'),
-        ('MB-PLOT', '/LMS-MB?mode=plot&field_size=1.0&age=45&min=400.0&max=700.0&step-size=1.2', 'CIE-LMS-MB-PLOT.csv'),
-        ('MW', '/LMS-MW?mode=result&field_size=1.5&age=71&min=399.0&max=702.5&step-size=0.5', 'CIE-LMS-MW.csv'),
-        ('MW-PLOT', '/LMS-MW?mode=plot&field_size=2.9&age=80&min=400.0&max=700.0&step-size=0.5', 'CIE-LMS-MW-PLOT.csv'),
-        ('XYZ', '/XYZ?mode=result&field_size=2.0&age=36&min=390.0&max=830.0&step-size=0.8', 'CIE-XYZ.csv'),
-        ('XYZ-NORM', '/XYZ?mode=result&field_size=2.5&age=20&min=390.0&max=829.6&step-size=1.4&norm', 'CIE-XYZ-NORM.csv'),
-        ('XYZ-PLOT', '/XYZ?mode=plot&field_size=4.0&age=38&min=400.0&max=700.0&step-size=0.1&norm', 'CIE-XYZ-PLOT.csv'),
-        ('XY', '/XY?mode=result&field_size=2.3&age=25&min=391.7&max=829.1&step-size=0.6', 'CIE-XY.csv'),
-        ('XY-PLOT', '/XY?mode=plot&field_size=1.5&age=35&min=390.0&max=829.2&step-size=0.1', 'CIE-XY-PLOT.csv'), # needs less precision, 0.xxxxx
-        ('XY-P', '/XY-P?mode=result&field_size=3.4&age=45&min=390.0&max=829.8&step-size=0.6', 'CIE-XY-P.csv'),
-        ('XYZ-STD', '/XYZ-STD?mode=result&field_size=2', 'CIE-XYZ-STD.csv'), # needs less precision
-        ('XY-STD', '/XY-STD?mode=plot&field_size=10', 'CIE-XY-STD.csv'),
-        ('false-pos-1', '/LMS?mode=result&field_size=2.0&age=19&min=390.0&max=830.0&step-size=1.0', 'CIE-LMS.csv'),
-        ('false-pos-2', '/LMS-MB?mode=result&field_size=2.0&age=23&min=390.0&max=810.0&step-size=1.2', 'CIE-LMS-MB.csv'),
-        ('false-pos-3', '/LMS-MW?mode=plot&field_size=2.0&age=11&min=400.0&max=700.0&step-size=0.5', 'CIE-LMS-MW-PLOT.csv')
-    ]
-    # for each of these in the list ...
-    for (name, endpoint, file) in endpoints:
-        # get the connection, see if successful
-        url = "http://localhost:5000" + endpoint
-        response = requests.get(url)
-        if response.status_code == 200:
-            # if it is successful, load the JSON data and create it into a DataFrame
-            # as to lessen chances of floating point error occuring
-            testing = json.loads(response.content)
-            testingDF = pd.DataFrame(testing)
-            # the csv file corresponding to the current endpoint is read,
-            # float_precision is high to ensure that *all* float decimals are included
-            #  (as pandas likes to sometimes round it off at 10 decimals)
-            # header=None as there are no headers in the csv file
-            filepath = "./data/tests/" + file
-            original = pd.read_csv(filepath, float_precision="high", header=None)
-            # some CIE functions (like log LMS) confuse the DataFrame by having a column
-            # with both floats AND not-a-numerical-numbers that it cannot read as floats
-            #  to ensure this won't happen, the original data is treated to numerics
-            original = original.apply(pd.to_numeric, errors='coerce')
-            # last, the dictionary for current endpoint uses pandas equals to
-            # see if original csv DataFrame is equal to the DataFrame from endpoint
-            # debugging tester, shows differences between dataframes to easier
-            # see the cause of unequalness
-            # tester = testingDF.compare(original)
-            testingResults[name] = (testingDF.equals(original))
-            # the false-pos tests will return a false initially to indicate that the
-            # API dataframe and the csv dataframe are not identical, this just reverses it
-            # so that it shows that it passed the test
-            if "false" in name:
-                testingResults[name] = not testingResults[name]
-
-            if not testingResults[name]:
-                print("wait.")
-            print(testingResults[name], name)
-        else:
-            # if connection fails, it'll show up here
-            # (though this won't happen probably)
-            testingResults[name] = "-"
-    return testingResults
-
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, STATUS_ENDPOINT), methods=["GET"])
+def statusEndpoint():
+    status = {
+        "status": 200,
+        "uptime": str(time.time() - server_start) + "s",
+        "version": API_VERSION
+    }
+    return Response(json.dumps(status), mimetype="application/json", status=200)
 
 
 if __name__ == '__main__':

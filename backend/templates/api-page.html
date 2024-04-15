@@ -1,0 +1,316 @@
+<html>
+  <head><title>CIE Colour Match API</title></head>
+  <body>
+    <h1> CIE Colour Match API </h1>
+    <h2> Endpoints </h2>
+    <hr>
+    <div> 
+      <h3> CIE LMS Cone Fundamentals with optional logarithmic values & 9 significant values: </h3>
+      <ul>
+        <li> <b>Path</b>: /LMS </li>
+        <li> <b>Method</b>: GET </li>
+        <li> <b>Output</b>: application/json </li>
+        <li> <b>Mandatory Parameters: </b></li>
+        <ul>
+          <li> <code>'field_size'</code>: The wished field_size between 1.0-20.0, <code>float</code> type. </li>
+          <li> <code>'age'</code>: The wished age between 20-80, <code>float</code> type. </li>
+        </ul>
+        <li> <b>Optional Parameters: </b></li>
+        <ul> 
+          <li> <code>'min'</code>: Minimum value for domain between 390.0-400.0 nm (default = 390.0), <code>float</code> type.</li>
+          <li> <code>'max'</code>: Maximum value for domain between 700.0-830.0 nm (default = 830.0), <code>float</code> type.</li>
+          <li> <code>'step_size'</code>: Minimum value for domain between 0.1-5.0 (nm) (default = 1.0), <code>float</code> type.</li>
+          <li> <code>'log10'</code>: Activates logarithmic values for function, use by placing <code>log10</code> into URL.</li>
+          <li> <code>'base'</code>: Activates 9 significant figures for function, use by placing <code>base</code> into URL.</li>
+        </ul>
+        <li> <b>Examples: </b></li>
+        <ul> 
+          <li> <a href="./LMS?field_size=1.0&age=64&min=390.0&max=830.0&step_size=0.5&log10&base">/LMS?field_size=1.0&age=64&min=390.0&max=830.0&step_size=0.5&log10&base</a></li>
+          <li> <a href="./LMS?field_size=2.0&age=23">/LMS?field_size=2.0&age=23</a> </li>
+          <li> <a href="./LMS?field_size=2.0&age=23&log10&max=700&min=400">/LMS?field_size=2.0&age=23&log10&max=700&min=400</a> </li>
+        </ul>
+      </ul>
+    </div>
+    
+    <div> 
+      <h3> MacLeod-Boynton ls chromaticity diagram: </h3>
+      <ul>
+        <li> <b>Path</b>: /LMS-MB </li>
+        <li> <b>Method</b>: GET </li>
+        <li> <b>Output</b>: application/json </li>
+        <li> <b>Mandatory Parameters: </b></li>
+        <ul>
+          <li> <code>'field_size'</code>: The wished field_size between 1.0-20.0, <code>float</code> type. </li>
+          <li> <code>'age'</code>: The wished age between 20-80, <code>float</code> type. </li>
+        </ul>
+        <li> <b>Optional Parameters: </b></li>
+        <ul> 
+          <li> <code>'min'</code>: Minimum value for domain between 390.0-400.0 nm (default = 390.0), <code>float</code> type.</li>
+          <li> <code>'max'</code>: Maximum value for domain between 700.0-830.0 nm (default = 830.0), <code>float</code> type.</li>
+          <li> <code>'step_size'</code>: Minimum value for domain between 0.1-5.0 (nm) (default = 1.0), <code>float</code> type.</li>
+          <li> <code>'info'</code>: Returns instead sidemeny information containing the elements below, use by placing <code>info</code> into URL.</li>
+          <ul> 
+            <li> <code>'norm'</code>: Normalization coefficients. </li>
+            <li> <code>'white'</code>: Chromaticity point of Illuminant E. </li>
+            <li> <code>'tg_purple'</code>: Tangent points of purple line. </li>
+          </ul>
+        </ul>
+        <li> <b>Examples: </b></li>
+        <ul> 
+          <li> <a href="./LMS-MB?field_size=3.0&age=32&min=390.0&max=830.0&step_size=0.75">/LMS-MB?field_size=3.0&age=32&min=390.0&max=830.0&step_size=0.75</a></li>
+          <li> <a href="./LMS-MB?field_size=5&age=21">/LMS-MB?field_size=5&age=21</a> </li>
+          <li> <a href="./LMS-MB?field_size=1.5&age=51&max=700&info">/LMS-MB?field_size=1.5&age=51&max=700&info</a> </li>
+        </ul>
+      </ul>
+    </div>
+
+    <div> 
+      <h3> Maxwellian lm chromacity diagram: </h3>
+      <ul>
+        <li> <b>Path</b>: /LMS-MW </li>
+        <li> <b>Method</b>: GET </li>
+        <li> <b>Output</b>: application/json </li>
+        <li> <b>Mandatory Parameters: </b></li>
+        <ul>
+          <li> <code>'field_size'</code>: The wished field_size between 1.0-20.0, <code>float</code> type. </li>
+          <li> <code>'age'</code>: The wished age between 20-80, <code>float</code> type. </li>
+        </ul>
+        <li> <b>Optional Parameters: </b></li>
+        <ul> 
+          <li> <code>'min'</code>: Minimum value for domain between 390.0-400.0 nm (default = 390.0), <code>float</code> type.</li>
+          <li> <code>'max'</code>: Maximum value for domain between 700.0-830.0 nm (default = 830.0), <code>float</code> type.</li>
+          <li> <code>'step_size'</code>: Minimum value for domain between 0.1-5.0 (nm) (default = 1.0), <code>float</code> type.</li>
+          <li> <code>'info'</code>: Returns instead sidemeny information containing the elements below, use by placing <code>info</code> into URL.</li>
+          <ul> 
+            <li> <code>'norm'</code>: Normalization coefficients. </li>
+            <li> <code>'white'</code>: Chromaticity point of Illuminant E. </li>
+            <li> <code>'tg_purple'</code>: Tangent points of purple line. </li>
+          </ul>
+        </ul>
+        <li> <b>Examples: </b></li>
+        <ul> 
+          <li> <a href="./LMS-MW?field_size=2.3&age=34&min=390.0&max=830.0&step_size=1.8">/LMS-MW?field_size=2.3&age=34&min=390.0&max=830.0&step_size=1.8</a></li>
+          <li> <a href="./LMS-MW?field_size=1&age=71">/LMS-MW?field_size=1&age=71</a> </li>
+          <li> <a href="./LMS-MW?field_size=4&age=20&info">/LMS-MW?field_size=4&age=20&info</a> </li>
+        </ul>
+      </ul>
+    </div>
+    
+    <div> 
+      <h3> CIE cone-fundamental-based XYZ tristimulus functions: </h3>
+      <ul>
+        <li> <b>Path</b>: /XYZ </li>
+        <li> <b>Method</b>: GET </li>
+        <li> <b>Output</b>: application/json </li>
+        <li> <b>Mandatory Parameters: </b></li>
+        <ul>
+          <li> <code>'field_size'</code>: The wished field_size between 1.0-20.0, <code>float</code> type. </li>
+          <li> <code>'age'</code>: The wished age between 20-80, <code>float</code> type. </li>
+        </ul>
+        <li> <b>Optional Parameters: </b></li>
+        <ul> 
+          <li> <code>'min'</code>: Minimum value for domain between 390.0-400.0 nm (default = 390.0), <code>float</code> type.</li>
+          <li> <code>'max'</code>: Maximum value for domain between 700.0-830.0 nm (default = 830.0), <code>float</code> type.</li>
+          <li> <code>'step_size'</code>: Minimum value for domain between 0.1-5.0 (nm) (default = 1.0), <code>float</code> type.</li>
+          <li> <code>'norm'</code>: Makes all values returned be normalized (including <code>'info'</code> below, use by placing <code>norm</code> into URL.
+          <li> <code>'info'</code>: Returns instead sidemeny information containing the elements below, use by placing <code>info</code> into URL.</li>
+          <ul> 
+            <li> <code>'trans_mat'</code>: Transformation matrix of linear transformation LMS --> XYZ. </li>
+          </ul>
+        </ul>
+        <li> <b>Examples: </b></li>
+        <ul> 
+          <li> <a href="./XYZ?field_size=4&age=21&min=390.0&max=830.0&step_size=0.2">/XYZ?field_size=4&age=21&min=390.0&max=830.0&step_size=0.2</a></li>
+          <li> <a href="./XYZ?field_size=4&age=80&min=400.0&norm">/XYZ?field_size=4&age=80&min=400.0&norm</a> </li>
+          <li> <a href="./XYZ?field_size=1.2&age=21&min=390.0&step_size=2.3&info">/XYZ?field_size=1.2&age=21&min=390.0&step_size=2.3&info</a> </li>
+        </ul>
+      </ul>
+    </div>
+    
+    <div> 
+      <h3> CIE cone-fundamental-based xyz chromaticity coordinates: </h3>
+      <ul>
+        <li> <b>Path</b>: /XY </li>
+        <li> <b>Method</b>: GET </li>
+        <li> <b>Output</b>: application/json </li>
+        <li> <b>Mandatory Parameters: </b></li>
+        <ul>
+          <li> <code>'field_size'</code>: The wished field_size between 1.0-20.0, <code>float</code> type. </li>
+          <li> <code>'age'</code>: The wished age between 20-80, <code>float</code> type. </li>
+        </ul>
+        <li> <b>Optional Parameters: </b></li>
+        <ul> 
+          <li> <code>'min'</code>: Minimum value for domain between 390.0-400.0 nm (default = 390.0), <code>float</code> type.</li>
+          <li> <code>'max'</code>: Maximum value for domain between 700.0-830.0 nm (default = 830.0), <code>float</code> type.</li>
+          <li> <code>'step_size'</code>: Minimum value for domain between 0.1-5.0 (nm) (default = 1.0), <code>float</code> type.</li>
+          <li> <code>'norm'</code>: Makes all values returned be normalized (including <code>'info'</code> below, use by placing <code>norm</code> into URL.
+          <li> <code>'info'</code>: Returns instead sidemeny information containing the elements below, use by placing <code>info</code> into URL.</li>
+          <ul> 
+            <li> <code>'xyz_white'</code>: Chromaticity point of Illuminant E. </li>
+            <li> <code>'xyz_tg_purple'</code>: Tangent points of the purple line with spectrum locus. </li>
+            <li> <code>'XYZ_tg_purple'</code>: Tristimulus values of tangent points to purple line with spectrum locus. </li>
+          </ul>
+        </ul>
+        <li> <b>Examples: </b></li>
+        <ul> 
+          <li> <a href="./XY?field_size=2&age=21&min=393.0&max=820.0&step_size=0.9">/XY?field_size=2&age=21&min=393.0&max=820.0&step_size=0.9</a></li>
+          <li> <a href="./XY?field_size=4.9&age=70&step_size=1.3">/XY?field_size=4.9&age=70&step_size=1.3</a> </li>
+          <li> <a href="./XY?field_size=1.2&age=42&step_size=1.5&info">/XY?field_size=1.2&age=42&step_size=1.5&info</a> </li>
+        </ul>
+      </ul>
+    </div>
+    
+    <div> 
+      <h3> CIE cone-fundamental-based tristimulus functions for purple-line stimuli: </h3>
+      <ul>
+        <li> <b>Path</b>: /XYZ-P </li>
+        <li> <b>Method</b>: GET </li>
+        <li> <b>Output</b>: application/json </li>
+        <li> <b>Mandatory Parameters: </b></li>
+        <ul>
+          <li> <code>'field_size'</code>: The wished field_size between 1.0-20.0, <code>float</code> type. </li>
+          <li> <code>'age'</code>: The wished age between 20-80, <code>float</code> type. </li>
+        </ul>
+        <li> <b>Optional Parameters: </b></li>
+        <ul> 
+          <li> <code>'min'</code>: Minimum value for domain between 390.0-400.0 nm (default = 390.0), <code>float</code> type.</li>
+          <li> <code>'max'</code>: Maximum value for domain between 700.0-830.0 nm (default = 830.0), <code>float</code> type.</li>
+          <li> <code>'step_size'</code>: Minimum value for domain between 0.1-5.0 (nm) (default = 1.0), <code>float</code> type.</li>
+          <li> <code>'norm'</code>: Makes all values returned be normalized (including <code>'info'</code> below, use by placing <code>norm</code> into URL.
+          <li> <code>'info'</code>: Returns instead sidemeny information containing the elements below, use by placing <code>info</code> into URL.</li>
+          <ul> 
+            <li> <code>'trans_mat'</code>: Transformation matrix of linear transformation LMS --> XYZ. </li>
+          </ul>
+        </ul>
+        <li> <b>Examples: </b></li>
+        <ul> 
+          <li> <a href="./XYZ-P?field_size=2&age=21&min=392.0&max=825.0&step_size=2.1">/XYZ-P?field_size=2&age=21&min=392.0&max=825.0&step_size=2.1</a></li>
+          <li> <a href="./XYZ-P?field_size=1&age=36&min=391.0&step_size=4.1&norm">/XYZ-P?field_size=1&age=36&min=391.0&step_size=4.1&norm</a> </li>
+          <li> <a href="./XYZ-P?field_size=2.0&age=20&info">/XYZ-P?field_size=2.0&age=20&info</a> </li>
+        </ul>
+      </ul>
+    </div>
+    
+    <div> 
+      <h3> CIE xy cone-fundamental-based chromaticity diagram (purple-line stimuli): </h3>
+      <ul>
+        <li> <b>Path</b>: /XY-P </li>
+        <li> <b>Method</b>: GET </li>
+        <li> <b>Output</b>: application/json </li>
+        <li> <b>Mandatory Parameters: </b></li>
+        <ul>
+          <li> <code>'field_size'</code>: The wished field_size between 1.0-20.0, <code>float</code> type. </li>
+          <li> <code>'age'</code>: The wished age between 20-80, <code>float</code> type. </li>
+        </ul>
+        <li> <b>Optional Parameters: </b></li>
+        <ul> 
+          <li> <code>'min'</code>: Minimum value for domain between 390.0-400.0 nm (default = 390.0), <code>float</code> type.</li>
+          <li> <code>'max'</code>: Maximum value for domain between 700.0-830.0 nm (default = 830.0), <code>float</code> type.</li>
+          <li> <code>'step_size'</code>: Minimum value for domain between 0.1-5.0 (nm) (default = 1.0), <code>float</code> type.</li>
+          <li> <code>'norm'</code>: Makes all values returned be normalized (including <code>'info'</code> below, use by placing <code>norm</code> into URL.
+          <li> <code>'info'</code>: Returns instead sidemeny information containing the elements below, use by placing <code>info</code> into URL.</li>
+          <ul> 
+            <li> <code>'trans_mat'</code>: Transformation matrix of linear transformation LMS --> XYZ. </li>
+          </ul>
+        </ul>
+        <li> <b>Examples: </b></li>
+        <ul> 
+          <li> <a href="./XY-P?field_size=3.2&age=61&min=395.0&max=820.2&step_size=4.3">/XY-P?field_size=3.2&age=61&min=395.0&max=820.2&step_size=4.3</a></li>
+          <li> <a href="./XY-P?field_size=2&age=32&norm&min=392.5">/XY-P?field_size=2&age=32&norm&min=392.5m</a> </li>
+          <li> <a href="./XY-P?field_size=2&age=32&info">/XY-P?field_size=2&age=32&info</a> </li>
+        </ul>
+      </ul>
+    </div>
+
+    <div>
+      <h3> CIE XYZ standard colour-matching functions: </h3>
+      <ul>
+        <li> <b>Path</b>: /XYZ-STD </li>
+        <li> <b>Method</b>: GET </li>
+        <li> <b>Output</b>: application/json </li>
+        <li> <b>Mandatory Parameters: </b></li>
+        <ul>
+          <li> <code>'field_size'</code>: The wished field_size either equal to 2.0 (for 1931 standardizations), or 10.0 (for 1964 standardizations), <code>float</code> type. </li>
+        </ul>
+        <li> <b>Examples: </b></li>
+        <ul>
+          <li> <a href="./XYZ-STD?field_size=2.0">/XYZ-STD?field_size=2.0</a></li>
+          <li> <a href="./XYZ-STD?field_size=10.0">/XYZ-STD?field_size=10.0</a> </li>
+        </ul>
+      </ul>
+    </div>
+
+    <div>
+      <h3> CIE XY standard chromaticity diagram: </h3>
+      <ul>
+        <li> <b>Path</b>: /XY-STD </li>
+        <li> <b>Method</b>: GET </li>
+        <li> <b>Output</b>: application/json </li>
+        <li> <b>Mandatory Parameters: </b></li>
+        <ul>
+          <li> <code>'field_size'</code>: The wished field_size either equal to 2.0 (for 1931 standardizations), or 10.0 (for 1964 standardizations), <code>float</code> type. </li>
+        </ul>
+        <li> <b>Optional Parameters: </b></li>
+        <ul>
+          <li> <code>'info'</code>: Returns instead sidemeny information containing the elements below, use by placing <code>info</code> into URL.</li>
+          <ul>
+            <li> <code>'white'</code>: Chromaticity point of Illuminant E. </li>
+            <li> <code>'tg_purple'</code>: Tangent points of purple line. </li>
+          </ul>
+        </ul>
+        <li> <b>Examples: </b></li>
+        <ul>
+          <li> <a href="./XY-STD?field_size=2">/XY-STD?field_size=2</a></li>
+          <li> <a href="./XY-STD?field_size=10.0">/XY-STD?field_size=10.0</a> </li>
+          <li> <a href="./XY-STD?field_size=10.0&info">/XY-STD?field_size=10.0&info</a> </li>
+        </ul>
+      </ul>
+    </div>
+
+    <div>
+      <h3> STATUS </h3>
+      <ul>
+        <li> <b>Path</b>: /STATUS </li>
+        <li> <b>Method</b>: GET </li>
+        <li> <b>Output</b>: application/json </li>
+        <li> <b>Mandatory Parameters: </b></li>
+        <ul>
+          <li> None are needed. </li>
+        </ul>
+        <li> <b>Optional Parameters: </b></li>
+        <li> <b>Example: </b></li>
+        <ul>
+          <li> <a href="./STATUS">/STATUS</a></li>
+        </ul>
+      </ul>
+    </div>
+
+    <div>
+      <code>
+               ------- OLD API DOCUMENTATION ----------
+
+
+1. Path: /compute_all_specific_data
+   Method: POST
+   Description: Computes specific visual data based on the provided parameters (field_size, age, min, max, step). Returns both results and plots.
+
+2. Path: /compute_all_default_data
+   Method: GET
+   Description: Computes default visual data for all color functions. Returns both results and plots.
+
+3. Path: /compute_LMS_default_data
+   Method: GET
+   Description: Computes default visual data specifically for the LMS color function. Returns both results and plots.
+
+4. Path: /compute_LMS_plots_default_data
+   Method: GET
+   Description: Computes default visual data specifically for the LMS color function. Returns only plots.
+
+5. Path: /compute_LMS_results_default_data
+   Method: GET
+   Description: Computes default visual data specifically for the LMS color function. Returns only results.
+      </code>
+    </div>
+  </body>
+  
+</html>
