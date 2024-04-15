@@ -4,6 +4,10 @@
 4. npm install recharts
 5. npm install react-router-dom
 5. npm install react-plotly.js plotly.js
+
+npm install react-katex
+npm i --save-dev @types/react-katex
+
 5. npm run dev 
 
 Accessible at http://localhost:5173/

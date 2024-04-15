@@ -1,29 +1,13 @@
-import { useState, useEffect } from 'react';
 import '../app-content.css';
-import { useLoading } from '../../hooks/useLoading';
+import { useParameters } from '../../context/parameter-context';
 import LoadingIndicator from '../LoadingIndicator';
 
 
-
-type data = number[][];
-
+/**
+ * A class to construct the table with the  computed data. Gets computed 
+ */
 const FetchedTable = () => {
-  const [tableData, setTableData] = useState<data>([]);
-  const { isLoading, stopLoading } = useLoading();
-
-  useEffect(() => {
-    
-    const handleDataUpdate = (event: CustomEvent<data>) => {
-      setTableData(event.detail);
-      stopLoading();
-    };
-
-    window.addEventListener('updateTableData', handleDataUpdate as EventListener);
-
-    return () => {
-      window.removeEventListener('updateTableData', handleDataUpdate as EventListener);
-    };
-  }, [stopLoading]);
+  const { computedData, isLoading } = useParameters();
 
   if (isLoading) {
     return <LoadingIndicator />;
@@ -41,7 +25,7 @@ const FetchedTable = () => {
           </tr>
         </thead>
         <tbody>
-          {tableData.map((row, index) => (
+          {computedData.tableData.map((row, index) => (
             <tr key={index}>
               {row.map((cell, cellIndex) => (
                 <td key={cellIndex}>{cell}</td>
@@ -53,5 +37,6 @@ const FetchedTable = () => {
     </div>
   );
 };
+
 
 export default FetchedTable;
