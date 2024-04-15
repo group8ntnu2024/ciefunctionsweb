@@ -21,18 +21,18 @@ from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Mo
 api = Flask(__name__)
 CORS(api)
 
-API_HOMEPAGE = "/API"
-API_VERSION = "V1"
-LMS_ENDPOINT = "LMS"
-LMS_MB_ENDPOINT = "LMS-MB"
-LMS_MW_ENDPOINT = "LMS-MW"
-XYZ_ENDPOINT = "XYZ"
-XY_ENDPOINT = "XY"
-XYZP_ENDPOINT = "XYZ-P"
-XYP_ENDPOINT = "XY-P"
-XYZSTD_ENDPOINT = "XYZ-STD"
-XYSTD_ENDPOINT = "XY-STD"
-STATUS_ENDPOINT = "STATUS"
+API_HOMEPAGE = "/api"
+API_VERSION = "v1"
+LMS_ENDPOINT = "lms"
+LMS_MB_ENDPOINT = "lms-mb"
+LMS_MW_ENDPOINT = "lms-mw"
+XYZ_ENDPOINT = "xyz"
+XY_ENDPOINT = "xy"
+XYZP_ENDPOINT = "xyz-p"
+XYP_ENDPOINT = "xy-p"
+XYZSTD_ENDPOINT = "xyz-std"
+XYSTD_ENDPOINT = "xy-std"
+STATUS_ENDPOINT = "status"
 
 server_start = time.time()
 
@@ -562,21 +562,39 @@ def createAndCheckParameters(disabled, calculation):
 
 
         # Now, adding optional/specific parameters
-        parameters['log'] = True if request.args.get('log10') is not None else False # only for LMS to activate log lms
-        parameters['base'] = True if request.args.get('base') is not None else False # only for LMS for base lms
 
-        parameters['info'] = True if request.args.get('info') is not None else False
-        parameters['norm'] = True if request.args.get('norm') is not None else False
+        optionals2 = {
+            'log': True if request.args.get('log10') is not None else False,
+            'base': True if request.args.get('base') is not None else False,
+            'info': True if request.args.get('info') is not None else False,
+            'norm': True if request.args.get('norm') is not None else False
+        }
 
+        for (name, body) in optionals2.items():
+            if body:
+                if (name == "log" or name == "base") and (calculation is not compute_LMS_Modular):
+                    return Response(
+                        errorhandler("Value Error",
+                                     "Invalid usage of {} for endpoint.".format(name),
+                                     "The {} is exclusive to the /LMS endpoint. Please, remove it from your URL.".format(name)),
+                        status=400, mimetype="application/json")
+                if (name == "info") and (calculation is compute_LMS_Modular):
+                        return Response(
+                            errorhandler("Value Error",
+                                         "Invalid usage of 'info' for endpoint. ",
+                                         "Please verify if this endpoint supports 'info' parameter, and try again. If not, please remove from URL. "),
+                            status=400, mimetype="application/json")
+                if (name == "norm") and (calculation in [compute_LMS_Modular, compute_MacLeod_Modular, compute_Maxwellian_Modular]):
+                    return Response(
+                        errorhandler("Value Error",
+                                     "Invalid usage of 'norm' for endpoint. ",
+                                     "Please verify if this endpoint supports 'norm' parameter, and try again. If not, please remove from URL. "),
+                        status=400, mimetype="application/json")
+            parameters.update({
+                name: body
+            })
 
-        # specific 'info' parameter handling:
-        if parameters['info'] and (calculation is compute_LMS_Modular or compute_XYZ_standard_modular):
-            return Response(
-                errorhandler("Value Error",
-                             "Invalid usage of 'info' for endpoint. ",
-                             "Please verify if this endpoint supports 'info' parameter, and try again. If not, please remove from URL. "),
-                status=400, mimetype="application/json")
-
+        parameters['age'] = round(parameters['age'])
 
 
         # parameter that cannot be triggered by any URL parameter, exclusive to XYZ-purples in usage for compute_xy_modular
@@ -591,6 +609,37 @@ def createAndCheckParameters(disabled, calculation):
         parameters = {"field_size": request.args.get('field_size', type=float, default=None),
                       'info': True if request.args.get('info') is not None else False
                       }
+
+        optionals2 = {
+            'log': True if request.args.get('log10') is not None else False,
+            'base': True if request.args.get('base') is not None else False,
+            'info': True if request.args.get('info') is not None else False,
+            'norm': True if request.args.get('norm') is not None else False
+        }
+
+        for (name, body) in optionals2.items():
+            if body:
+                if (name == "log" or name == "base"):
+                    return Response(
+                        errorhandler("Value Error",
+                                     "Invalid usage of {} for endpoint.".format(name),
+                                     "The {} is exclusive to the /LMS endpoint. Please, remove it from your URL.".format(name)),
+                        status=400, mimetype="application/json")
+                if (name == "info") and (calculation is compute_XYZ_standard_modular):
+                        return Response(
+                            errorhandler("Value Error",
+                                         "Invalid usage of 'info' for endpoint. ",
+                                         "Please verify if this endpoint supports 'info' parameter, and try again. If not, please remove from URL. "),
+                            status=400, mimetype="application/json")
+                if (name == "norm"):
+                    return Response(
+                        errorhandler("Value Error",
+                                     "Invalid usage of 'norm' for endpoint. ",
+                                     "Please verify if this endpoint supports 'norm' parameter, and try again. If not, please remove from URL. "),
+                        status=400, mimetype="application/json")
+            parameters.update({
+                name: body
+            })
 
         if parameters['field_size'] == 2.0 or parameters['field_size'] == 10.0:
             return parameters
