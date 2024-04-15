@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParameters } from '../../context/parameter-context';
-
+import './parameters.css';
 
 const ParametersForm = () => {
   const { parameters, setParameters, computeData } = useParameters();

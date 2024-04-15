@@ -1,6 +1,6 @@
 #root {
   max-width: 1280px;
-  margin: 0 auto;
+  margin: 2 auto;
   padding: 2rem;
   text-align: center;
 }
@@ -8,11 +8,12 @@
 .content-container {
   width: 800px;
   height: 600px;
-  border: 2px solid #ccc;
+  border: 0px solid #ccc;
   padding: 1rem;
   display: flex; 
   flex-direction: column; 
   justify-content: start;
+  margin-bottom: 20px;
 }
 
 .centered-content {
@@ -21,51 +22,4 @@
   align-items: center;
   height: 100%;
 }
-.scrollable-table {
-  flex-grow: 1;
-  min-height: 0; 
-  overflow-y: auto;
-}
 
-.scrollable-table table {
-  height: 100%;
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.scrollable-table th, .scrollable-table td {
-  border: 2px solid white;
-  padding: 8px;
-}
-
-.scrollable-table tbody tr:nth-child(even) {
-  background-color: #dac4c4a1;
-}
-
-.scrollable-table tbody tr:hover {
-  background-color: #c04600bb;
-  color: white;
-}
-
-
-.parameters-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  align-items: center;
-  margin-bottom: 200px;
-}
-
-.parameters-control {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-}
-
-.parameters-form input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 40px;
-}

@@ -1,0 +1,25 @@
+.scrollable-table {
+    flex-grow: 1;
+    min-height: 0; 
+    overflow-y: auto;
+  }
+  
+  .scrollable-table table {
+    height: 100%;
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .scrollable-table th, .scrollable-table td {
+    border: 2px solid white;
+    padding: 8px;
+  }
+  
+  .scrollable-table tbody tr:nth-child(even) {
+    background-color: #dac4c4a1;
+  }
+  
+  .scrollable-table tbody tr:hover {
+    background-color: #c04600bb;
+    color: white;
+  }

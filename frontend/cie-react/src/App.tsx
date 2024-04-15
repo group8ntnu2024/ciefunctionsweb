@@ -10,6 +10,7 @@ import { PulldownMenu } from "./components/PulldownMenu/PulldownMenu";
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import { ParametersProvider } from './context/parameter-context';
 import './index.css';
+import './components/app-content.css';
 
 function App() {
   const [selectedOption, setSelectedOption] = useState("method1");
@@ -17,7 +18,23 @@ function App() {
   const router = createHashRouter([
     {
       path: "/",
-      element: <div><Navbar/><div className="contentLayout"><PulldownMenu onChange={setSelectedOption} /><Outlet /></div><SidePanel selectedOption={selectedOption} /></div>,
+      element: 
+<div className="container">
+    <Navbar/>
+    <div className="row">
+        <div className="col-md-9">
+            <Outlet />
+            <div>
+                <PulldownMenu onChange={setSelectedOption} />
+            </div>
+        </div>
+        <div className="col-md-3">
+            <SidePanel selectedOption={selectedOption} />
+        </div>
+    </div>
+</div>
+,
+
       children: [
         { path: PLOT_ROUTE, element: <ParametersLayout><PlotContent/></ParametersLayout> },
         { path: TABLE_ROUTE, element: <ParametersLayout><TableContent/></ParametersLayout> },
@@ -33,3 +50,8 @@ function App() {
 }
 
 export default App;
+
+
+
+
+

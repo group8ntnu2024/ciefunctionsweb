@@ -72,3 +72,5 @@ export const SidePanel: React.FC<SidePanelProps> = ({ selectedOption }) => {
         </div>
       );
 };
+
+
