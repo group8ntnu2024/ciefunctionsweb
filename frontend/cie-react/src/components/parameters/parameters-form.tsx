@@ -1,31 +1,16 @@
 import React from 'react';
 import { useParameters } from '../../context/parameter-context';
-import { fetchCalculationResults } from '../../utils/ApiService';
-import { useLoading } from '../../hooks/useLoading';
+
 
 const ParametersForm = () => {
-  const { parameters, setParameters } = useParameters();
-  const { startLoading, stopLoading } = useLoading();
+  const { parameters, setParameters, computeData } = useParameters();
+
 
   const handleParameterChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setParameters((prev) => ({ ...prev, [name]: parseFloat(value) }));
   };
 
-  const handleComputeClick = async () => {
-    startLoading();
-    try {
-      const resultData = await fetchCalculationResults({
-        ...parameters,
-        type: "specific_computation",
-      });
-      window.dispatchEvent(new CustomEvent('updateTableData', { detail: resultData }));
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      stopLoading();
-    }
-  };
 
 
   return (
@@ -80,7 +65,7 @@ const ParametersForm = () => {
           onChange={handleParameterChange}
         />
       </div>
-      <button onClick={handleComputeClick}>Compute</button>
+      <button onClick={computeData}>Compute</button>
     </div>
   );
 };
