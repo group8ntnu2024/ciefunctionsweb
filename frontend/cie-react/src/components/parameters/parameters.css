@@ -1,0 +1,28 @@
+.parameters-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .parameters-control {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .parameters-form input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 75px;
+  }
+  
+  .checkbox {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 75px;
+  }

@@ -1,4 +1,4 @@
-import '../app-content.css';
+import './table.css';
 import { useParameters } from '../../context/parameter-context';
 import LoadingIndicator from '../LoadingIndicator';
 
