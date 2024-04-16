@@ -8,19 +8,21 @@ import scipy.optimize
 import scipy.interpolate
 
 """
-    This module contains the modularized versions of the CIE functions found in compute.py. These are modularized
-    in the sense that they give off a specific ndarray dependant on the parameters given (dictionary of URL params),
-    unlike the original ones which give several ndarrays for all at once.
-    Endpoint testing shows that there is a noticable speedup in request handling time when using these functions
-    contrast of using their corresponding originals from compute.py, cutting time for some from 215~ ms to 42~ ms
-    as an example. merge
+
+    This module contains the modularized versions of the CIE functions found within compute.py, found at:
+    https://github.com/ifarup/ciefunctions/blob/master/tc1_97/compute.py, consult with Ivar later on proper credit.
+
+    While this module originally contained heavily modularized and routed functions that somewhat helped the performance
+    of requests, these became obsolete when the new method of serializing to JSON was made. With that in mind, it may
+    be a better idea to use the compute_ functions directly from compute.py.    
+    Anyways, these functions are modularized in the sense that they output specific ndarrays depending on the endpoint,
+    unlike everything at once.
 """
 
 def compute_LMS_Modular(parameters):
 
     """
-    A modularized version of 'compute_LMS(...)' from compute.py, based directly on it, just
-    modularized to output either plot or result to enhance performance and lessen memory usage.
+    A modularized version of 'compute_LMS(...)' from compute.py ...
 
     Parameters
     ----------
