@@ -1,6 +1,22 @@
 # Tests
 
 ## Current Coverage
+
+### v2
+- Date: 16/04/2024, 19:19
+```
+Name                       Stmts   Miss  Cover   
+------------------------------------------------
+cieapi.py                    231     43    81%  
+cieapi_test.py               112      2    98%   
+compute.py                   559    299    47%   
+computemodularization.py     195     20    90%   
+utils.py                      11      0   100%
+------------------------------------------------
+TOTAL                       1108    364    67%
+```
+
+### v1
 - Date: 15/04/2024, 21:10
 
 ```

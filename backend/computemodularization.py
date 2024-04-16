@@ -428,10 +428,10 @@ def compute_xyz_purples_modular(parameters):
     -------
     A ndarray of xyz cone-fundamental-based tristimulus values of purple-line stimuli, given parameters.
     """
-    XYZ = compute_XY_modular(parameters)
     if parameters['info']:
-        return XYZ
+        return compute_XY_modular(parameters)
     else:
+        XYZ = compute_XYZ_purples_modular(parameters)
         result = chrom_coords_µ(XYZ['result'])
         result[:, 1:] = my_round(result[:, 1:], 5)
         return {

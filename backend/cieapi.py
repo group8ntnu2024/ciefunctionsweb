@@ -334,8 +334,8 @@ async def xy_std(request):
         return response.json(parameterCheck, status=parameterCheck["status_code"])
 
     return response.raw(
-        new_calculation_JSON(compute_XYZ_standard_modular,
-                             createAndCheckParameters(False, compute_XYZ_standard_modular, request)),
+        new_calculation_JSON(compute_xyz_standard_modular,
+                             createAndCheckParameters(False, compute_xyz_standard_modular, request)),
         content_type="application/json"
     )
 
