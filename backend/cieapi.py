@@ -1,10 +1,10 @@
 import math
 
 import requests
-from flask import Flask, request, jsonify, make_response, Response, render_template
+# from flask import Flask, request, jsonify, make_response, Response, render_template
 from flask_cors import CORS
 
-from compute import compute_tabulated, compute_LMS1, my_round, compute_LMS, LMS_energy, chop,\
+from compute import compute_tabulated, compute_LMS1, my_round, compute_LMS, LMS_energy, chop, \
     Vλ_energy_and_LM_weights, compute_MacLeod_Boynton_diagram, compute_Maxwellian_diagram
 import scipy.interpolate
 import numpy as np
@@ -13,16 +13,18 @@ import json
 from pathlib import Path
 from datetime import datetime
 import time
+# from gevent.pywsgi import WSGIServer
+from sanic import Sanic, response
+from sanic.response import json, html
 
 from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Modular, compute_LMS_Modular, \
     compute_XYZ_Modular, compute_XY_modular, compute_XYZ_purples_modular, compute_xyz_purples_modular, \
     compute_XYZ_standard_modular, compute_xyz_standard_modular
 
-api = Flask(__name__)
-CORS(api)
+api = Sanic(__name__)
 
 API_HOMEPAGE = "/api"
-API_VERSION = "v1"
+API_VERSION = "v2"
 LMS_ENDPOINT = "lms"
 LMS_MB_ENDPOINT = "lms-mb"
 LMS_MW_ENDPOINT = "lms-mw"
@@ -36,13 +38,15 @@ STATUS_ENDPOINT = "status"
 
 server_start = time.time()
 
+
 def endpoint_creator(homepage, version, endpoint=""):
     all = [homepage, version, endpoint]
     temp = '/'.join(all)
     return temp
 
+
 calculation_formats = {
-    "LMS-base-log":  {
+    "LMS-base-log": {
         "result": ["{:.1f}", "{:.8f}", "{:.8f}", "{:.8f}"],
         "plot": ["{:.1f}", "{:.8f}", "{:.8f}", "{:.8f}"],
     },
@@ -67,8 +71,8 @@ calculation_formats = {
         "plot": ["{:.1f}", "{:.6e}", "{:.6e}", "{:.6e}"],
     },
     "XY-XYP-XY-STD": {
-        "result":  ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
-        "plot":  ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+        "result": ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+        "plot": ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
     },
     "info-1": {
         "norm": ["{:.8f}", "{:.8f}", "{:.8f}"],
@@ -84,17 +88,21 @@ calculation_formats = {
     }
 }
 
-@api.route('/')
-def home():
-    # redo so it serves static html instead of this
-    return render_template('index.html')
 
-@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION))
-def APIhome():
-    return render_template('api-page.html')
+@api.get('/')
+async def home(request):
+    # redo so it serves static html instead of this
+    content = Path('./templates/index.html').read_text()
+    return html(content)
+
+
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION))
+async def APIhome(request):
+    content = Path('./templates/api-page.html').read_text()
+    return html(content)
+
 
 def new_calculation_JSON(calculation, parameters):
-
     if parameters['info']:
         return write_to_JSON(calculation(parameters), calculation_formats['info-1'])
 
@@ -107,7 +115,7 @@ def new_calculation_JSON(calculation, parameters):
                 # base LMS
                 return write_to_JSON(calculation(parameters), calculation_formats['LMS-base'])
         else:
-                # log10 LMS
+            # log10 LMS
             if parameters['log']:
                 return write_to_JSON(calculation(parameters), calculation_formats['LMS-log'])
             else:
@@ -120,6 +128,7 @@ def new_calculation_JSON(calculation, parameters):
         return write_to_JSON(calculation(parameters), calculation_formats["XYZ-XYZP-XYZ-STD"])
     else:
         return write_to_JSON(calculation(parameters), calculation_formats["XY-XYP-XY-STD"])
+
 
 def write_to_JSON(results_dict, json_dict):
     """
@@ -144,6 +153,7 @@ def write_to_JSON(results_dict, json_dict):
         output.append(temp)
     fin = ','.join(output)
     return '{' + fin + '}'
+
 
 def ndarray_to_JSON(body, formatta):
     """
@@ -184,6 +194,7 @@ def ndarray_to_JSON(body, formatta):
         output = ','.join(temp)
         return '[' + output + ']'
 
+
 """
     The endpoints for the API. 
     
@@ -192,146 +203,166 @@ def ndarray_to_JSON(body, formatta):
     respective endpoint.
 """
 
-@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_ENDPOINT), methods=['GET'])
-def LMS():
-    parameterCheck = createAndCheckParameters(True, compute_LMS_Modular)
+
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_ENDPOINT))
+async def LMS(request):
+    parameterCheck = createAndCheckParameters(True, compute_LMS_Modular, request)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
     # or a Response object (which means that a mandatory parameter is not filled, so calculations
     # cannot proceed further).
-    if isinstance(parameterCheck, Response):
-        return parameterCheck
+    if "error" in parameterCheck.keys():
+        return response.json(parameterCheck, status=parameterCheck["status_code"])
 
-    return Response(
-        new_calculation_JSON(compute_LMS_Modular,
-                          createAndCheckParameters(True, compute_LMS_Modular)),
-        mimetype='application/json')
+    return response.raw(new_calculation_JSON(compute_LMS_Modular,
+                                             createAndCheckParameters(True, compute_LMS_Modular, request)),
+                        content_type="application/json")
 
-@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MB_ENDPOINT), methods=['GET'])
-def MB():
-    parameterCheck = createAndCheckParameters(True, compute_MacLeod_Modular)
+
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MB_ENDPOINT))
+async def MB(request):
+    parameterCheck = createAndCheckParameters(True, compute_MacLeod_Modular, request)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
     # or a Response object (which means that a mandatory parameter is not filled, so calculations
     # cannot proceed further).
-    if isinstance(parameterCheck, Response):
-        return parameterCheck
+    if "error" in parameterCheck.keys():
+        return response.json(parameterCheck, status=parameterCheck["status_code"])
 
-    return Response(
-        new_calculation_JSON(compute_MacLeod_Modular,
-                          createAndCheckParameters(True, compute_MacLeod_Modular)),
-        mimetype='application/json')
+    return response.raw(new_calculation_JSON(compute_MacLeod_Modular,
+                                             createAndCheckParameters(True, compute_MacLeod_Modular, request)),
+                        content_type="application/json")
 
-@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MW_ENDPOINT), methods=['GET'])
-def maxwellian():
-        parameterCheck = createAndCheckParameters(True, compute_Maxwellian_Modular)
-        # parameterCheck may either be a dictionary (which means that all parameters are alright),
-        # or a Response object (which means that a mandatory parameter is not filled, so calculations
-        # cannot proceed further).
-        if isinstance(parameterCheck, Response):
-            return parameterCheck
 
-        return Response(
-            new_calculation_JSON(compute_Maxwellian_Modular,
-                              createAndCheckParameters(True, compute_Maxwellian_Modular)),
-                                mimetype='application/json')
-
-@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZ_ENDPOINT), methods=['GET'])
-def xyz():
-        parameterCheck = createAndCheckParameters(True, compute_XYZ_Modular)
-        # parameterCheck may either be a dictionary (which means that all parameters are alright),
-        # or a Response object (which means that a mandatory parameter is not filled, so calculations
-        # cannot proceed further).
-        if isinstance(parameterCheck, Response):
-            return parameterCheck
-
-        return Response(
-            new_calculation_JSON(compute_XYZ_Modular,
-                              createAndCheckParameters(True, compute_XYZ_Modular)),
-                                mimetype='application/json')
-
-@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XY_ENDPOINT), methods=['GET'])
-def xy():
-    parameterCheck = createAndCheckParameters(True, compute_XY_modular)
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MW_ENDPOINT))
+async def maxwellian(request):
+    parameterCheck = createAndCheckParameters(True, compute_Maxwellian_Modular, request)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
     # or a Response object (which means that a mandatory parameter is not filled, so calculations
     # cannot proceed further).
-    if isinstance(parameterCheck, Response):
-        return parameterCheck
+    if "error" in parameterCheck.keys():
+        return response.json(parameterCheck, status=parameterCheck["status_code"])
 
-    return Response(
+    return response.raw(new_calculation_JSON(compute_Maxwellian_Modular,
+                                             createAndCheckParameters(True, compute_Maxwellian_Modular, request)),
+                        content_type="application/json")
+
+
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZ_ENDPOINT))
+async def xyz(request):
+    parameterCheck = createAndCheckParameters(True, compute_XYZ_Modular, request)
+    # parameterCheck may either be a dictionary (which means that all parameters are alright),
+    # or a Response object (which means that a mandatory parameter is not filled, so calculations
+    # cannot proceed further).
+    if "error" in parameterCheck.keys():
+        return response.json(parameterCheck, status=parameterCheck["status_code"])
+
+    return response.raw(new_calculation_JSON(compute_XYZ_Modular,
+                                             createAndCheckParameters(True, compute_XYZ_Modular, request)),
+                        content_type="application/json")
+
+
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XY_ENDPOINT))
+async def xy(request):
+    parameterCheck = createAndCheckParameters(True, compute_XY_modular, request)
+    # parameterCheck may either be a dictionary (which means that all parameters are alright),
+    # or a Response object (which means that a mandatory parameter is not filled, so calculations
+    # cannot proceed further).
+    if "error" in parameterCheck.keys():
+        return response.json(parameterCheck, status=parameterCheck["status_code"])
+
+    return response.raw(
         new_calculation_JSON(compute_XY_modular,
-                          createAndCheckParameters(True, compute_XY_modular)),
-        mimetype='application/json')
+                             createAndCheckParameters(True, compute_XY_modular, request)),
+        content_type="application/json"
+    )
 
-@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZP_ENDPOINT), methods=['GET'])
-def xyz_p():
-    parameterCheck = createAndCheckParameters(True, compute_XYZ_purples_modular)
+
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZP_ENDPOINT))
+async def xyz_p(request):
+    parameterCheck = createAndCheckParameters(True, compute_XYZ_purples_modular, request)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
     # or a Response object (which means that a mandatory parameter is not filled, so calculations
     # cannot proceed further).
-    if isinstance(parameterCheck, Response):
-        return parameterCheck
+    if "error" in parameterCheck.keys():
+        return response.json(parameterCheck, status=parameterCheck["status_code"])
 
-    return Response(
+    return response.raw(
         new_calculation_JSON(compute_XYZ_purples_modular,
-                          createAndCheckParameters(True, compute_XYZ_purples_modular)),
-        mimetype='application/json')
+                             createAndCheckParameters(True, compute_XYZ_purples_modular, request)),
+        content_type="application/json"
+    )
 
-@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XYP_ENDPOINT), methods=['GET'])
-def xy_p():
-    parameterCheck = createAndCheckParameters(True, compute_xyz_purples_modular)
+
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYP_ENDPOINT))
+async def xy_p(request):
+    parameterCheck = createAndCheckParameters(True, compute_xyz_purples_modular, request)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
     # or a Response object (which means that a mandatory parameter is not filled, so calculations
     # cannot proceed further).
-    if isinstance(parameterCheck, Response):
-        return parameterCheck
+    if "error" in parameterCheck.keys():
+        return response.json(parameterCheck, status=parameterCheck["status_code"])
 
-    return Response(
+    return response.raw(
         new_calculation_JSON(compute_xyz_purples_modular,
-                          createAndCheckParameters(True, compute_xyz_purples_modular)),
-        mimetype='application/json')
+                             createAndCheckParameters(True, compute_xyz_purples_modular, request)),
+        content_type="application/json"
+    )
 
-@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZSTD_ENDPOINT), methods=['GET'])
-def xyz_std():
-    parameterCheck = createAndCheckParameters(False, compute_XYZ_standard_modular)
+
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZSTD_ENDPOINT))
+async def xyz_std(request):
+    parameterCheck = createAndCheckParameters(False, compute_XYZ_standard_modular, request)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
     # or a Response object (which means that a mandatory parameter is not filled, so calculations
     # cannot proceed further).
-    if isinstance(parameterCheck, Response):
-        return parameterCheck
+    if "error" in parameterCheck.keys():
+        return response.json(parameterCheck, status=parameterCheck["status_code"])
 
-    return Response(
+    return response.raw(
         new_calculation_JSON(compute_XYZ_standard_modular,
-                          createAndCheckParameters(False, compute_XYZ_standard_modular)),
-        mimetype='application/json')
+                             createAndCheckParameters(False, compute_XYZ_standard_modular, request)),
+        content_type="application/json"
+    )
 
-@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, XYSTD_ENDPOINT), methods=['GET'])
-def xy_std():
-    parameterCheck = createAndCheckParameters(False, compute_xyz_standard_modular)
+
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYSTD_ENDPOINT))
+async def xy_std(request):
+    parameterCheck = createAndCheckParameters(False, compute_xyz_standard_modular, request)
     # parameterCheck may either be a dictionary (which means that all parameters are alright),
     # or a Response object (which means that a mandatory parameter is not filled, so calculations
     # cannot proceed further).
-    if isinstance(parameterCheck, Response):
-        return parameterCheck
+    if "error" in parameterCheck.keys():
+        return response.json(parameterCheck, status=parameterCheck["status_code"])
 
-    return Response(
-        new_calculation_JSON(compute_xyz_standard_modular,
-                          createAndCheckParameters(False, compute_xyz_standard_modular)),
-        mimetype='application/json')
+    return response.raw(
+        new_calculation_JSON(compute_XYZ_standard_modular,
+                             createAndCheckParameters(False, compute_XYZ_standard_modular, request)),
+        content_type="application/json"
+    )
 
 
+@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, STATUS_ENDPOINT), methods=["GET"])
+def statusEndpoint(request):
+    status = {
+        "status": 200,
+        "uptime": str(time.time() - server_start) + "s",
+        "version": API_VERSION
+    }
+    return response.json(status, status=200)
 
-def errorhandler(title, message, suggestion):
+
+def errorhandler(title, status, message, suggestion):
     now = datetime.now()
     dict = {
-        "status": title,
+        "error": title,
+        "status_code": status,
         "message": message,
         "suggestion": suggestion,
         "timestamp": str(now)
     }
-    return json.dumps(dict)
+    return dict
 
-def createAndCheckParameters(disabled, calculation):
 
+def createAndCheckParameters(disabled, calculation, request):
     """
 
     Parameters
@@ -350,120 +381,139 @@ def createAndCheckParameters(disabled, calculation):
 
     """
 
+    # error handling
+    def string_to_type_else(string, type, other):
+        # try to make the string into an instance of type
+        try:
+            return type(string)
+        # if it cannot be converted to type, then return the "other"
+        except ValueError:
+            return other
+        # however, if there is a typerror (such as passing None to float()), then return None
+        except TypeError:
+            return None
+
     # for all functions except standardization functions:
     if disabled:
-
         # uses checkArgument to fill in all mandatory parameters
         parameters = {
             # mostly mandatory parameters
-            "field_size": request.args.get('field_size', type=float, default=None),
-            "age": request.args.get('age', type=float, default=None)
+            "field_size": string_to_type_else(request.args.get('field_size'), float, None),
+            "age": string_to_type_else(request.args.get('age'), float, None)
         }
 
+        # checks if mandatory parameters are present
         for (name, value) in parameters.items():
             if value is None:
-                return Response(
-                    errorhandler("Value Error",
-                                 "Invalid input for '{}' due to absence or invalid type.".format(name),
-                                 "Please check if '{}' is present, and is of the 'float' type.".format(name)),
-                    status=400, mimetype="application/json")
+                return errorhandler("Value Error",
+                                    422,
+                                    "Invalid input for '{}' due to absence or invalid type.".format(name),
+                                    "Please check if '{}' is present, and is of the 'float' type.".format(name))
         parameters['age'] = round(parameters['age'])
 
         # sees if optional parameters present, makes them default to their usual values in the case they are
         # not present
         optionals = {
-            "min": request.args.get('min', type=str, default=390.0),
-            "max": request.args.get('max', type=str, default=830.0),
-            "step_size": request.args.get('step_size', type=str, default=1.0)
+            # are either None (if arg is not present at all),
+            # a float value if the arg is present and is a float,
+            # or a -1 if the arg is present, but not float
+            "min": string_to_type_else(request.args.get('min'), float, -1),
+            "max": string_to_type_else(request.args.get('max'), float, -1),
+            "step_size": string_to_type_else(request.args.get('step_size'), float, -1),
         }
+
         for (name, value) in optionals.items():
+            # if not correct type
+            if value is -1:
+                return errorhandler("Value Error",
+                                    422,
+                                    "Invalid input for '{}' due to invalid type.".format(name),
+                                    "Please check if '{}' is of the 'float' type. Alternatively, "
+                                    "you can remove it to use default values.".format(name))
+            # if not present at all
             if value is None:
                 given = 0
                 if name == "min": given = 390.0
                 if name == "max": given = 830.0
                 if name == "step_size": given = 1.0
-                parameters.update({ name: given })
+                parameters.update({name: given})
+            # if present and correct type
             else:
-                try:
-                    parameters.update({name: float(value)})
-                except ValueError:
-                    return Response(
-                    errorhandler("Value Error",
-                                 "Invalid input for '{}' due to invalid type.".format(name),
-                                 "Please check if '{}' is of the 'float' type. Alternatively, "
-                                 "you can remove it to use default values.".format(name)),
-                    status=400, mimetype="application/json")
+                parameters.update({name: float(value)})
 
         # error handling for the values
         if parameters['field_size'] > 10 or parameters['field_size'] < 1:
-            return Response(
-                errorhandler("Value Error",
-                             "Invalid input for 'field_size'; range is between 1.0-10.0.",
-                             "Please check if your 'field_size' is between 1.0 and 10.0."),
-                status=422, mimetype="application/json")
+            return errorhandler("Value Error",
+                                422,
+                                "Invalid input for 'field_size'; range is between 1.0-10.0.",
+                                "Please check if your 'field_size' is between 1.0 and 10.0.")
         if parameters['age'] < 20 or parameters['age'] > 80:
-            return Response(
-                errorhandler("Value Error",
-                             "Invalid input for 'age': range is between 20-80.",
-                             "Please check if your 'age' is between 20-80."),
-                status=422, mimetype="application/json")
+            return errorhandler("Value Error",
+                                422,
+                                "Invalid input for 'age': range is between 20-80.",
+                                "Please check if your 'age' is between 20-80.")
         if parameters['min'] < 390 or parameters['min'] > 400:
-            return Response(
-                errorhandler("Value Error",
-                             "Invalid input for 'min': range is between 390.0-400.0.",
-                             "Please check if your 'min' is between 390.0-400.0."),
-                status=422, mimetype="application/json")
+            return errorhandler("Value Error",
+                                422,
+                                "Invalid input for 'min': range is between 390.0-400.0.",
+                                "Please check if your 'min' is between 390.0-400.0.")
         if parameters['max'] > 830 or parameters['max'] < 700:
-            return Response(
-                errorhandler("Value Error",
-                             "Invalid input for 'max': range is between 700.0-830.0.",
-                             "Please check if your 'max' is between 700.0-830.0."),
-                status=422, mimetype="application/json")
+            return errorhandler("Value Error",
+                                422,
+                                "Invalid input for 'max': range is between 700.0-830.0.",
+                                "Please check if your 'max' is between 700.0-830.0.")
         if parameters['step_size'] > 5 or parameters['step_size'] < 0.1:
-            return Response(
-                errorhandler("Value Error",
-                             "Invalid input for 'step_size': range is between 0.1-5.0.",
-                             "Please check if your 'step_size' is between 0.1-5.0."),
-                status=422, mimetype="application/json")
+            return errorhandler("Value Error",
+                                422,
+                                "Invalid input for 'step_size': range is between 0.1-5.0.",
+                                "Please check if your 'step_size' is between 0.1-5.0.")
 
         # ----------------------
 
-
-        # Now, adding optional/specific parameters
-
-        optionals2 = {
-            'log': True if request.args.get('log10') is not None else False,
-            'base': True if request.args.get('base') is not None else False,
-            'info': True if request.args.get('info') is not None else False,
-            'norm': True if request.args.get('norm') is not None else False
+        optionals = {
+            'log': False,
+            'base': False,
+            'info': False,
+            'norm': False
         }
 
-        for (name, body) in optionals2.items():
+        # if there is anything with "optional" in URL
+        if request.args.get('optional') is not None:
+            # split it by the comma to make a list of entries
+            params = request.args.get('optional').split(',')
+            # for every element in this list, see if it exists in the optional parameter dictionary keys; if it does,
+            # then make that key's body True
+            for param in params:
+                if param in optionals.keys():
+                    optionals[param] = True
+                else:
+                    return errorhandler("Value Error",
+                                        422,
+                                        "Optional parameter list contains unknown optional parameter.",
+                                        "Please control that the list contains only valid parameters, and try again.")
+            # else, if it is not in it, then throw error
+
+        for (name, body) in optionals.items():
             if body:
                 if (name == "log" or name == "base") and (calculation is not compute_LMS_Modular):
-                    return Response(
-                        errorhandler("Value Error",
-                                     "Invalid usage of {} for endpoint.".format(name),
-                                     "The {} is exclusive to the /LMS endpoint. Please, remove it from your URL.".format(name)),
-                        status=400, mimetype="application/json")
+                    return errorhandler("Value Error",
+                                        422,
+                                        "Invalid usage of {} for endpoint.".format(name),
+                                        "The {} is exclusive to the /LMS endpoint. Please, remove it from your URL.".format(name))
                 if (name == "info") and (calculation is compute_LMS_Modular):
-                        return Response(
-                            errorhandler("Value Error",
-                                         "Invalid usage of 'info' for endpoint. ",
-                                         "Please verify if this endpoint supports 'info' parameter, and try again. If not, please remove from URL. "),
-                            status=400, mimetype="application/json")
+                    return errorhandler("Value Error",
+                                        422,
+                                           "Invalid usage of 'info' for endpoint. ",
+                                         "Please verify if this endpoint supports 'info' parameter, and try again. If not, please remove from URL. ")
                 if (name == "norm") and (calculation in [compute_LMS_Modular, compute_MacLeod_Modular, compute_Maxwellian_Modular]):
-                    return Response(
-                        errorhandler("Value Error",
-                                     "Invalid usage of 'norm' for endpoint. ",
-                                     "Please verify if this endpoint supports 'norm' parameter, and try again. If not, please remove from URL. "),
-                        status=400, mimetype="application/json")
+                    return errorhandler("Value Error",
+                                        422,
+                                        "Invalid usage of 'norm' for endpoint. ",
+                                        "Please verify if this endpoint supports 'norm' parameter, and try again. If not, please remove from URL. ")
+
             parameters.update({
                 name: body
             })
-
-        parameters['age'] = round(parameters['age'])
-
 
         # parameter that cannot be triggered by any URL parameter, exclusive to XYZ-purples in usage for compute_xy_modular
         # in order to save time
@@ -474,37 +524,55 @@ def createAndCheckParameters(disabled, calculation):
         return parameters
 
     else:
-        parameters = {"field_size": request.args.get('field_size', type=float, default=None),
-                      'info': True if request.args.get('info') is not None else False
-                      }
+        parameters = {"field_size": string_to_type_else(request.args.get('field_size'), float, None)}
+        if parameters['field_size'] is None:
+            return errorhandler("Value Error", 422, "Invalid value type for field_size parameter.",
+                                "Please check if your field_size is a float value that is either 2.0 or 10.0.")
 
-        optionals2 = {
-            'log': True if request.args.get('log10') is not None else False,
-            'base': True if request.args.get('base') is not None else False,
-            'info': True if request.args.get('info') is not None else False,
-            'norm': True if request.args.get('norm') is not None else False
+        optionals = {
+            'log': False,
+            'base': False,
+            'info': False,
+            'norm': False
         }
 
-        for (name, body) in optionals2.items():
+        # if there is anything with "optional" in URL
+        if request.args.get('optional') is not None:
+            # split it by the comma to make a list of entries
+            params = request.args.get('optional').split(',')
+            # for every element in this list, see if it exists in the optional parameter dictionary keys; if it does,
+            # then make that key's body True
+            for param in params:
+                if param in optionals.keys():
+                    optionals[param] = True
+                else:
+                    return errorhandler("Value Error",
+                                        422,
+                                        "Optional parameter list contains unknown optional parameter.",
+                                        "Please control that the list contains only valid parameters, and try again.")
+            # else, if it is not in it, then throw error
+
+        for (name, body) in optionals.items():
+            if body == None:
+                if body is None:
+                    parameters.update({name: False})
+                    continue
             if body:
                 if (name == "log" or name == "base"):
-                    return Response(
-                        errorhandler("Value Error",
-                                     "Invalid usage of {} for endpoint.".format(name),
-                                     "The {} is exclusive to the /LMS endpoint. Please, remove it from your URL.".format(name)),
-                        status=400, mimetype="application/json")
+                    return errorhandler("Value Error",
+                                        422,
+                                        "Invalid usage of {} for endpoint.".format(name),
+                                        "The {} is exclusive to the /LMS endpoint. Please, remove it from your URL.".format(name))
                 if (name == "info") and (calculation is compute_XYZ_standard_modular):
-                        return Response(
-                            errorhandler("Value Error",
-                                         "Invalid usage of 'info' for endpoint. ",
-                                         "Please verify if this endpoint supports 'info' parameter, and try again. If not, please remove from URL. "),
-                            status=400, mimetype="application/json")
+                    return errorhandler("Value Error",
+                                        422,
+                                        "Invalid usage of 'info' for endpoint. ",
+                                        "Please verify if this endpoint supports 'info' parameter, and try again. If not, please remove from URL. ")
                 if (name == "norm"):
-                    return Response(
-                        errorhandler("Value Error",
-                                     "Invalid usage of 'norm' for endpoint. ",
-                                     "Please verify if this endpoint supports 'norm' parameter, and try again. If not, please remove from URL. "),
-                        status=400, mimetype="application/json")
+                    return errorhandler("Value Error",
+                                        422,
+                                        "Invalid usage of parameter norm for endpoint. ",
+                                        "Please verify if this endpoint supports 'norm' parameter, and try again. If not, please remove from URL. ")
             parameters.update({
                 name: body
             })
@@ -512,30 +580,16 @@ def createAndCheckParameters(disabled, calculation):
         if parameters['field_size'] == 2.0 or parameters['field_size'] == 10.0:
             return parameters
 
-        return Response(
-            errorhandler("Value Error",
-                         "Invalid input for 'field_size': Choose between 2.0 or 10.0.",
-                         "This endpoint are for standardization functions only, and supports only 2.0 (1931) and 10.0 (1964). Please,"
-                         " make sure this is the correct endpoint, and control that your value is one of these two. "),
-            status=422, mimetype="application/json")
-
-
-@api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, STATUS_ENDPOINT), methods=["GET"])
-def statusEndpoint():
-    status = {
-        "status": 200,
-        "uptime": str(time.time() - server_start) + "s",
-        "version": API_VERSION
-    }
-    return Response(json.dumps(status), mimetype="application/json", status=200)
+        return errorhandler("Value Error",
+                            422,
+                            "Invalid input for 'field_size': Choose between 2.0 or 10.0.",
+                            "This endpoint are for standardization functions only, and supports only 2.0 (1931) and 10.0 (1964). Please,"
+                            " make sure this is the correct endpoint, and control that your value is one of these two. ")
 
 
 if __name__ == '__main__':
-    api.run(debug=True)
+    api.run(debug=True, port=8080)
 
-
-     
-     
 """   
 ========================================
 ===============JSON BODY================

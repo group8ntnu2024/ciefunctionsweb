@@ -37,6 +37,10 @@ Accessible at http://localhost:5000/
 
 Accessible at http://localhost:5000/
 
+---
+- `pip install Sanic`
+- http://localhost:8000/
+
 ### Disable virtual environment:
 
 deactivate
