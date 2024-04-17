@@ -1,12 +1,11 @@
 import { Dispatch, SetStateAction } from "react";
 
 export type paramProps = {
-    type: string,
     field_size: number,
-    age: number,
+    age?: number,
     min?: number,
     max?: number,
-    step?: number,
+    step_size?: number,
     optional?: string
 }
 
@@ -15,7 +14,7 @@ export interface Parameters {
     age: number;
     min: number;
     max: number;
-    step: number;
+    step_size: number;
   }
 
 export interface ComputedData {
@@ -27,7 +26,9 @@ export interface ParametersContextType {
     setParameters: Dispatch<SetStateAction<Parameters>>;
     computedData: ComputedData;
     setComputedData: Dispatch<SetStateAction<ComputedData>>;
-    computeData: () => void;
+    computeData: () => Promise<void>;
     isLoading: boolean;
+    endpoint: string;
+    setEndpoint: (url: string) => void;
   }
 

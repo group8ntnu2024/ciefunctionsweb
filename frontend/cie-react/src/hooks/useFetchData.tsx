@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { fetchLMSData } from '../utils/ApiService';
+import { fetchApiData } from '../utils/ApiService';
 import { paramProps } from '../utils/propTypes';
 
-export function useFetchData(params: paramProps) {
+export function useFetchData(endpoint: string, params: paramProps) {
   const [data, setData] = useState<number[][] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -11,7 +11,7 @@ export function useFetchData(params: paramProps) {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const result = await fetchLMSData(params);
+        const result = await fetchApiData(endpoint, params);
         setData(result);
       } catch (error) {
         setError(error as Error);
@@ -21,7 +21,7 @@ export function useFetchData(params: paramProps) {
     };
 
     fetchData();
-  }, [params]);
+  }, [endpoint, params]);
 
   return { data, isLoading, error };
 }

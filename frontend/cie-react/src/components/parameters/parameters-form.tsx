@@ -56,12 +56,12 @@ const ParametersForm = () => {
         />
       </div>
       <div className="parameter-control">
-        <label htmlFor="step">Step:</label>
+        <label htmlFor="step_size">Step:</label>
         <input
           type="number"
-          id="step"
-          name="step"
-          value={parameters.step}
+          id="step_size"
+          name="step_size"
+          value={parameters.step_size}
           onChange={handleParameterChange}
         />
       </div>
