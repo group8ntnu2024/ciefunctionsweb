@@ -1,5 +1,6 @@
 import React, { ChangeEvent, useEffect } from 'react';
 import { useParameters } from '../../context/parameter-context';
+import styles from './ParametersForm.module.css';
 
 interface ParametersFormProps {
   selectedOption: string;
@@ -18,11 +19,11 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ selectedOption }) => {
   };
 
   const createParameterControl = (label: string, name: string, value: number, onChange: (event: ChangeEvent<HTMLInputElement>) => void) => (
-    <div className="parameters-control d-flex align-items-center">
-      <label htmlFor={name} className="mb-0">{label}</label>
+    <div className={styles.parametersControl}>
+      <label htmlFor={name} className={`mb-0 ${label === "-" ? styles.labelSpacing : "  "}`}>{label}</label>
       <input
         type="number"
-        className="form-control"
+        className={styles.formControl}
         id={name}
         name={name}
         value={value.toString()}
@@ -31,17 +32,120 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ selectedOption }) => {
     </div>
   );
 
+  const createDegreeDropdown = () => (
+    <div className={styles.parametersControl}>
+      <label htmlFor="degree-selection">Field size:	</label>
+      <select
+        className={styles.formControl}
+        id="degree-selection"
+        name="degree-selection"
+      >
+        <option value="2">2°</option>
+        <option value="10">10°</option>
+      </select>
+    </div>
+  );
+
   const renderParameters = () => {
     switch (selectedOption) {
       case "method1":
-      case "method2":
         return (
-          <div className="d-flex align-items-center flex-grow-1">
+          <div className={styles.parametersForm}>
             {createParameterControl("Field Size:", "field_size", parameters.field_size, handleParameterChange)}
             {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain Min:", "min", parameters.min, handleParameterChange)}
-            {createParameterControl("Domain Max:", "max", parameters.max, handleParameterChange)}
+            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
             {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
+          </div>
+        );
+      case "method2":
+        return (
+          <div className={styles.parametersForm}>
+            {createParameterControl("Field Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
+            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
+            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
+          </div>
+        );
+      case "method3":
+        return (
+          <div className={styles.parametersForm}>
+            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
+            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
+            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
+          </div>
+        );
+      case "method4":
+        return (
+          <div className={styles.parametersForm}>
+            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
+            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
+            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
+          </div>
+        );
+      case "method5":
+        return (
+          <div className={styles.parametersForm}>
+            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
+            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
+            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
+          </div>
+        );
+      case "method6":
+        return (
+          <div className={styles.parametersForm}>
+            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
+            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
+            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
+          </div>
+        );
+      case "method7":
+        return (
+          <div className={styles.parametersForm}>
+            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
+            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
+            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
+          </div>
+        );
+      case "method8":
+        return (
+          <div className={styles.parametersForm}>
+            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
+            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
+            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
+          </div>
+        );
+      case "method9":
+        return (
+          <div className={styles.parametersForm}>
+            {createDegreeDropdown()}
+          </div>
+        );
+      case "method10":
+        return (
+          <div className={styles.parametersForm}>
+            {createDegreeDropdown()}
           </div>
         );
       default:
@@ -50,11 +154,10 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ selectedOption }) => {
   };
 
   return (
-    <div className="d-flex justify-content-between align-items-center w-100 parameters-form">
-      <div className="flex-grow-1 d-flex justify-content-start">
+    <div className={styles.parametersForm}>
+      <div style={{ flex: '1 1 auto' }}>
         {renderParameters()}
       </div>
-      <button className="btn btn-primary ml-2" onClick={computeData}>Compute</button>
     </div>
   );
 };

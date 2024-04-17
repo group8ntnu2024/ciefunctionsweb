@@ -8,12 +8,10 @@ import ParametersLayout from "./components/parameters/parameters-layout";
 import { PulldownMenu } from "./components/PulldownMenu/PulldownMenu";
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import { ParametersProvider } from './context/parameter-context';
-import './index.css';
-import './components/app-content.css';
+import './layout.css'; // Make sure this path is correct
 
 function App() {
   const [selectedOption, setSelectedOption] = useState("method1");
-
   const router = createHashRouter([
     {
       path: "/",
@@ -33,14 +31,8 @@ function App() {
           </div>
         </div>,
       children: [
-        {
-          path: PLOT_ROUTE, 
-          element: <ParametersLayout selectedOption={selectedOption}><PlotContent/></ParametersLayout>
-        },
-        {
-          path: TABLE_ROUTE, 
-          element: <ParametersLayout selectedOption={selectedOption}><TableContent/></ParametersLayout>
-        },
+        { path: PLOT_ROUTE, element: <ParametersLayout selectedOption={selectedOption}><PlotContent/></ParametersLayout> },
+        { path: TABLE_ROUTE, element: <ParametersLayout selectedOption={selectedOption}><TableContent/></ParametersLayout> },
       ],
     }
   ]);
