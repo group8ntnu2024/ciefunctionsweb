@@ -21,6 +21,9 @@ from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Mo
     compute_XYZ_Modular, compute_XY_modular, compute_XYZ_purples_modular, compute_xyz_purples_modular, \
     compute_XYZ_standard_modular, compute_xyz_standard_modular
 
+from descriptionapi import *
+from descriptionapi import _head
+
 api = Sanic(__name__)
 CORS(api)
 
@@ -37,6 +40,9 @@ XYP_ENDPOINT = "xy-p"
 XYZSTD_ENDPOINT = "xyz-std"
 XYSTD_ENDPOINT = "xy-std"
 STATUS_ENDPOINT = "status"
+# constants for standardization field sizes
+STD_1931 = 2.0
+STD_1964 = 10.0
 
 # Timer that starts when server boots up, for status endpoint
 server_start = time.time()
@@ -59,6 +65,13 @@ async def check_get(request):
 
 # Custom error handler
 @api.exception(SanicException)
+async def errorhandler(request, exception):
+    return json({
+        "status_code": exception.status_code,
+        "message": str(exception.args)
+    })
+
+
 async def error_handler(request, exception):
     """
     SanicException error handler function that returns a JSON with information regarding the exception.
@@ -153,44 +166,12 @@ calculation_formats = {
     }
 }
 
+# static file hosting
+api.static("/", "./templates/index.html", name="home-page")
+api.static("/api/v2/", "./templates/api-page.html", name="api-page")
 
-@api.get('/')
-async def home(request):
-    """
-    Temporary homepage service endpoint. In the future, this endpoint will rather serve the static files
-    for the frontend project.
-
-    Parameters
-    ----------
-    request: A mandatory but unused parameter symbolizing the user's request.
-
-    Returns
-    -------
-    The HTML content of the file.
-
-    """
-    # redo so it serves static html instead of this
-    content = Path('./templates/index.html').read_text()
-    return html(content)
-
-
-@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION))
-async def APIhome(request):
-    """
-    API homepage service endpoint, dispensing the html file for the page.
-
-    Parameters
-    ----------
-    request: A mandatory but unused parameter symbolizing the user's request.
-
-    Returns
-    -------
-    The HTML content of the file.
-
-    """
-    content = Path('./templates/api-page.html').read_text()
-    return html(content)
-
+# hosting css
+api.static("/styles/description.css", "./styles/description.css")
 
 def new_calculation_JSON(calculation, parameters):
     """
@@ -336,81 +317,124 @@ def ndarray_to_JSON(body, formatta):
 """
 
 # lms
-@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_ENDPOINT))
-async def LMS(request):
-    return response.raw(new_calculation_JSON(compute_LMS_Modular,
-                                             createAndCheckParameters(True, compute_LMS_Modular, request)),
-                        content_type="application/json")
-
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_ENDPOINT) + "/<more:str>"  )
+async def LMS(request, more:str):
+    if more == "calculation":
+        return response.raw(new_calculation_JSON(compute_LMS_Modular,
+                                                 createAndCheckParameters(True, compute_LMS_Modular, request)),
+                            content_type="application/json")
+    if more == "sidemenu":
+        return html(LMS_sidemenu(createAndCheckParameters(True, compute_LMS_Modular, request)))
+    else:
+        # add later
+        return text("neither...")
 
 # macleod
-@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MB_ENDPOINT))
-async def MB(request):
-    return response.raw(new_calculation_JSON(compute_MacLeod_Modular,
-                                             createAndCheckParameters(True, compute_MacLeod_Modular, request)),
-                        content_type="application/json")
-
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MB_ENDPOINT) + "/<more:str>"  )
+async def MB(request, more:str):
+    if more == "calculation":
+        return response.raw(new_calculation_JSON(compute_MacLeod_Modular,
+                                                 createAndCheckParameters(True, compute_MacLeod_Modular, request)),
+                            content_type="application/json")
+    if more == "sidemenu":
+        return html(LMS_MB_sidemenu(createAndCheckParameters(True, compute_MacLeod_Modular, request)))
+    else:
+        return text("neither, placeholder...")
 
 # maxwellian
-@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MW_ENDPOINT))
-async def maxwellian(request):
-    return response.raw(new_calculation_JSON(compute_Maxwellian_Modular,
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MW_ENDPOINT) + "/<more:str>")
+async def maxwellian(request, more:str):
+    if more == "calculation":
+        return response.raw(new_calculation_JSON(compute_Maxwellian_Modular,
                                              createAndCheckParameters(True, compute_Maxwellian_Modular, request)),
                         content_type="application/json")
+    if more == "sidemenu":
+        return html(LMS_MW_sidemenu(createAndCheckParameters(True, compute_Maxwellian_Modular, request)))
+    else:
+        return text("neither, placeholder...")
 
 
 # xyz
-@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZ_ENDPOINT))
-async def xyz(request):
-    return response.raw(new_calculation_JSON(compute_XYZ_Modular,
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZ_ENDPOINT) + "/<more:str>")
+async def xyz(request, more:str):
+    if more == "calculation":
+        return response.raw(new_calculation_JSON(compute_XYZ_Modular,
                                              createAndCheckParameters(True, compute_XYZ_Modular, request)),
                         content_type="application/json")
-
+    if more == "sidemenu":
+        return html(XYZ_sidemenu(createAndCheckParameters(True, compute_XYZ_Modular, request)))
+    else:
+        return text("neither, placeholder...")
 
 # xy
-@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XY_ENDPOINT))
-async def xy(request):
-    return response.raw(
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XY_ENDPOINT) + "/<more:str>")
+async def xy(request, more:str):
+    if more == "calculation":
+        return response.raw(
         new_calculation_JSON(compute_XY_modular,
                              createAndCheckParameters(True, compute_XY_modular, request)),
         content_type="application/json"
     )
+    if more == "sidemenu":
+        return html(XY_sidemenu(createAndCheckParameters(True, compute_XY_modular, request)))
+    else:
+        return text("Placeholder..")
 
 # xyz purples
-@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZP_ENDPOINT))
-async def xyz_p(request):
-    return response.raw(
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZP_ENDPOINT) + "/<more:str>")
+async def xyz_p(request, more:str):
+    if more == "calculation":
+        return response.raw(
         new_calculation_JSON(compute_XYZ_purples_modular,
                              createAndCheckParameters(True, compute_XYZ_purples_modular, request)),
         content_type="application/json"
     )
+    if more == "sidemenu":
+        return html(XYZP_sidemenu(createAndCheckParameters(True, compute_XYZ_purples_modular, request)))
+    else:
+        return text("palceholder..")
 
 # xy purples
-@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYP_ENDPOINT))
-async def xy_p(request):
-    return response.raw(
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYP_ENDPOINT) + "/<more:str>")
+async def xy_p(request, more:str):
+    if more == "calculation":
+        return response.raw(
         new_calculation_JSON(compute_xyz_purples_modular,
                              createAndCheckParameters(True, compute_xyz_purples_modular, request)),
         content_type="application/json"
     )
+    if more == "sidemenu":
+        return html(XYP_sidemenu(createAndCheckParameters(True, compute_xyz_purples_modular, request)))
+    else:
+        return text("palsd")
 
 # xyz standardization
-@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZSTD_ENDPOINT))
-async def xyz_std(request):
-    return response.raw(
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZSTD_ENDPOINT) + "/<more:str>")
+async def xyz_std(request, more:str):
+    if more == "calculation":
+        return response.raw(
         new_calculation_JSON(compute_XYZ_standard_modular,
                              createAndCheckParameters(False, compute_XYZ_standard_modular, request)),
         content_type="application/json"
     )
+    if more == "sidemenu":
+        return html(XYZ_std_sidemenu(createAndCheckParameters(False, compute_XYZ_standard_modular, request)))
+    else:
+        return text("placehgolder")
 
 # xy standardization
-@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYSTD_ENDPOINT))
-async def xy_std(request):
-    return response.raw(
+@api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYSTD_ENDPOINT) + "/<more:str>")
+async def xy_std(request, more:str):
+    if more == "calculation":
+        return response.raw(
         new_calculation_JSON(compute_xyz_standard_modular,
                              createAndCheckParameters(False, compute_xyz_standard_modular, request)),
         content_type="application/json"
     )
+    if more == "sidemenu":
+        return html(XY_std_sidemenu(createAndCheckParameters(False, compute_xyz_standard_modular, request)))
+    else:
+        return text("placeholder")
 
 @api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, STATUS_ENDPOINT), methods=["GET"])
 def statusEndpoint(request):
@@ -527,7 +551,8 @@ def createAndCheckParameters(disabled, calculation, request):
             'log': False,
             'base': False,
             'info': False,
-            'norm': False
+            'norm': False,
+            'sidemenu': False,
         }
 
         # if there is anything with "optional" in URL
@@ -542,6 +567,10 @@ def createAndCheckParameters(disabled, calculation, request):
                 else:
                     raise SanicException(("Value error.", "Parameter list 'optional' contains unknown parameter '{}'.".format(param),
                                           "Check if the parameter has correct value, and try again. Alternatively, remove it if not."), status_code=422)
+
+        if optionals['sidemenu'] and optionals['info']:
+            raise SanicException(("Value error", "Cannot combine parameters 'sidemenu' and 'info'.",
+                                  "Please remove one of them from the URL."), 422)
 
         for (name, body) in optionals.items():
             if body:
@@ -606,7 +635,7 @@ def createAndCheckParameters(disabled, calculation, request):
                 name: body
             })
 
-        if parameters['field_size'] == 2.0 or parameters['field_size'] == 10.0:
+        if parameters['field_size'] == STD_1931 or parameters['field_size'] == STD_1964:
             return parameters
 
         raise SanicException("Value error", "Invalid value for 'field_size'.",
