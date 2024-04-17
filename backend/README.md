@@ -24,3 +24,15 @@ To run tests and see coverage, use the following commands in terminal:
 ## v1
 
 placeholder ..
+
+## 
+
+Mac
+
+ pip install Sanic 
+ pip install setuptools 
+ pip install requests    
+ pip install flask-cors
+ pip install numpy
+ pip install scipy
+ pip install pandas
