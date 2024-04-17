@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchCalculationResults } from '../utils/ApiService';
+import { fetchLMSData } from '../utils/ApiService';
 import { paramProps } from '../utils/propTypes';
 
 export function useFetchData(params: paramProps) {
@@ -11,7 +11,7 @@ export function useFetchData(params: paramProps) {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const result = await fetchCalculationResults(params);
+        const result = await fetchLMSData(params);
         setData(result);
       } catch (error) {
         setError(error as Error);

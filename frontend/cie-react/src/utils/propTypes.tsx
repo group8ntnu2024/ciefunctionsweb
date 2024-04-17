@@ -4,9 +4,10 @@ export type paramProps = {
     type: string,
     field_size: number,
     age: number,
-    min: number,
-    max: number,
-    step: number
+    min?: number,
+    max?: number,
+    step?: number,
+    optional?: string
 }
 
 export interface Parameters {

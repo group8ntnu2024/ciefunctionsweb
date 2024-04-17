@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { Parameters, ComputedData, ParametersContextType } from '../utils/propTypes';
-import { fetchCalculationResults } from '../utils/ApiService';
+import { fetchLMSData } from '../utils/ApiService';
 import { useLoading } from '../hooks/useLoading';
 
 
@@ -37,7 +37,7 @@ export const ParametersProvider = ({ children }: ParametersProviderProps) => {
    
      try {
       startLoading();
-      const resultData = await fetchCalculationResults({
+      const resultData = await fetchLMSData({
         ...parameters,
         type: "specific_computation",
       });
