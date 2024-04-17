@@ -1,17 +1,18 @@
 import React from 'react';
-import ParametersForm from './parameters-form'; // Ensure this is the correct path
-
+import ParametersForm from './parameters-form';
 
 interface LayoutProps {
-    children: React.ReactNode;
-  }
-  const Layout: React.FC<LayoutProps> = ({ children }) => {
-    return (
-      <>
-        <div>{children}</div>
-        <ParametersForm />
-      </>
-    );
-  };
-  
-  export default Layout;
+  selectedOption: string;
+  children?: React.ReactNode;
+}
+
+const ParametersLayout: React.FC<LayoutProps> = ({ selectedOption, children }) => {
+  return (
+    <>
+      <div>{children}</div>
+      <ParametersForm selectedOption={selectedOption} />
+    </>
+  );
+};
+
+export default ParametersLayout;

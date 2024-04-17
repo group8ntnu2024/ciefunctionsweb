@@ -12,18 +12,6 @@ export const SidePanel: React.FC<SidePanelProps> = ({ selectedOption }) => {
             return (
               <div>
                 <h2>CIE LMS cone fundamentals</h2>
-                <p><strong>Parameters</strong></p>
-                <p>Field size: 2°<br/>
-                Age: 32 yr</p>
-                <p><strong>Function symbols</strong></p>
-                <p>Functions:</p>
-                <p>Argument: λ (wavelength)</p>
-                <p><strong>Wavelengths</strong></p>
-                <p>Domain: 390 nm – 830 nm<br/>
-                Step: 1 nm</p>
-                <p><strong>Normalization</strong></p>
-                <p>Function values peaking at unity at 0.1 nm resolution</p>
-                <p><strong>Precision of tabulated values</strong></p>
                 <p>6 significant figures</p>
               </div>
             );
@@ -31,36 +19,57 @@ export const SidePanel: React.FC<SidePanelProps> = ({ selectedOption }) => {
             return (
               <div>
                 <h2>CIE LMS cone fundamentals</h2>
-                <p><strong>Parameters</strong></p>
-                <p>Field size: 2°<br/>
-                Age: 32 yr</p>
-                <p><strong>Function symbols</strong></p>
-                <p>Functions:</p>
-                <p>Argument: λ (wavelength)</p>
-                <p><strong>Wavelengths</strong></p>
-                <p>Domain: 390 nm – 830 nm<br/>
-                Step: 1 nm</p>
-                <p><strong>Normalization</strong></p>
-                <p>Function values peaking at unity at 0.1 nm resolution</p>
-                <p><strong>Precision of tabulated values</strong></p>
                 <p>9 significant figures</p>
               </div>
             );
-            case "method3":
-              return (
-                <div className="content">
-                  <h2>MacLeod–Boynton ls chromaticity diagram</h2>
-                  <p><strong>Parameters</strong></p>
-                  <p>Field size: 2°<br/>
-                  Age: 32 yr</p>
-                  <p><strong>Coordinate symbols</strong></p>
-                  <p><strong>Wavelengths</strong></p>
-                  <p>Domain: 390 nm – 830 nm<br/>
-                  Step: 1 nm</p>
-                  <p><strong>Normalization</strong></p>
-        
-                </div>
-              );
+          case "method3":
+            return (
+              <div className="content">
+                <h2>MacLeod–Boynton ls chromaticity diagram</h2>
+              </div>
+            );
+          case "method4":
+            return (
+              <div className="content">
+                <h2>Maxwellian lm chromaticity diagram</h2>
+              </div>
+            );
+          case "method5":
+            return (
+              <div className="content">
+                <h2>CIE XYZ cone-fundamental-based tristimulus functions</h2>
+              </div>
+            );
+          case "method6":
+            return (
+              <div className="content">
+                <h2>CIE xy cone-fundamental-based chromaticity diagram</h2>
+              </div>
+            );
+          case "method7":
+            return (
+              <div className="content">
+                <h2>XYZ cone-fundamental-based tristimulus functions for purple-line stimuli</h2>
+              </div>
+            );
+          case "method8":
+            return (
+              <div className="content">
+                <h2>xy cone-fundamental-based chromaticity diagram (purple-line stimuli)</h2>
+              </div>
+            );
+          case "method9":
+            return (
+              <div className="content">
+                <h2>CIE XYZ standard colour-matching functions</h2>
+              </div>
+            );
+          case "method10":
+            return (
+              <div className="content">
+                <h2>CIE xy standard chromaticity diagram</h2>
+              </div>
+            );
           default:
             return <p>Select a method to see its formula.</p>;
         }

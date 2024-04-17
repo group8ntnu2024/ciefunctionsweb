@@ -1,0 +1,48 @@
+.parametersForm {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.parametersControl {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin: 10px 20px;
+}
+
+.formControl {
+  padding: 1px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 55px;
+}
+
+.labelSpacing {
+  margin-right: 25px;  
+}
+
+.btnPrimary {
+  border-radius: 8px;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  background-color: #6a82fb;
+  background-image: linear-gradient(to right, #6a82fb, #fc5c7d);
+  color: white;
+  cursor: pointer;
+  transition: all 0.25s ease-in-out;
+  border: 1px solid transparent;
+}
+
+.btnPrimary:hover {
+  background-image: linear-gradient(to right, #fc5c7d, #6a82fb);
+  border-color: #fff;
+}
+
+.btnPrimary:active {
+  background-color: #535bf2;
+  transform: scale(0.98);
+}
