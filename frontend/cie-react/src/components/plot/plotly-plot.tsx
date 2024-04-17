@@ -1,56 +1,63 @@
-import{ useState, useEffect } from 'react';
+import React from 'react';
 import Plot from 'react-plotly.js';
+import { useParameters } from '../../context/parameter-context';
+import LoadingIndicator from '../LoadingIndicator';
 
 type PlotlyPlot = {
-    x: any[];
-    y: any[];
-    type: 'scatter';
-    mode: 'lines';
-    name: string;
-    marker: { color: string };
-  }[];
-  
-  const PlotlyPlot = () => {
-    const [chartData, setChartData] = useState<PlotlyPlot>([]);
-    const [isLoading, setIsLoading] = useState(true);
+  x: number[];
+  y: number[];
+  type: 'scatter';
+  mode: 'lines' | 'markers';
+  name: string;
+  marker: { color: string };
+}[];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://127.0.0.1:5000/LMS_plots');
-        const json = await response.json();
-        
-        const xValues = json.plots.map((item: any[]) => item[0]);
-        const y1Values = json.plots.map((item: any[]) => item[1]);
-        const y2Values = json.plots.map((item: any[]) => item[2]);
-        const y3Values = json.plots.map((item: any[]) => item[3]);
+const PlotlyPlot: React.FC = () => {
+  const { computedData, isLoading } = useParameters();
 
-        setChartData([
-          { x: xValues, y: y1Values, type: 'scatter', mode: 'lines', name: 'Y1', marker: {color: 'red'} },
-          { x: xValues, y: y2Values, type: 'scatter', mode: 'lines', name: 'Y2', marker: {color: 'green'} },
-          { x: xValues, y: y3Values, type: 'scatter', mode: 'lines', name: 'Y3', marker: {color: 'blue'} }
-        ]);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const xValues = computedData.plotData.map(item => item[0]); 
+  const y1Values = computedData.plotData.map(item => item[1]);
+  const y2Values = computedData.plotData.map(item => item[2]);
+  const y3Values = computedData.plotData.map(item => item[3]);
 
-    fetchData();
-  }, []);
+  const chartData: PlotlyPlot = [
+    {
+      x: xValues, 
+      y: y1Values,
+      type: 'scatter',
+      mode: 'lines',
+      name: 'Y1',
+      marker: { color: 'red' },
+    },
+    {
+      x: xValues, 
+      y: y2Values,
+      type: 'scatter',
+      mode: 'lines',
+      name: 'Y2',
+      marker: { color: 'green' },
+    },
+    {
+      x: xValues,
+      y: y3Values,
+      type: 'scatter',
+      mode: 'lines',
+      name: 'Y3',
+      marker: { color: 'blue' },
+    },
+  ];
 
   if (isLoading) {
-    return <div>Loading ...</div>;
+    return <LoadingIndicator />;
   }
 
   return (
     <Plot
       data={chartData}
       layout={{
-        width: 800, 
-        height: 600, 
-        title: 'LMS',
+        width: 800,
+        height: 600,
+        title: 'LMS Plot',
         xaxis: { title: 'Wavelength (nm)' },
         yaxis: { title: 'Relative energy sensitivities' }
       }}

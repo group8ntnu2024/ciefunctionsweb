@@ -15,7 +15,10 @@ const defaultContextValue: ParametersContextType = {
     step_size: 1.0,
   },
   setParameters: () => {},
-  computedData : { tableData: [] },
+  computedData : {
+    tableData: [],
+    plotData: []
+  },
   setComputedData: () => {},
   computeData: async () => {},
   isLoading: true,
@@ -36,8 +39,8 @@ export const ParametersProvider = ({ children }: { children: ReactNode }) => {
   const computeData = async () => {
     try {
       startLoading();
-      const resultData = await fetchApiData(endpoint, { ...parameters});
-      setComputedData({ tableData: resultData });
+      const {result, plot} = await fetchApiData(endpoint, { ...parameters});
+      setComputedData({ tableData: result, plotData: plot });
     } catch (error) {
       console.error('Error:', error);
     } finally {

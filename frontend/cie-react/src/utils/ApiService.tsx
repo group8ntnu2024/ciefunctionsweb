@@ -1,12 +1,12 @@
 import { ALL_SPECIFIC_DATA, BASE_URL, DEFAULT_DATA, LMS_URL, SANIC_BASE_URL } from "./ApiUrls";
-import { paramProps } from "./propTypes";
+import { ApiResponse, paramProps } from "./propTypes";
 
 
 
 /**
  * Fetches data from the backend API.
  */
-async function fetchApiData(endpoint: string, params: paramProps): Promise<number[][]> {
+async function fetchApiData(endpoint: string, params: paramProps): Promise<ApiResponse> {
   const queryParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined) {
@@ -25,7 +25,15 @@ async function fetchApiData(endpoint: string, params: paramProps): Promise<numbe
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
-  return response.json().then(data => data.result);
+  return response.json().then(data => {
+    if (data.result && data.plot) {
+      //console.log(data.result)
+      console.log(data.plot)
+      return { result: data.result, plot: data.plot };
+    } else {
+      throw new Error('Unexpected response structure');
+    }
+  });
 }
 export {fetchApiData}
 

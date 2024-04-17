@@ -19,6 +19,7 @@ export interface Parameters {
 
 export interface ComputedData {
   tableData: number[][];
+  plotData: number[][];
 }
 
 export interface ParametersContextType {
@@ -30,5 +31,10 @@ export interface ParametersContextType {
     isLoading: boolean;
     endpoint: string;
     setEndpoint: (url: string) => void;
+  }
+
+export interface ApiResponse {
+    result: number[][];
+    plot: number[][];
   }
 

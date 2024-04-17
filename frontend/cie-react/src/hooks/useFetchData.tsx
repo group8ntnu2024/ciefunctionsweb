@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+/*import { useState, useEffect } from 'react';
 import { fetchApiData } from '../utils/ApiService';
 import { paramProps } from '../utils/propTypes';
 
@@ -24,4 +24,6 @@ export function useFetchData(endpoint: string, params: paramProps) {
   }, [endpoint, params]);
 
   return { data, isLoading, error };
-}
+}*/
+
+//deprecated, keeping for potential use in future
