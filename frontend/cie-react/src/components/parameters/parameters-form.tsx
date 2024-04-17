@@ -51,88 +51,88 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ selectedOption }) => {
       case "method1":
         return (
           <div className={styles.parametersForm}>
-            {createParameterControl("Field Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
             {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
             {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
             <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
           </div>
         );
       case "method2":
         return (
           <div className={styles.parametersForm}>
-            {createParameterControl("Field Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
             {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
             {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
             <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
           </div>
         );
       case "method3":
         return (
           <div className={styles.parametersForm}>
-            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
             {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
             {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
             <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
           </div>
         );
       case "method4":
         return (
           <div className={styles.parametersForm}>
-            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
             {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
             {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
             <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
           </div>
         );
       case "method5":
         return (
           <div className={styles.parametersForm}>
-            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
             {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
             {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
             <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
           </div>
         );
       case "method6":
         return (
           <div className={styles.parametersForm}>
-            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
             {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
             {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
             <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
           </div>
         );
       case "method7":
         return (
           <div className={styles.parametersForm}>
-            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
             {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
             {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
             <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
           </div>
         );
       case "method8":
         return (
           <div className={styles.parametersForm}>
-            {createParameterControl("hore Size:", "field_size", parameters.field_size, handleParameterChange)}
+            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
             {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain (nm):", "min", parameters.min, handleParameterChange)}
+            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
             {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step:", "step", parameters.step, handleParameterChange)}
+            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
             <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
           </div>
         );
