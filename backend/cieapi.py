@@ -16,12 +16,13 @@ import time
 # from gevent.pywsgi import WSGIServer
 from sanic import Sanic, response, exceptions, SanicException, text
 from sanic.response import json, html
-
+from sanic_cors import CORS
 from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Modular, compute_LMS_Modular, \
     compute_XYZ_Modular, compute_XY_modular, compute_XYZ_purples_modular, compute_xyz_purples_modular, \
     compute_XYZ_standard_modular, compute_xyz_standard_modular
 
 api = Sanic(__name__)
+CORS(api)
 
 # constants for each endpoint
 API_HOMEPAGE = "/api"
