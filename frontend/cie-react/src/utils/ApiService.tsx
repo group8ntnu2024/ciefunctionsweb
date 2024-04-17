@@ -1,4 +1,4 @@
-import { ALL_SPECIFIC_DATA, BASE_URL, DEFAULT_DATA, LMS_URL, SANIC_BASE_URL } from "./ApiUrls";
+import { ALL_SPECIFIC_DATA, BASE_URL, DEFAULT_DATA, SANIC_BASE_URL } from "./ApiUrls";
 import { ApiResponse, paramProps } from "./propTypes";
 
 

@@ -1,17 +1,21 @@
 import React, { ChangeEvent, useEffect } from 'react';
 import { useParameters } from '../../context/parameter-context';
 import styles from './ParametersForm.module.css';
+import { endpointMap } from '../../utils/propTypes';
+import { LMS_URL } from '../../utils/ApiUrls';
 
 interface ParametersFormProps {
   selectedOption: string;
 }
 
 const ParametersForm: React.FC<ParametersFormProps> = ({ selectedOption }) => {
-  const { parameters, setParameters, computeData } = useParameters();
+  const { parameters, setParameters, computeData, setEndpoint } = useParameters();
 
   useEffect(() => {
     console.log("Selected method:", selectedOption);
-  }, [selectedOption]);
+    const newEndpoint = endpointMap[selectedOption] || LMS_URL;
+    setEndpoint(newEndpoint);
+  }, [selectedOption, setEndpoint]);
 
   const handleParameterChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = event.target;

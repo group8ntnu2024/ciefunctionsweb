@@ -38,3 +38,10 @@ export interface ApiResponse {
     plot: number[][];
   }
 
+export const endpointMap: Record<string, string> = {
+  method1: "lms/",
+  method3: "lms-mb/",
+  method7: "xy-p/"
+};
+  
+
