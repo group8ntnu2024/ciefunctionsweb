@@ -1,8 +1,38 @@
-import { ALL_SPECIFIC_DATA, BASE_URL, DEFAULT_DATA } from "./ApiUrls";
+import { ALL_SPECIFIC_DATA, BASE_URL, DEFAULT_DATA, LMS_URL, SANIC_BASE_URL } from "./ApiUrls";
 import { paramProps } from "./propTypes";
 
 
 
+/**
+ * Fetches data from the backend API.
+ */
+async function fetchApiData(endpoint: string, params: paramProps): Promise<number[][]> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      queryParams.append(key, value.toString());
+    }
+  });
+
+
+  const url = `${SANIC_BASE_URL}${endpoint}?${queryParams.toString()}`;
+  console.log(url)
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json().then(data => data.result);
+}
+export {fetchApiData}
+
+/**
+ * 
+ * Deprecated function. Used under development for testing plot/table in frontend
+ */
 async function fetchCalculationResults(params: paramProps) {
     try {
       const response = await fetch(`${BASE_URL}${ALL_SPECIFIC_DATA}`, {
@@ -24,7 +54,10 @@ async function fetchCalculationResults(params: paramProps) {
       throw error;
     }
 }
-  
+/**
+ * Deprecated function. Used under development for testing plot/table in frontend
+ * 
+ */  
 async function fetchDefaultData() {
   try {
       const response = await fetch(`${BASE_URL}${DEFAULT_DATA}`, {
