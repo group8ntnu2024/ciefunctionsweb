@@ -1,17 +1,26 @@
-import { useState } from 'react';
+import { ReactNode, createContext, useContext, useState } from 'react';
 
 type UseContentControllerHook = {
   selectedOption: string;
   setSelectedOption: (option: string) => void;
 };
 
-function useContentController(initialOption: string = "method1"): UseContentControllerHook {
-  const [selectedOption, setSelectedOption] = useState<string>(initialOption);
+const ContentControllerContext = createContext<UseContentControllerHook | undefined>(undefined);
 
-  return {
-    selectedOption,
-    setSelectedOption,
-  };
-}
+export const UseContentControllerProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [selectedOption, setSelectedOption] = useState<string>("method1");
 
-export default useContentController;
+  return (
+    <ContentControllerContext.Provider value={{ selectedOption, setSelectedOption }}>
+      {children}
+    </ContentControllerContext.Provider>
+  );
+};
+
+export const useContentController = (): UseContentControllerHook => {
+  const context = useContext(ContentControllerContext);
+  if (context === undefined) {
+    throw new Error('Error!! useContentController without context!!');
+  }
+  return context;
+};

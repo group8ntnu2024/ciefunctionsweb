@@ -1,12 +1,11 @@
 import React from 'react';
 import './SidePanel.css';
+import { useContentController } from '../../hooks/useContentController';
 
-interface SidePanelProps {
-  selectedOption: string;
-}
 
-export const SidePanel: React.FC<SidePanelProps> = ({ selectedOption }) => {
+export const SidePanel: React.FC = () => {
     const renderFormula = () => {
+      const { selectedOption } = useContentController();
         switch (selectedOption) {
           case "method1":
             return (

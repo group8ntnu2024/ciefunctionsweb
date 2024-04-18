@@ -3,13 +3,12 @@ import { useParameters } from '../../context/parameter-context';
 import styles from './ParametersForm.module.css';
 import { endpointMap } from '../../utils/propTypes';
 import { LMS_CALC_URL } from '../../utils/ApiUrls';
+import { useContentController } from '../../hooks/useContentController';
 
-interface ParametersFormProps {
-  selectedOption: string;
-}
 
-const ParametersForm: React.FC<ParametersFormProps> = ({ selectedOption }) => {
+const ParametersForm: React.FC = () => {
   const { parameters, setParameters, computeData, setEndpoint } = useParameters();
+  const { selectedOption } = useContentController();
 
   useEffect(() => {
     console.log("Selected method:", selectedOption);
