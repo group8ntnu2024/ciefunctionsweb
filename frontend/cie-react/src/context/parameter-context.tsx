@@ -2,7 +2,7 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 import { Parameters, ComputedData, ParametersContextType } from '../utils/propTypes';
 import { fetchApiData } from '../utils/ApiService';
 import { useLoading } from '../hooks/useLoading';
-import { LMS_URL } from '../utils/ApiUrls';
+import { LMS_CALC_URL } from '../utils/ApiUrls';
 
 
 
@@ -22,7 +22,7 @@ const defaultContextValue: ParametersContextType = {
   setComputedData: () => {},
   computeData: async () => {},
   isLoading: true,
-  endpoint: LMS_URL,
+  endpoint: LMS_CALC_URL,
   setEndpoint: () => {}
 };
 
@@ -34,7 +34,7 @@ export const ParametersProvider = ({ children }: { children: ReactNode }) => {
   const [parameters, setParameters] = useState<Parameters>(defaultContextValue.parameters);
   const [computedData, setComputedData] = useState<ComputedData>(defaultContextValue.computedData);
   const { isLoading, startLoading, stopLoading } = useLoading();
-  const [endpoint, setEndpoint] = useState<string>(LMS_URL);
+  const [endpoint, setEndpoint] = useState<string>(LMS_CALC_URL);
 
   const computeData = async () => {
     try {

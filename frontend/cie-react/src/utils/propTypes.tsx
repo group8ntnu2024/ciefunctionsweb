@@ -39,9 +39,18 @@ export interface ApiResponse {
   }
 
 export const endpointMap: Record<string, string> = {
-  method1: "lms/",
-  method3: "lms-mb/",
-  method7: "xy-p/"
+  method1: "lms/calculation/",
+  method2: "lms/calculation/",
+  method3: "lms-mb/calculation",
+  method4: "lms-mw/calculation/",
+  method5: "xyz/calculation/",
+  method6: "xy/calculation/",
+  method7: "xyz-p/calculation",
+  method8: "xy-p/calculation/",
+  method9: "xyz-std/calculation/",
+  method10: "xy-std/calculation/",
+
+
 };
   
 
