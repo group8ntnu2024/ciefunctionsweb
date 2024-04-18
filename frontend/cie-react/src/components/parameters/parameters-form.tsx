@@ -2,7 +2,7 @@ import React, { ChangeEvent, useEffect } from 'react';
 import { useParameters } from '../../context/parameter-context';
 import styles from './ParametersForm.module.css';
 import { endpointMap } from '../../utils/propTypes';
-import { LMS_URL } from '../../utils/ApiUrls';
+import { LMS_CALC_URL } from '../../utils/ApiUrls';
 
 interface ParametersFormProps {
   selectedOption: string;
@@ -13,7 +13,7 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ selectedOption }) => {
 
   useEffect(() => {
     console.log("Selected method:", selectedOption);
-    const newEndpoint = endpointMap[selectedOption] || LMS_URL;
+    const newEndpoint = endpointMap[selectedOption] || LMS_CALC_URL;
     setEndpoint(newEndpoint);
   }, [selectedOption, setEndpoint]);
 
@@ -50,103 +50,39 @@ const ParametersForm: React.FC<ParametersFormProps> = ({ selectedOption }) => {
     </div>
   );
 
+  const createParameterForm = () => {
+    return(<div className={styles.parametersForm}>
+      {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
+      {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
+      {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
+      {createParameterControl("-", "max", parameters.max, handleParameterChange)}
+      {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
+      <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
+    </div>
+    );
+  }
+
   const renderParameters = () => {
-    switch (selectedOption) {
-      case "method1":
+
+    const methodNumber = parseInt(selectedOption.replace('method', ''));
+    let caseNumber;
+    if (methodNumber >= 1 && methodNumber <= 8) {
+      caseNumber = 1;
+    } else if (methodNumber >= 9 && methodNumber <= 10) {
+      caseNumber = 2;
+    } else {
+      caseNumber = 0;
+    }
+
+    switch (caseNumber) {
+      case 1:
         return (
-          <div className={styles.parametersForm}>
-            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
-            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
-            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
-            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
-          </div>
+          <div>
+          {createParameterForm()}
+        </div>
         );
-      case "method2":
-        return (
-          <div className={styles.parametersForm}>
-            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
-            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
-            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
-            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
-          </div>
-        );
-      case "method3":
-        return (
-          <div className={styles.parametersForm}>
-            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
-            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
-            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
-            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
-          </div>
-        );
-      case "method4":
-        return (
-          <div className={styles.parametersForm}>
-            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
-            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
-            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
-            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
-          </div>
-        );
-      case "method5":
-        return (
-          <div className={styles.parametersForm}>
-            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
-            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
-            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
-            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
-          </div>
-        );
-      case "method6":
-        return (
-          <div className={styles.parametersForm}>
-            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
-            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
-            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
-            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
-          </div>
-        );
-      case "method7":
-        return (
-          <div className={styles.parametersForm}>
-            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
-            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
-            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
-            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
-          </div>
-        );
-      case "method8":
-        return (
-          <div className={styles.parametersForm}>
-            {createParameterControl("Field size:", "field_size", parameters.field_size, handleParameterChange)}
-            {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-            {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
-            {createParameterControl("-", "max", parameters.max, handleParameterChange)}
-            {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
-            <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
-          </div>
-        );
-      case "method9":
-        return (
-          <div className={styles.parametersForm}>
-            {createDegreeDropdown()}
-          </div>
-        );
-      case "method10":
+      
+      case 2:
         return (
           <div className={styles.parametersForm}>
             {createDegreeDropdown()}
