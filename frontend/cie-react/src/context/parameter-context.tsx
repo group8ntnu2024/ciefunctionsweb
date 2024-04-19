@@ -30,13 +30,14 @@ const ParametersContext = createContext<ParametersContextType>(defaultContextVal
 
 export const useParameters = () => useContext(ParametersContext);
 
-export const ParametersProvider = ({ children }: { children: ReactNode }) => {
+export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   const [parameters, setParameters] = useState<Parameters>(defaultContextValue.parameters);
   const [computedData, setComputedData] = useState<ComputedData>(defaultContextValue.computedData);
   const { isLoading, startLoading, stopLoading } = useLoading();
   const [endpoint, setEndpoint] = useState<string>(LMS_CALC_URL);
 
   const computeData = useCallback(async () => {
+    console.log('hei');
     startLoading();
     try {
       const { result, plot } = await fetchApiData(endpoint, parameters);

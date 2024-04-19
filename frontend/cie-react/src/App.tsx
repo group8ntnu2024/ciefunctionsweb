@@ -16,14 +16,14 @@ function App() {
       element: (
         <UseContentControllerProvider>
           <ParametersProvider>
-          <div className="container">
+          <div className="outer-container">
             <Navbar />
-            <div className="row">
-              <div className="col-md-9">
+            <div className="inner-container">
+              <div className="plo">
                 <Outlet />
                 <PulldownMenu />
               </div>
-              <div className="col-md-3">
+              <div className="sid">
                 <SidePanel />
               </div>
             </div>

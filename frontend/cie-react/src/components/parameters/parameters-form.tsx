@@ -86,16 +86,16 @@ const ParametersForm: React.FC = () => {
     switch (caseNumber) {
       case 1:
         return (
-          <div>
+          <>
           {createParameterForm()}
-        </div>
+          </>
         );
       
       case 2:
         return (
-          <div className={styles.parametersForm}>
+          <>
             {createDegreeDropdown()}
-          </div>
+          </>
         );
       default:
         return <p>Please select a method to display parameters.</p>;

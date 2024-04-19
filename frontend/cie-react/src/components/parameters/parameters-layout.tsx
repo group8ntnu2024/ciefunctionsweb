@@ -8,7 +8,7 @@ interface LayoutProps {
 const ParametersLayout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <>
-      <div>{children}</div>
+      {children}
       <ParametersForm  />
     </>
   );
