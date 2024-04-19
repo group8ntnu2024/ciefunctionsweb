@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { Parameters, ComputedData, ParametersContextType } from '../utils/propTypes';
 import { fetchApiData } from '../utils/ApiService';
 import { useLoading } from '../hooks/useLoading';
@@ -36,17 +36,17 @@ export const ParametersProvider = ({ children }: { children: ReactNode }) => {
   const { isLoading, startLoading, stopLoading } = useLoading();
   const [endpoint, setEndpoint] = useState<string>(LMS_CALC_URL);
 
-  const computeData = async () => {
+  const computeData = useCallback(async () => {
+    startLoading();
     try {
-      startLoading();
-      const {result, plot} = await fetchApiData(endpoint, { ...parameters});
+      const { result, plot } = await fetchApiData(endpoint, parameters);
       setComputedData({ tableData: result, plotData: plot });
     } catch (error) {
       console.error('Error:', error);
     } finally {
       stopLoading();
     }
-  };
+  }, [endpoint, parameters, setComputedData]);
 
   return (
     <ParametersContext.Provider value={{ parameters, setParameters, computedData, setComputedData, computeData, isLoading, endpoint, setEndpoint }}>

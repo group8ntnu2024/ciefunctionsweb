@@ -52,5 +52,21 @@ export const endpointMap: Record<string, string> = {
 
 
 };
+
+export type MethodOption = 'method1' | 'method2' | 'method3' | 'method4' | 'method5' |'method6' | 'method7' | 'method8' | 'method9' | 'method10';
+
+
+export const titles: Record<MethodOption, string> = {
+  method1: "CIE LMS cone fundamentals",
+  method2: "CIE LMS cone fundamentals (9 sign. figs.)",
+  method3: "MacLeod-Boynton Is chromaticity diagram",
+  method4: "Maxwellian Im chromaticity diagram",
+  method5: "CIE XYZ cone-fundamental-based tristimulus functions",
+  method6: "CIE xy cone-fundamental-based chromaticity diagram",
+  method7: "XYZ cone-fundamental-based tristimulus functions for purple-line stimuli",
+  method8: "xy cone-fundamental-based chromaticity diagram (purple-line stimuli)",
+  method9: "CIE XYZ standard colour-matching functions",
+  method10: "CIE xy standard chromaticity diagram",
+};
   
 

@@ -7,7 +7,7 @@ import ParametersLayout from "./components/parameters/parameters-layout";
 import { PulldownMenu } from "./components/PulldownMenu/PulldownMenu";
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import { ParametersProvider } from './context/parameter-context';
-import { useContentController, UseContentControllerProvider } from "./hooks/useContentController";
+import { UseContentControllerProvider } from "./hooks/useContentController";
 
 function App() {
   const router = createHashRouter([
@@ -32,8 +32,8 @@ function App() {
         </UseContentControllerProvider>
       ),
       children: [
-        { path: PLOT_ROUTE, element: <ParametersLayout selectedOption={''}><PlotContent/></ParametersLayout> },
-        { path: TABLE_ROUTE, element: <ParametersLayout selectedOption={''}><TableContent/></ParametersLayout> },
+        { path: PLOT_ROUTE, element: <ParametersLayout><PlotContent/></ParametersLayout> },
+        { path: TABLE_ROUTE, element: <ParametersLayout><TableContent/></ParametersLayout> },
       ],
     }
   ]);

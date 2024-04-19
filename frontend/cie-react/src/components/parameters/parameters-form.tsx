@@ -7,14 +7,24 @@ import { useContentController } from '../../hooks/useContentController';
 
 
 const ParametersForm: React.FC = () => {
-  const { parameters, setParameters, computeData, setEndpoint } = useParameters();
+  const { parameters, setParameters, computeData, setEndpoint, endpoint } = useParameters();
   const { selectedOption } = useContentController();
 
+  //useeffect to set new endpoint based on selected option in pulldown
   useEffect(() => {
-    console.log("Selected method:", selectedOption);
+    console.log("\n -------------------------------------------------------- \n" + "Selected method:", selectedOption);
     const newEndpoint = endpointMap[selectedOption] || LMS_CALC_URL;
     setEndpoint(newEndpoint);
+    console.log("endpoint: " + newEndpoint)
   }, [selectedOption, setEndpoint]);
+
+  //useffect to call computedata when endpoint is changed
+  useEffect(() => {
+    if (endpoint) {
+      computeData();
+    }
+  }, [endpoint]);
+  
 
   const handleParameterChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = event.target;

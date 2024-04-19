@@ -2,6 +2,8 @@ import React from 'react';
 import Plot from 'react-plotly.js';
 import { useParameters } from '../../context/parameter-context';
 import LoadingIndicator from '../LoadingIndicator';
+import { useContentController } from '../../hooks/useContentController';
+import { MethodOption, titles } from '../../utils/propTypes'
 
 type PlotlyPlot = {
   x: number[];
@@ -14,6 +16,9 @@ type PlotlyPlot = {
 
 const PlotlyPlot: React.FC = () => {
   const { computedData, isLoading } = useParameters();
+  const { selectedOption } = useContentController();
+
+  const plotTitle = (selectedOption in titles) ? titles[selectedOption as MethodOption] : 'Select a method';
 
   const xValues = computedData.plotData.map(item => item[0]); 
   const y1Values = computedData.plotData.map(item => item[1]);
@@ -57,7 +62,7 @@ const PlotlyPlot: React.FC = () => {
       layout={{
         width: 800,
         height: 600,
-        title: 'LMS Plot',
+        title: plotTitle,
         xaxis: { title: 'Wavelength (nm)' },
         yaxis: { title: 'Relative energy sensitivities' }
       }}

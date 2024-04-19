@@ -27,8 +27,6 @@ async function fetchApiData(endpoint: string, params: paramProps): Promise<ApiRe
   }
   return response.json().then(data => {
     if (data.result && data.plot) {
-      //console.log(data.result)
-      console.log(data.plot)
       return { result: data.result, plot: data.plot };
     } else {
       throw new Error('Unexpected response structure');
