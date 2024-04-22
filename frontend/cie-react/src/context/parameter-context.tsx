@@ -1,8 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { Parameters, ComputedData, ParametersContextType } from '../utils/propTypes';
-import { fetchApiData } from '../utils/ApiService';
+import { fetchApiData, fetchHtmlContent } from '../utils/ApiService';
 import { useLoading } from '../hooks/useLoading';
-import { LMS_CALC_URL } from '../utils/ApiUrls';
 
 
 
@@ -22,8 +21,9 @@ const defaultContextValue: ParametersContextType = {
   setComputedData: () => {},
   computeData: async () => {},
   isLoading: true,
-  endpoint: LMS_CALC_URL,
-  setEndpoint: () => {}
+  endpoint: '',
+  setEndpoint: () => {},
+  htmlContent: ''
 };
 
 const ParametersContext = createContext<ParametersContextType>(defaultContextValue);
@@ -33,15 +33,29 @@ export const useParameters = () => useContext(ParametersContext);
 export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   const [parameters, setParameters] = useState<Parameters>(defaultContextValue.parameters);
   const [computedData, setComputedData] = useState<ComputedData>(defaultContextValue.computedData);
+  const [htmlContent, setHtmlContent] = useState<string>('');
   const { isLoading, startLoading, stopLoading } = useLoading();
-  const [endpoint, setEndpoint] = useState<string>(LMS_CALC_URL);
+  const [endpoint, setEndpoint] = useState<string>('');
+
+
+  const updateSideMenu = useCallback(async () => {
+    try {
+      const sideMenuContent = await fetchHtmlContent(endpoint + 'sidemenu/', parameters);
+      setHtmlContent(sideMenuContent);
+    } catch (error) {
+      console.error('Error fetching sidemenu content:', error);
+    }
+  }, [endpoint, parameters]);
 
   const computeData = useCallback(async () => {
-    console.log('hei');
+    const calculateData = endpoint + 'calculation/';
+  
     startLoading();
     try {
-      const { result, plot } = await fetchApiData(endpoint, parameters);
+      console.log("Current parameters:", parameters);
+      const { result, plot } = await fetchApiData(calculateData, parameters);
       setComputedData({ tableData: result, plotData: plot });
+      await updateSideMenu();
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -50,7 +64,7 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   }, [endpoint, parameters, setComputedData]);
 
   return (
-    <ParametersContext.Provider value={{ parameters, setParameters, computedData, setComputedData, computeData, isLoading, endpoint, setEndpoint }}>
+    <ParametersContext.Provider value={{ parameters, setParameters, computedData, setComputedData, computeData, htmlContent,isLoading, endpoint, setEndpoint }}>
       {children}
     </ParametersContext.Provider>
   );

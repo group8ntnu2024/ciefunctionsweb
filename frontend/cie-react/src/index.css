@@ -16,12 +16,17 @@
 .outer-container {
   width: 100%;
   margin: auto;
+  display: flex;
+  flex-direction: column;
  /* padding: 20px;*/
 }
 
 
 .inner-container {
   display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  width: 100%;
  /* flex-wrap: wrap;*/
   /*margin-right: -15px;
   margin-left: -15px;*/
