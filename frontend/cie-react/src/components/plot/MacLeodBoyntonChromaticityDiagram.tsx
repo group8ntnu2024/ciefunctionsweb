@@ -6,12 +6,17 @@ import { useContentController } from '../../hooks/useContentController';
 import { MethodOption, titles } from '../../utils/propTypes';
 import { Data } from 'plotly.js';
 
+
+
+
+
 const MacLeodBoyntonChromaticityDiagram: React.FC = () => {
   const { computedData, isLoading } = useParameters();
   const { selectedOption } = useContentController();
 
   const plotTitle = (selectedOption && titles[selectedOption as MethodOption]) ? titles[selectedOption as MethodOption] : 'Chromaticity Diagram';
 
+  
   if (!computedData || !computedData.plotData || computedData.plotData.length === 0) {
     return <div>No data available for plotting.</div>;
   }
@@ -20,8 +25,36 @@ const MacLeodBoyntonChromaticityDiagram: React.FC = () => {
     return <LoadingIndicator />;
   }
 
+  function addSpecificWavelengthPoints() {
+    const startWavelength = 410;
+    const endWavelength = 480;
+    const step = 10;
+    const additionalWavelengths = [500, 550, 575, 600, 700]; // Additional specific wavelengths
+
+    drawnPoints.push(0); // Add first point
+    drawnPoints.push(computedData.plotData.length - 1); // Add last point
+
+    for (let wavelength = startWavelength; wavelength <= endWavelength; wavelength += step) {
+        const index = wavelengths.indexOf(wavelength);
+        if (index !== -1) {
+            drawnPoints.push(index);
+        }
+    }
+
+    additionalWavelengths.forEach(wavelength => {
+        const index = wavelengths.indexOf(wavelength);
+        if (index !== -1) {
+            drawnPoints.push(index);
+        }
+    });
+}
+
+  const wavelengths = computedData.plotData.map(item => item[0]);
   const xValues = computedData.plotData.map(item => item[1]); 
   const yValues = computedData.plotData.map(item => item[3]);
+
+  const drawnPoints: number[] = [];
+  addSpecificWavelengthPoints();
 
   // Prepares plot data with in the arch of the chromaticity diagram
   const chartData: Data[] = [
@@ -76,6 +109,25 @@ const MacLeodBoyntonChromaticityDiagram: React.FC = () => {
     });
   }
 
+
+  drawnPoints.forEach(index => {
+    chartData.push({
+      x: [xValues[index]],
+      y: [yValues[index]],
+      type: 'scatter',
+      mode: 'markers',
+      marker: {
+        color: 'white',
+        size: 10,
+        line: {
+          color: 'black',
+          width: 2
+        },
+        symbol: 'circle'
+      }
+    });
+  });
+  
   const minX = Math.min(...xValues) - 0.1;
   const maxX = Math.max(...xValues) + 0.1;
   const minY = Math.min(...yValues) - 0.1;
