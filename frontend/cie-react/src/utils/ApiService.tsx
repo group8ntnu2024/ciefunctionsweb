@@ -1,4 +1,4 @@
-import { ALL_SPECIFIC_DATA, BASE_URL, DEFAULT_DATA, SANIC_BASE_URL } from "./ApiUrls";
+import { SANIC_BASE_URL } from "./ApiUrls";
 import { ApiResponse, paramProps } from "./propTypes";
 
 
@@ -35,49 +35,23 @@ async function fetchApiData(endpoint: string, params: paramProps): Promise<ApiRe
 }
 export {fetchApiData}
 
-/**
- * 
- * Deprecated function. Used under development for testing plot/table in frontend
- */
-async function fetchCalculationResults(params: paramProps) {
-    try {
-      const response = await fetch(`${BASE_URL}${ALL_SPECIFIC_DATA}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(params),
-      });
-  
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-  
-      const result = await response.json();
-      return result.results.LMS; 
-    } catch (error) {
-      console.error('Error during fetch operation:', error);
-      throw error;
+async function fetchHtmlContent(endpoint: string, params: paramProps): Promise<string> {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      queryParams.append(key, value.toString());
     }
-}
-/**
- * Deprecated function. Used under development for testing plot/table in frontend
- * 
- */  
-async function fetchDefaultData() {
-  try {
-      const response = await fetch(`${BASE_URL}${DEFAULT_DATA}`, {
-          method: 'GET',
-      });
-      if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const result = await response.json();
-      return result.results.LMS;
-  } catch (error) {
-      console.error('Error fetching default data:', error);
-      throw error;
+  });
+
+  const url = `${SANIC_BASE_URL}${endpoint}?${queryParams.toString()}`;
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: { 'Accept': 'text/html' },
+  });
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
   }
+  console.log(response)
+  return response.text();
 }
-  
-  export { fetchCalculationResults, fetchDefaultData };
+export {fetchHtmlContent}

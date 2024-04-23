@@ -12,7 +12,6 @@
   
   .scrollable-table th, .scrollable-table td {
     border: 2px solid white;
-    padding: 8px;
   }
   
   .scrollable-table tbody tr:nth-child(even) {

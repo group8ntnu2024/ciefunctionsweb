@@ -31,6 +31,7 @@ export interface ParametersContextType {
     isLoading: boolean;
     endpoint: string;
     setEndpoint: (url: string) => void;
+    htmlContent: string;
   }
 
 export interface ApiResponse {
@@ -39,16 +40,16 @@ export interface ApiResponse {
   }
 
 export const endpointMap: Record<string, string> = {
-  method1: "lms/calculation/",
-  method2: "lms/calculation/",
-  method3: "lms-mb/calculation",
-  method4: "lms-mw/calculation/",
-  method5: "xyz/calculation/",
-  method6: "xy/calculation/",
-  method7: "xyz-p/calculation",
-  method8: "xy-p/calculation/",
-  method9: "xyz-std/calculation/",
-  method10: "xy-std/calculation/",
+  method1: "lms/",
+  method2: "lms/",
+  method3: "lms-mb/",
+  method4: "lms-mw/",
+  method5: "xyz/",
+  method6: "xy/",
+  method7: "xyz-p/",
+  method8: "xy-p/",
+  method9: "xyz-std/",
+  method10: "xy-std/",
 
 
 };
