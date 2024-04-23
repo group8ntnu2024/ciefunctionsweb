@@ -55,12 +55,13 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
     startLoading();
     try {
       console.log("Current parameters:", parameters);
-      const { result, plot, plot_purple, plot_white } = await fetchApiData(calculateData, parameters);
+      const { result, plot, plot_purple, plot_white, xyz_plot } = await fetchApiData(calculateData, parameters);
       setComputedData({ 
         tableData: result, 
         plotData: plot, 
         purpleLineData: plot_purple,
-        whitePointData: plot_white
+        whitePointData: plot_white,
+        plsArchData: xyz_plot,
       });
       await updateSideMenu();
     } catch (error) {

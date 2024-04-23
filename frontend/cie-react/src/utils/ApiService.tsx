@@ -29,8 +29,10 @@ async function fetchApiData(endpoint: string, params: paramProps): Promise<ApiRe
     const apiResponse: ApiResponse = {
       result: data.result ?? [],
       plot: data.plot ?? [],
+      xyz_plot: data.xyz_plot ?? [],
       plot_purple: data.plot_purple ?? [],
-      plot_white: data.plot_white ?? []
+      plot_white: data.plot_white ?? [],
+
     };
     return apiResponse;
   });

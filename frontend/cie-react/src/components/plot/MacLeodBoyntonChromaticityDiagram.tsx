@@ -29,10 +29,9 @@ const MacLeodBoyntonChromaticityDiagram: React.FC = () => {
     const startWavelength = 410;
     const endWavelength = 480;
     const step = 10;
-    const additionalWavelengths = [500, 550, 575, 600, 700]; // Additional specific wavelengths
-
-    drawnPoints.push(0); // Add first point
-    drawnPoints.push(computedData.plotData.length - 1); // Add last point
+    const additionalWavelengths = [500, 550, 575, 600, 700];
+    drawnPoints.push(0);
+    drawnPoints.push(computedData.plotData.length - 1);
 
     for (let wavelength = startWavelength; wavelength <= endWavelength; wavelength += step) {
         const index = wavelengths.indexOf(wavelength);
@@ -49,9 +48,9 @@ const MacLeodBoyntonChromaticityDiagram: React.FC = () => {
     });
 }
 
-  const wavelengths = computedData.plotData.map(item => item[0]);
   const xValues = computedData.plotData.map(item => item[1]); 
   const yValues = computedData.plotData.map(item => item[3]);
+  const wavelengths = computedData.plotData.map(item => item[0]);
 
   const drawnPoints: number[] = [];
   addSpecificWavelengthPoints();
