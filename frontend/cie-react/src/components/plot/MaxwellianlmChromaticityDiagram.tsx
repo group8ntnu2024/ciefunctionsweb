@@ -20,8 +20,35 @@ const MaxwellianlmChromaticityDiagram: React.FC = () => {
     return <LoadingIndicator />;
   }
 
+  function addSpecificWavelengthPoints() {
+    const startWavelength = 450;
+    const endWavelength = 631;
+    const step = 10;
+    const additionalWavelengths = [700];
+    drawnPoints.push(0);
+    drawnPoints.push(computedData.plotData.length - 1);
+
+    for (let wavelength = startWavelength; wavelength <= endWavelength; wavelength += step) {
+        const index = wavelengths.indexOf(wavelength);
+        if (index !== -1) {
+            drawnPoints.push(index);
+        }
+    }
+
+    additionalWavelengths.forEach(wavelength => {
+        const index = wavelengths.indexOf(wavelength);
+        if (index !== -1) {
+            drawnPoints.push(index);
+        }
+    });
+}
+
   const xValues = computedData.plotData.map(item => item[1]); 
   const yValues = computedData.plotData.map(item => item[2]);
+  const wavelengths = computedData.plotData.map(item => item[0]);
+
+  const drawnPoints: number[] = [];
+  addSpecificWavelengthPoints();
 
   // Prepares plot data with in the arch of the chromaticity diagram
   const chartData: Data[] = [
@@ -36,28 +63,6 @@ const MaxwellianlmChromaticityDiagram: React.FC = () => {
       }
     }
   ];
-
-    // Adding the white point if available
-    if (computedData.whitePointData) {
-        const whiteX = [computedData.whitePointData[0]];
-        const whiteY = [computedData.whitePointData[2]];
-    
-        chartData.push({
-          x: whiteX,
-          y: whiteY,
-          type: 'scatter',
-          mode: 'markers',
-          marker: {
-            color: 'red',
-            symbol: 'x-thin',
-            size: 10,
-            line: {
-              color: 'black',
-              width: 1
-            }
-          }
-        });
-      }
 
   // Extracting purple line points if available and adding it to the plot
   if (computedData.purpleLineData) {
@@ -76,6 +81,47 @@ const MaxwellianlmChromaticityDiagram: React.FC = () => {
     });
   }
 
+  // Adding the white point if available
+  if (computedData.whitePointData) {
+    const whiteX = [computedData.whitePointData[0]];
+    const whiteY = [computedData.whitePointData[2]];
+
+    chartData.push({
+      x: whiteX,
+      y: whiteY,
+      type: 'scatter',
+      mode: 'markers',
+      marker: {
+        color: 'red',
+        symbol: 'x-thin',
+        size: 10,
+        line: {
+          color: 'black',
+          width: 1
+        }
+      }
+    });
+  }
+
+
+  drawnPoints.forEach(index => {
+    chartData.push({
+      x: [xValues[index]],
+      y: [yValues[index]],
+      type: 'scatter',
+      mode: 'markers',
+      marker: {
+        color: 'white',
+        size: 10,
+        line: {
+          color: 'black',
+          width: 2
+        },
+        symbol: 'circle'
+      }
+    });
+  });
+  
   const minX = Math.min(...xValues) - 0.1;
   const maxX = Math.max(...xValues) + 0.1;
   const minY = Math.min(...yValues) - 0.1;
@@ -112,5 +158,4 @@ const MaxwellianlmChromaticityDiagram: React.FC = () => {
     return <div>Error displaying plot. Please check the console for more details.</div>;
   }
 };
-
 export default MaxwellianlmChromaticityDiagram;
