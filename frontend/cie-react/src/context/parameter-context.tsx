@@ -16,7 +16,9 @@ const defaultContextValue: ParametersContextType = {
   setParameters: () => {},
   computedData : {
     tableData: [],
-    plotData: []
+    plotData: [],
+    purpleLineData: [],
+    whitePointData: []
   },
   setComputedData: () => {},
   computeData: async () => {},
@@ -53,15 +55,20 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
     startLoading();
     try {
       console.log("Current parameters:", parameters);
-      const { result, plot } = await fetchApiData(calculateData, parameters);
-      setComputedData({ tableData: result, plotData: plot });
+      const { result, plot, plot_purple, plot_white } = await fetchApiData(calculateData, parameters);
+      setComputedData({ 
+        tableData: result, 
+        plotData: plot, 
+        purpleLineData: plot_purple,
+        whitePointData: plot_white
+      });
       await updateSideMenu();
     } catch (error) {
       console.error('Error:', error);
     } finally {
       stopLoading();
     }
-  }, [endpoint, parameters, setComputedData]);
+  }, [endpoint, parameters, setComputedData, updateSideMenu, startLoading, stopLoading]);
 
   return (
     <ParametersContext.Provider value={{ parameters, setParameters, computedData, setComputedData, computeData, htmlContent,isLoading, endpoint, setEndpoint }}>
