@@ -1,6 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 import math
 
 import requests
+import sanic
 # from flask import Flask, request, jsonify, make_response, Response, render_template
 from flask_cors import CORS
 
@@ -40,62 +43,25 @@ XYP_ENDPOINT = "xy-p"
 XYZSTD_ENDPOINT = "xyz-std"
 XYSTD_ENDPOINT = "xy-std"
 STATUS_ENDPOINT = "status"
-# constants for standardization field sizes
+# constants for field sizes in standardization functions
 STD_1931 = 2.0
 STD_1964 = 10.0
+# constants for limits
+FIELD_SIZE_LIMIT = (1, 10)
+AGE_LIMIT = (20, 80)
+λ_MIN_LIMIT = (390, 400)
+λ_MAX_LIMIT = (700, 830)
+λ_STEP_LIMIT = (0.1, 5)
+
 
 # Timer that starts when server boots up, for status endpoint
 server_start = time.time()
 
 # bad practice, but valid for us now
-@api.middleware("request")
-async def check_get(request):
-    """
-    Bad practice, but valid for us.
-    A middleware function that checks the method of the request; if it is not GET, then raise an exception
-    and return an error response.
-
-    All of our endpoints only support GET, and will seemingly so for the future. However, if this service gets
-    expanded on in the future to support several HTTP Methods, then this middleware has to go.
-    """
-    if request.method != "GET":
-        raise SanicException(("Method error.", "The HTTP Method you are trying to use is not supported by any endpoint in this server.",
-                              "All of the endpoints support only HTTP GET requests. We suggest you try that instead."),
-                             status_code=405)
-
 # Custom error handler
-@api.exception(SanicException)
-async def errorhandler(request, exception):
-    return json({
-        "status_code": exception.status_code,
-        "message": str(exception.args)
-    })
 
-
-async def error_handler(request, exception):
-    """
-    SanicException error handler function that returns a JSON with information regarding the exception.
-
-    Parameters
-    ----------
-    request: Unusued but customary parameter for the request itself.
-    exception: Parameter symbolizing the request.
-
-    Returns
-    -------
-    A HTML response with a JSON containing the title of the error, a message detailing it, a possible suggestion
-    for the user to do, and the status code itself.
-
-    """
-    [title, message, suggestion] = exception.args[0]
-    json_error = {
-        "error": title,
-        "status_code": exception.status_code,
-        "message": message,
-        "suggestion:": suggestion,
-    }
-    return json(json_error, status=exception.status_code)
-
+class UnprocessableContent(SanicException):
+    status_code = 422
 
 def endpoint_creator(homepage, version, endpoint=""):
     """
@@ -123,33 +89,34 @@ def endpoint_creator(homepage, version, endpoint=""):
     into the JSON string as a float with one decimal.
 """
 calculation_formats = {
-    "LMS-base-log": {
-        "result": ["{:.1f}", "{:.8f}", "{:.8f}", "{:.8f}"],
-        "plot": ["{:.1f}", "{:.8f}", "{:.8f}", "{:.8f}"],
-    },
     "LMS-base": {
         "result": ["{:.1f}", "{:.8e}", "{:.8e}", "{:.8e}"],
         "plot": ["{:.1f}", "{:.8e}", "{:.8e}", "{:.8e}"],
-    },
-    "LMS-log": {
-        "result": ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
-        "plot": ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+        "result_log": ["{:.1f}", "{:.8f}", "{:.8f}", "{:.8f}"],
+        "plot_log": ["{:.1f}", "{:.8f}", "{:.8f}", "{:.8f}"],
     },
     "LMS": {
         "result": ["{:.1f}", "{:.5e}", "{:.5e}", "{:.5e}"],
         "plot": ["{:.1f}", "{:.5e}", "{:.5e}", "{:.5e}"],
+        "result_log": ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+        "plot_log": ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"]
     },
     "Maxwell-Macleod-resplot": {
         "result": ["{:.1f}", "{:.6f}", "{:.6f}", "{:.6f}"],
         "plot": ["{:.1f}", "{:.6f}", "{:.6f}", "{:.6f}"],
+        "plot_white": ["{:.6f}", "{:.6f}", "{:.6f}"],
+        "plot_purple": ["{:.6f}", "{:.6f}", "{:.6f}"],
     },
     "XYZ-XYZP-XYZ-STD": {
         "result": ["{:.1f}", "{:.6e}", "{:.6e}", "{:.6e}"],
-        "plot": ["{:.1f}", "{:.6e}", "{:.6e}", "{:.6e}"],
+        "plot": ["{:.1f}", "{:.6e}", "{:.6e}", "{:.6e}"]
     },
     "XY-XYP-XY-STD": {
         "result": ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
         "plot": ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+        "plot_purple": ["{:.5f}", "{:.5f}", "{:.5f}"],
+        "plot_white": ["{:.6f}", "{:.6f}", "{:.6f}"],
+        "xyz_plot": ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"]
     },
     # shared dictionary between all info
     "info-1": {
@@ -161,6 +128,7 @@ calculation_formats = {
         "xyz_white": ["{:.5f}", "{:.5f}", "{:.5f}"],
         "xyz_tg_purple": ["{:.5f}", "{:.5f}", "{:.5f}"],
         "XYZ_tg_purple": ["{:.5f}", "{:.5f}", "{:.5f}", "{:.5f}"],
+        "xyz_tg_purple_plot": ["{:.6f}", "{:.6f}", "{:.6f}"],
         "trans_mat": ["{:.8f}", "{:.8f}", "{:.8f}"],
         # "trans_mat_N": ["{:.8f}", "{:.8f}", "{:.8f}"],
     }
@@ -194,19 +162,10 @@ def new_calculation_JSON(calculation, parameters):
 
     if calculation is compute_LMS_Modular:
         if parameters['base']:
-            if parameters['log']:
-                # log10 base LMS
-                return write_to_JSON(calculation(parameters), calculation_formats['LMS-base-log'])
-            else:
                 # base LMS
-                return write_to_JSON(calculation(parameters), calculation_formats['LMS-base'])
+            return write_to_JSON(calculation(parameters), calculation_formats['LMS-base'])
         else:
-            # log10 LMS
-            if parameters['log']:
-                return write_to_JSON(calculation(parameters), calculation_formats['LMS-log'])
-            else:
-                # LMS
-                return write_to_JSON(calculation(parameters), calculation_formats['LMS'])
+            return write_to_JSON(calculation(parameters), calculation_formats['LMS'])
     # many of these share the same ones
     if calculation in [compute_Maxwellian_Modular, compute_MacLeod_Modular]:
         return write_to_JSON(calculation(parameters), calculation_formats["Maxwell-Macleod-resplot"])
@@ -326,8 +285,7 @@ async def LMS(request, more:str):
     if more == "sidemenu":
         return html(LMS_sidemenu(createAndCheckParameters(True, compute_LMS_Modular, request)))
     else:
-        # add later
-        return text("neither...")
+        raise sanic.exceptions.NotFound("This endpoint supports only /sidemenu and /calculation. Please, use one of those, and try again.")
 
 # macleod
 @api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MB_ENDPOINT) + "/<more:str>"  )
@@ -529,19 +487,19 @@ def createAndCheckParameters(disabled, calculation, request):
                 parameters.update({name: float(value)})
 
         # error handling for the values
-        if parameters['field_size'] > 10 or parameters['field_size'] < 1:
+        if parameters['field_size'] < FIELD_SIZE_LIMIT[0] or parameters['field_size'] > FIELD_SIZE_LIMIT[1]:
             raise SanicException(("Value error.", "Invalid value for 'field_size'.",
                                   "Control that the value is between 1.0 and 5.0."), status_code=422)
-        if parameters['age'] < 20 or parameters['age'] > 80:
+        if parameters['age'] < AGE_LIMIT[0] or parameters['age'] > AGE_LIMIT[1]:
             raise SanicException(("Value error.", "Invalid value for 'age'",
                                   "Control that the value is between 20.0 and 80.0."), status_code=422)
-        if parameters['min'] < 390 or parameters['min'] > 400:
+        if parameters['min'] < λ_MIN_LIMIT[0] or parameters['min'] > λ_MIN_LIMIT[1]:
             raise SanicException(("Value error.", "Invalid value for 'min'-imum domain.",
                                   "Control that the value is between 390.0 and 400.0. Alternatively, remove it from URL."), status_code=422)
-        if parameters['max'] > 830 or parameters['max'] < 700:
+        if parameters['max'] < λ_MAX_LIMIT[0] or parameters['max'] > λ_MAX_LIMIT[1]:
             raise SanicException(("Value error.", "Invalid value for 'max'-imum domain.",
                                   "Control that the value is between 700.0 and 830.0."), status_code=422)
-        if parameters['step_size'] > 5 or parameters['step_size'] < 0.1:
+        if parameters['step_size'] < λ_STEP_LIMIT[0] or parameters['step_size'] > λ_STEP_LIMIT[1]:
             raise SanicException(("Value error.", "Invalid value for 'step size'",
                                   "Control that the value is between 0.1 and 5.0."), status_code=422)
 
@@ -574,13 +532,13 @@ def createAndCheckParameters(disabled, calculation, request):
 
         for (name, body) in optionals.items():
             if body:
-                if (name == "log" or name == "base") and (calculation is not compute_LMS_Modular):
-                    raise SanicException("Value error", "Invalid usage of '{}' for endpoint.".format(name),
-                                         "The '{}' parameter is exclusive to the /lms endpoint. Please remove it from the URL.".format(name))
+                if (name == "base") and (calculation is not compute_LMS_Modular):
+                    raise SanicException(("Value error", "Invalid usage of '{}' for endpoint.".format(name),
+                                         "The '{}' parameter is exclusive to the /lms endpoint. Please remove it from the URL.".format(name) ), status_code=422)
                 if (((name == "info") and (calculation is compute_LMS_Modular))
                         or ((name == "norm") and (calculation in [compute_LMS_Modular, compute_MacLeod_Modular, compute_Maxwellian_Modular]))):
-                    raise SanicException("Value error", "Invalid usage of '{}' for endpoint.".format(name),
-                                         "This endpoint does not support {}. Please, verify this, and try again. If not, remove it from URL.".format(name))
+                    raise SanicException(("Value error", "Invalid usage of '{}' for endpoint.".format(name),
+                "This endpoint does not support {}. Please, verify this, and try again. If not, remove it from URL.".format(name) ), status_code=422)
             parameters.update({
                 name: body
             })
@@ -596,8 +554,8 @@ def createAndCheckParameters(disabled, calculation, request):
     else:
         parameters = {"field_size": string_to_type_else(request.args.get('field_size'), float, None)}
         if parameters['field_size'] is None:
-            raise SanicException("Value error", "The value of 'field_size' is not present.",
-                                 "Please make sure that the parameter is present as a float value that is either 2.0 or 10.0.", status_code=422)
+            raise SanicException(("Value error", "The value of 'field_size' is not present.",
+                                 "Please make sure that the parameter is present as a float value that is either 2.0 or 10.0."), status_code=422)
         optionals = {
             'log': False,
             'base': False,
@@ -625,12 +583,14 @@ def createAndCheckParameters(disabled, calculation, request):
                     parameters.update({name: False})
                     continue
             if body:
-                if (name == "log" or name == "base"):
-                    raise SanicException("Value error", "Invalid usage of '{}' for endpoint.".format(name),
-                                         "The '{}' parameter is exclusive to the /lms endpoint. Please remove it from the URL.".format(name))
+                if (name == "base"):
+                    raise SanicException(("Value error", "Invalid usage of '{}' for endpoint.".format(name),
+                                         "The '{}' parameter is exclusive to the /lms endpoint. Please remove it from the URL.".format(name)), status_code=422)
                 if ((name == "info") and (calculation is compute_XYZ_standard_modular)) or (name == "norm"):
-                    raise SanicException("Value error", "Invalid usage of '{}' for endpoint.".format(name),
-                                         "This endpoint does not support {}. Please, verify this, and try again. If not, remove it from URL.".format(name))
+                    raise SanicException(("Value error",
+                                         "Invalid usage of '{}' for endpoint.".format(name),
+                                         "This endpoint does not support {}. Please, verify this, and try again. If not, remove it from URL.".format(name)
+                                          ), status_code=422)
             parameters.update({
                 name: body
             })
@@ -638,8 +598,8 @@ def createAndCheckParameters(disabled, calculation, request):
         if parameters['field_size'] == STD_1931 or parameters['field_size'] == STD_1964:
             return parameters
 
-        raise SanicException("Value error", "Invalid value for 'field_size'.",
-                             "Please make sure that the parameter is present as a float value that is either 2.0 or 10.0.",
+        raise SanicException(("Value error", "Invalid value for 'field_size'.",
+                             "Please make sure that the parameter is present as a float value that is either 2.0 or 10.0."),
                              status_code=422)
 
 
