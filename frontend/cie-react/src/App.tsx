@@ -8,6 +8,7 @@ import { PulldownMenu } from "./components/PulldownMenu/PulldownMenu";
 import { SidePanel } from "./components/SidePanel/SidePanel";
 import { ParametersProvider } from './context/parameter-context';
 import { UseContentControllerProvider } from "./hooks/useContentController";
+import { PlotTypeProvider } from "./context/PlotTypeContext";
 
 function App() {
   const router = createHashRouter([
@@ -15,21 +16,23 @@ function App() {
       path: "/",
       element: (
         <UseContentControllerProvider>
-          <ParametersProvider>
-          <div className="outer-container">
-            <Navbar />
-            <div className="inner-container">
-              <div className="plo">
-                <Outlet />
-                <PulldownMenu />
-              </div>
-              <div className="sid">
-                <SidePanel />
+        <ParametersProvider>
+          <PlotTypeProvider>
+            <div className="outer-container">
+              <Navbar />
+              <div className="inner-container">
+                <div className="plo">
+                  <Outlet />
+                  <PulldownMenu />
+                </div>
+                <div className="sid">
+                  <SidePanel />
+                </div>
               </div>
             </div>
-          </div>
-          </ParametersProvider>
-        </UseContentControllerProvider>
+          </PlotTypeProvider>
+        </ParametersProvider>
+      </UseContentControllerProvider>
       ),
       children: [
         { path: PLOT_ROUTE, element: <ParametersLayout><PlotContent/></ParametersLayout> },
