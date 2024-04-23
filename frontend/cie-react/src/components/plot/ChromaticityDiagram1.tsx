@@ -38,13 +38,6 @@ const ChromaticityDiagram1: React.FC = () => {
     const purpleXValues = computedData.purpleLineData.map(item => item[1]);
     const purpleYValues = computedData.purpleLineData.map(item => item[2]);
 
-    // Error handeling to check that the purple line data is beeing set.
-    if (!computedData.purpleLineData || computedData.purpleLineData.length === 0) {
-      console.warn("Warning: purpleLineData is empty or undefined.");
-    } else {
-      console.log("Loaded purpleLineData:", computedData.purpleLineData);
-    }
-
     chartData.push({
       x: purpleXValues,
       y: purpleYValues,
