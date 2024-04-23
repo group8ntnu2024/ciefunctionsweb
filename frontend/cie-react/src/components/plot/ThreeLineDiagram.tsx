@@ -5,7 +5,7 @@ import LoadingIndicator from '../LoadingIndicator';
 import { useContentController } from '../../hooks/useContentController';
 import { MethodOption, titles } from '../../utils/propTypes'
 
-type PlotlyPlot = {
+type ThreeLineDiagram = {
   x: number[];
   y: number[];
   type: 'scatter';
@@ -14,7 +14,7 @@ type PlotlyPlot = {
   marker: { color: string };
 }[];
 
-const PlotlyPlot: React.FC = () => {
+const ThreeLineDiagram: React.FC = () => {
   const { computedData, isLoading } = useParameters();
   const { selectedOption } = useContentController();
 
@@ -25,7 +25,7 @@ const PlotlyPlot: React.FC = () => {
   const y2Values = computedData.plotData.map(item => item[2]);
   const y3Values = computedData.plotData.map(item => item[3]);
 
-  const chartData: PlotlyPlot = [
+  const chartData: ThreeLineDiagram = [
     {
       x: xValues, 
       y: y1Values,
@@ -74,4 +74,4 @@ const PlotlyPlot: React.FC = () => {
   );
 };
 
-export default PlotlyPlot;
+export default ThreeLineDiagram;
