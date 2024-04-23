@@ -12,13 +12,7 @@ This diagram layout works for
   * xy cone-fundamental-based chromaticity diagram (purple-line stimuli)
 */
 
-interface ChromaticityDiagram3 {
-  wavelength: number;
-  x: number;
-  y: number;
-}
-
-const ChromaticityDiagram3: React.FC = () => {
+const XyConeFundamentalBasedChromaticityDiagramPls: React.FC = () => {
   const { computedData, isLoading } = useParameters();
   const { selectedOption } = useContentController();
 
@@ -33,11 +27,9 @@ const ChromaticityDiagram3: React.FC = () => {
   }
 
 
-
   if (isLoading) {
     return <LoadingIndicator />;
   }
-
 
   const chartData: Data[] = [
     {
@@ -51,6 +43,28 @@ const ChromaticityDiagram3: React.FC = () => {
       }
     }
   ];
+
+    // Adding the white point if available
+    if (computedData.whitePointData) {
+        const whiteX = [computedData.whitePointData[0]];
+        const whiteY = [computedData.whitePointData[2]];
+    
+        chartData.push({
+          x: whiteX,
+          y: whiteY,
+          type: 'scatter',
+          mode: 'markers',
+          marker: {
+            color: 'red',
+            symbol: 'x-thin',
+            size: 10,
+            line: {
+              color: 'black',
+              width: 1
+            }
+          }
+        });
+      }
 
   try {
     return (
@@ -84,4 +98,4 @@ const ChromaticityDiagram3: React.FC = () => {
   }
 };
 
-export default ChromaticityDiagram3;
+export default XyConeFundamentalBasedChromaticityDiagramPls;

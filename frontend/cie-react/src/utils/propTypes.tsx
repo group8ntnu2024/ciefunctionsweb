@@ -21,7 +21,7 @@ export interface ComputedData {
   tableData: number[][];
   plotData: number[][];
   purpleLineData?: number[][];
-  whitePointData?: number[][];
+  whitePointData?: number[];
 }
 
 export interface ParametersContextType {
@@ -40,7 +40,7 @@ export interface ApiResponse {
     result: number[][];
     plot: number[][];
     plot_purple: number[][]; 
-    plot_white: number[][];
+    plot_white: number[];
   }
 
 export const endpointMap: Record<string, string> = {

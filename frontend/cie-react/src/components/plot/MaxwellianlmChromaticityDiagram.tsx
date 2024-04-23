@@ -6,7 +6,7 @@ import { useContentController } from '../../hooks/useContentController';
 import { MethodOption, titles } from '../../utils/propTypes';
 import { Data } from 'plotly.js';
 
-const ChromaticityDiagram1: React.FC = () => {
+const MaxwellianlmChromaticityDiagram: React.FC = () => {
   const { computedData, isLoading } = useParameters();
   const { selectedOption } = useContentController();
 
@@ -14,6 +14,10 @@ const ChromaticityDiagram1: React.FC = () => {
 
   if (!computedData || !computedData.plotData || computedData.plotData.length === 0) {
     return <div>No data available for plotting.</div>;
+  }
+
+  if (isLoading) {
+    return <LoadingIndicator />;
   }
 
   const xValues = computedData.plotData.map(item => item[1]); 
@@ -33,6 +37,28 @@ const ChromaticityDiagram1: React.FC = () => {
     }
   ];
 
+    // Adding the white point if available
+    if (computedData.whitePointData) {
+        const whiteX = [computedData.whitePointData[0]];
+        const whiteY = [computedData.whitePointData[2]];
+    
+        chartData.push({
+          x: whiteX,
+          y: whiteY,
+          type: 'scatter',
+          mode: 'markers',
+          marker: {
+            color: 'red',
+            symbol: 'x-thin',
+            size: 10,
+            line: {
+              color: 'black',
+              width: 1
+            }
+          }
+        });
+      }
+
   // Extracting purple line points if available and adding it to the plot
   if (computedData.purpleLineData) {
     const purpleXValues = computedData.purpleLineData.map(item => item[1]);
@@ -48,10 +74,6 @@ const ChromaticityDiagram1: React.FC = () => {
         width: 2
       }
     });
-  }
-
-  if (isLoading) {
-    return <LoadingIndicator />;
   }
 
   const minX = Math.min(...xValues) - 0.1;
@@ -91,4 +113,4 @@ const ChromaticityDiagram1: React.FC = () => {
   }
 };
 
-export default ChromaticityDiagram1;
+export default MaxwellianlmChromaticityDiagram;

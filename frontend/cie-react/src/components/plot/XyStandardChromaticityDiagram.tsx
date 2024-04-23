@@ -6,7 +6,7 @@ import { useContentController } from '../../hooks/useContentController';
 import { MethodOption, titles } from '../../utils/propTypes';
 import { Data } from 'plotly.js';
 
-const ChromaticityDiagram2: React.FC = () => {
+const XyStandardChromaticityDiagram: React.FC = () => {
   const { computedData, isLoading } = useParameters();
   const { selectedOption } = useContentController();
 
@@ -16,8 +16,12 @@ const ChromaticityDiagram2: React.FC = () => {
     return <div>No data available for plotting.</div>;
   }
 
+  if (isLoading) {
+    return <LoadingIndicator />;
+  }
+
   const xValues = computedData.plotData.map(item => item[1]); 
-  const yValues = computedData.plotData.map(item => item[3]);
+  const yValues = computedData.plotData.map(item => item[2]);
 
   // Prepares plot data with in the arch of the chromaticity diagram
   const chartData: Data[] = [
@@ -50,9 +54,27 @@ const ChromaticityDiagram2: React.FC = () => {
     });
   }
 
-  if (isLoading) {
-    return <LoadingIndicator />;
-  }
+    // Adding the white point if available
+    if (computedData.whitePointData) {
+        const whiteX = [computedData.whitePointData[0]];
+        const whiteY = [computedData.whitePointData[2]];
+    
+        chartData.push({
+          x: whiteX,
+          y: whiteY,
+          type: 'scatter',
+          mode: 'markers',
+          marker: {
+            color: 'red',
+            symbol: 'x-thin',
+            size: 10,
+            line: {
+              color: 'black',
+              width: 1
+            }
+          }
+        });
+      }
 
   const minX = Math.min(...xValues) - 0.1;
   const maxX = Math.max(...xValues) + 0.1;
@@ -91,4 +113,4 @@ const ChromaticityDiagram2: React.FC = () => {
   }
 };
 
-export default ChromaticityDiagram2;
+export default XyStandardChromaticityDiagram;
