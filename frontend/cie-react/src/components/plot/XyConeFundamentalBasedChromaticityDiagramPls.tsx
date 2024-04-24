@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
 import { useParameters } from '../../context/parameter-context';
 import LoadingIndicator from '../LoadingIndicator';
@@ -6,18 +6,19 @@ import { useContentController } from '../../hooks/useContentController';
 import { MethodOption, titles } from '../../utils/propTypes';
 import { Data } from 'plotly.js';
 
-
-/*
-This diagram layout works for 
-  * xy cone-fundamental-based chromaticity diagram (purple-line stimuli)
-*/
-
 const XyConeFundamentalBasedChromaticityDiagramPls: React.FC = () => {
+  // Fetches data and state from custom hooks
   const { computedData, isLoading } = useParameters();
   const { selectedOption } = useContentController();
+  
+  // State variables for controlling grid and labels display
+  const [showGrid, setShowGrid] = useState(true);
+  const [showLabels, setShowLabels] = useState(false);
 
+  // Determines plot title based on selected option
   const plotTitle = (selectedOption && titles[selectedOption as MethodOption]) ? titles[selectedOption as MethodOption] : 'Chromaticity Diagram';
 
+  // Checks if data is available or loading
   if (!computedData || !computedData.plotData || computedData.plotData.length === 0) {
     return <div>No data available for plotting.</div>;
   }
@@ -26,38 +27,36 @@ const XyConeFundamentalBasedChromaticityDiagramPls: React.FC = () => {
     return <LoadingIndicator />;
   }
 
+  // Function to add specific wavelength points
   function addSpecificWavelengthPoints() {
     const startWavelength = 400;
     const endWavelength = 700;
     const step = 10;
-    const additionalWavelengths = [390,407.3];
-    //drawnPoints.push(0);
-    //drawnPoints.push(computedData.plotData.length - 1);
+    const additionalWavelengths = [390, 407.3];
 
     for (let wavelength = startWavelength; wavelength <= endWavelength; wavelength += step) {
-        const index = wavelengths.indexOf(wavelength);
-        if (index !== -1) {
-            drawnPoints.push(index);
-        }
+      const index = wavelengths.indexOf(wavelength);
+      if (index !== -1) {
+        drawnPoints.push(index);
+      }
     }
 
     additionalWavelengths.forEach(wavelength => {
-        const index = wavelengths.indexOf(wavelength);
-        if (index !== -1) {
-            drawnPoints.push(index);
-        }
+      const index = wavelengths.indexOf(wavelength);
+      if (index !== -1) {
+        drawnPoints.push(index);
+      }
     });
-}
+  }
 
+  // Extracts data for plotting
   const purpleXValues = computedData.plotData.map(item => item[1]); 
   const purpleYValues = computedData.plotData.map(item => item[2]);
   const wavelengths = computedData.plotData.map(item => item[0]);
-
   const drawnPoints: number[] = [];
   addSpecificWavelengthPoints();
 
-
-  // Extracting purple line points if available and adding it to the plot
+  // Initial chart data with purple line
   const chartData: Data[] = [
     {
       x: purpleXValues,
@@ -71,26 +70,25 @@ const XyConeFundamentalBasedChromaticityDiagramPls: React.FC = () => {
     }
   ];
 
-  // Extends the purple line fully
+  // Adds purple line data if available
   if (computedData.purpleLineData) {  
     const xValues = computedData.purpleLineData.map(item => item[1]);
     const yValues = computedData.purpleLineData.map(item => item[2]);
 
-      chartData.push({
-        x: xValues,
-        y: yValues,
-        type: 'scatter',
-        mode: 'lines',
-        line: {
-          color: 'black',
-          width: 2
-        }
-      });
+    chartData.push({
+      x: xValues,
+      y: yValues,
+      type: 'scatter',
+      mode: 'lines',
+      line: {
+        color: 'black',
+        width: 2
+      }
+    });
   }
 
-  // first and last poins for purple line
+  // Adds markers for purple line first and last point
   if (computedData.purpleLineData && computedData.purpleLineData.length > 1) {
-    // Safely access the first and last points
     const firstPoint = computedData.purpleLineData[0];
     const lastPoint = computedData.purpleLineData[computedData.purpleLineData.length - 1];
   
@@ -110,6 +108,22 @@ const XyConeFundamentalBasedChromaticityDiagramPls: React.FC = () => {
           symbol: 'circle'
         }
       });
+  
+      // Adding labels if showLabels is true
+      if (showLabels) {
+        chartData.push({
+          x: [firstPoint[1], lastPoint[1]],
+          y: [firstPoint[2], lastPoint[2]],
+          type: 'scatter',
+          mode: 'text',
+          text: [`${firstPoint[0]}`, `${lastPoint[0]}`],
+          textposition: 'bottom right',
+          textfont: {
+            color: 'black',
+            size: 12
+          }
+        });
+      }
     } else {
       console.error("Error: Data points are not structured as expected.");
     }
@@ -117,12 +131,11 @@ const XyConeFundamentalBasedChromaticityDiagramPls: React.FC = () => {
     console.error("Error: 'purpleLineData' is not loaded or does not contain enough data.");
   }
 
-  // Adding the white point if available
+  // Adds white point marker and label if available
   if (computedData.whitePointData) {
     const whiteX = [computedData.whitePointData[0]];
     const whiteY = [computedData.whitePointData[2]];
 
-  
     chartData.push({
       x: whiteX,
       y: whiteY,
@@ -138,11 +151,26 @@ const XyConeFundamentalBasedChromaticityDiagramPls: React.FC = () => {
         }
       }
     });
+
+    if (showLabels) {
+      chartData.push({
+        x: whiteX,
+        y: whiteY,
+        type: 'scatter',
+        mode: 'text',
+        text: ['T'],
+        textposition: 'top right',
+        textfont: {
+          color: 'black',
+          size: 16
+        }
+      });
+    }
   }
 
-
-  // Draws circles on the
+  // Adds drawn points markers and labels
   drawnPoints.forEach(index => {
+    const wavelength = wavelengths[index];
     chartData.push({
       x: [purpleXValues[index]],
       y: [purpleYValues[index]],
@@ -158,61 +186,109 @@ const XyConeFundamentalBasedChromaticityDiagramPls: React.FC = () => {
         symbol: 'circle'
       }
     });
+
+    if (showLabels) {
+      chartData.push({
+        x: [purpleXValues[index]],
+        y: [purpleYValues[index]],
+        type: 'scatter',
+        mode: 'text',
+        text: [`${wavelength}c`],
+        textposition: 'bottom right',
+        textfont: {
+          color: 'black',
+          size: 12
+        }
+      });
+    }
   });
-  
-    // Prepares plot data with in the arch of the chromaticity diagram and sets up the plot
+
+  // Adds arch data if available
   if (computedData.plsArchData) {
     const xValues = computedData.plsArchData.map(item => item[1]);
     const yValues = computedData.plsArchData.map(item => item[2]);
 
-    const minX = Math.min(...xValues) - 0.1;
-    const maxX = Math.max(...xValues) + 0.1;
-    const minY = Math.min(...yValues) - 0.1;
-    const maxY = Math.max(...yValues) + 0.1;
+    // Range for the plot axes
+    const minX = 0 - 0.05;
+    const maxX = 1 + 0.05;
+    const minY = 0 - 0.05;
+    const maxY = 1 + 0.05;
 
     chartData.push({
-        x: xValues,
-        y: yValues,
-        type: 'scatter',
-        mode: 'lines',
-        line: {
-            color: 'black',
-            width: 2
-        }
+      x: xValues,
+      y: yValues,
+      type: 'scatter',
+      mode: 'lines',
+      line: {
+        color: 'black',
+        width: 2
+      }
     });
 
     try {
-        return (
-            <Plot
-                data={chartData}
-                layout={{
-                    width: 800,
-                    height: 600,
-                    title: plotTitle,
-                    xaxis: {
-                        title: 'Chromaticity x',
-                        range: [minX, maxX]
-                    },
-                    yaxis: {
-                        title: 'Chromaticity y',
-                        range: [minY, maxY]
-                    },
-                    autosize: false,
-                    margin: { l: 50, r: 10, b: 50, t: 50, pad: 4 },
-                    showlegend: false
-                }}
-                config={{
-                    scrollZoom: true,
-                    displaylogo: false
-                }}
-            />
-        );
+      // Render Plot component with configured layout and checkboxes
+      return (
+        <div>
+          <Plot
+            data={chartData}
+            layout={{
+              width: 800,
+              height: 600,
+              title: plotTitle,
+              xaxis: {
+                title: 'Chromaticity x',
+                range: [minX, maxX],
+                showgrid: showGrid,
+                gridcolor: 'rgba(0, 0, 0, 0.3)',
+                showline: true,
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true
+              },
+              yaxis: {
+                title: 'Chromaticity y',
+                range: [minY, maxY],
+                showgrid: showGrid,
+                gridcolor: 'rgba(0, 0, 0, 0.3)',
+                showline: true,
+                linecolor: 'black',
+                linewidth: 2,
+                mirror: true
+              },
+              autosize: false,
+              margin: { l: 85, r: 85, b: 60, t: 75, pad: 4 },
+              showlegend: false
+            }}
+            config={{
+              scrollZoom: true,
+              displaylogo: false
+            }}
+          />
+          <div className="checkbox-container">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={showGrid}
+                onChange={() => setShowGrid(!showGrid)}
+              />
+              Show Grid
+            </label>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={showLabels}
+                onChange={() => setShowLabels(!showLabels)}
+              />
+              Show Labels
+            </label>
+          </div>
+        </div>
+      );
     } catch (error) {
-        console.error("Error rendering plot:", error);
-        return <div>Error displaying plot.</div>;
+      console.error("Error rendering plot:", error);
+      return <div>Error displaying plot. Please check the console for more details.</div>;
     }
-} else {
-    console.error("Error: 'plsArchData' is not loaded or does not contain enough data.");
-}
+  }
 };
+
 export default XyConeFundamentalBasedChromaticityDiagramPls;

@@ -1,16 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
 import { useParameters } from '../../context/parameter-context';
 import LoadingIndicator from '../LoadingIndicator';
 import { useContentController } from '../../hooks/useContentController';
 import { MethodOption, titles } from '../../utils/propTypes';
-import { Data } from 'plotly.js';
+import { addSpecificWavelengthPoints, prepareChartData, PlotUtilsConfig } from './plotUtils';
+import './props.css';
 
 const MaxwellianlmChromaticityDiagram: React.FC = () => {
   const { computedData, isLoading } = useParameters();
   const { selectedOption } = useContentController();
-
-  const plotTitle = (selectedOption && titles[selectedOption as MethodOption]) ? titles[selectedOption as MethodOption] : 'Chromaticity Diagram';
+  const [showGrid, setShowGrid] = useState(true);
+  const [showLabels, setShowLabels] = useState(false);
 
   if (!computedData || !computedData.plotData || computedData.plotData.length === 0) {
     return <div>No data available for plotting.</div>;
@@ -20,138 +21,128 @@ const MaxwellianlmChromaticityDiagram: React.FC = () => {
     return <LoadingIndicator />;
   }
 
-  function addSpecificWavelengthPoints() {
-    const startWavelength = 450;
-    const endWavelength = 631;
-    const step = 10;
-    const additionalWavelengths = [700];
-    drawnPoints.push(0);
-    drawnPoints.push(computedData.plotData.length - 1);
-
-    for (let wavelength = startWavelength; wavelength <= endWavelength; wavelength += step) {
-        const index = wavelengths.indexOf(wavelength);
-        if (index !== -1) {
-            drawnPoints.push(index);
-        }
-    }
-
-    additionalWavelengths.forEach(wavelength => {
-        const index = wavelengths.indexOf(wavelength);
-        if (index !== -1) {
-            drawnPoints.push(index);
-        }
-    });
-}
-
-  const xValues = computedData.plotData.map(item => item[1]); 
-  const yValues = computedData.plotData.map(item => item[2]);
   const wavelengths = computedData.plotData.map(item => item[0]);
 
-  const drawnPoints: number[] = [];
-  addSpecificWavelengthPoints();
+  // Configuration for plot utilities
+  const plotConfig: PlotUtilsConfig = {
+    startWavelength: 450,
+    endWavelength: 631,
+    step: 10,
+    additionalWavelengths: [700],
+    purpleLineIndex: { x: 1, y: 2 },
+    whitePointIndex: { x: 0, y: 2 },
+    plotDataIndices: { x: 1, y: 2 }
+  };
+  
 
-  // Prepares plot data with in the arch of the chromaticity diagram
-  const chartData: Data[] = [
-    {
-      x: xValues,
-      y: yValues,
-      type: 'scatter',
-      mode: 'lines',
-      line: {
-        color: 'black',
-        width: 2
-      }
-    }
-  ];
+  // Draw points according to specific wavelengths
+  const drawnPoints = addSpecificWavelengthPoints(wavelengths, plotConfig);
 
-  // Extracting purple line points if available and adding it to the plot
-  if (computedData.purpleLineData) {
-    const purpleXValues = computedData.purpleLineData.map(item => item[1]);
-    const purpleYValues = computedData.purpleLineData.map(item => item[2]);
+  // Prepare chart data including the purple line and white point
+  const chartData = prepareChartData(computedData.plotData, drawnPoints, plotConfig, computedData.purpleLineData, computedData.whitePointData);
 
-    chartData.push({
-      x: purpleXValues,
-      y: purpleYValues,
-      type: 'scatter',
-      mode: 'lines',
-      line: {
-        color: 'black',
-        width: 2
-      }
-    });
-  }
+  const plotTitle = selectedOption && titles[selectedOption as MethodOption] ? titles[selectedOption as MethodOption] : 'Chromaticity Diagram';
 
-  // Adding the white point if available
-  if (computedData.whitePointData) {
-    const whiteX = [computedData.whitePointData[0]];
-    const whiteY = [computedData.whitePointData[2]];
-
-    chartData.push({
-      x: whiteX,
-      y: whiteY,
-      type: 'scatter',
-      mode: 'markers',
-      marker: {
-        color: 'red',
-        symbol: 'x-thin',
-        size: 10,
-        line: {
-          color: 'black',
-          width: 1
-        }
-      }
-    });
-  }
-
+let annotations = [];
+if (computedData.whitePointData && showLabels) {
+  annotations.push({
+    x: computedData.whitePointData[plotConfig.whitePointIndex.x],
+    y: computedData.whitePointData[plotConfig.whitePointIndex.y],
+    text: 'T',
+    font: {
+      family: 'Arial',
+      size: 16,
+      color: 'black'
+    },
+    showarrow: false,
+    xshift: 10,
+    yshift: 10
+  });
 
   drawnPoints.forEach(index => {
-    chartData.push({
-      x: [xValues[index]],
-      y: [yValues[index]],
-      type: 'scatter',
-      mode: 'markers',
-      marker: {
-        color: 'white',
-        size: 10,
-        line: {
-          color: 'black',
-          width: 2
-        },
-        symbol: 'circle'
-      }
+    const wavelength = wavelengths[index];
+    const x = computedData.plotData[index][plotConfig.plotDataIndices.x];
+    const y = computedData.plotData[index][plotConfig.plotDataIndices.y];
+    annotations.push({
+      x: x,
+      y: y,
+      text: `${wavelength}`,
+      font: {
+        family: 'Arial',
+        size: 12,
+        color: 'black'
+      },
+      showarrow: false,
+      xshift: 10,
+      yshift: 10
     });
   });
-  
-  const minX = Math.min(...xValues) - 0.1;
-  const maxX = Math.max(...xValues) + 0.1;
-  const minY = Math.min(...yValues) - 0.1;
-  const maxY = Math.max(...yValues) + 0.1;
+}
+
+  // Range for the plot axes
+  const minX = 0 - 0.05;
+  const maxX = 1 + 0.05;
+  const minY = 0 - 0.05;
+  const maxY = 1 + 0.05;
 
   try {
     return (
-      <Plot
-        data={chartData}
-        layout={{
-          width: 800,
-          height: 600,
-          title: plotTitle,
-          xaxis: {
-            title: 'Chromaticity x',
-            range: [minX, maxX]
-          },
-          yaxis: {
-            title: 'Chromaticity y',
-            range: [minY, maxY]
-          },
-          autosize: false,
-          margin: { l: 50, r: 10, b: 50, t: 50, pad: 4 },
-          showlegend: false
-        }}
-        config={{
-          scrollZoom: true,
-          displaylogo: false
-        }}
-      />
+      <div>
+        <Plot
+          data={chartData}
+          layout={{
+            width: 800,
+            height: 600,
+            title: plotTitle,
+            xaxis: {
+              title: 'Chromaticity x',
+              range: [minX, maxX],
+              showgrid: showGrid,
+              gridcolor: 'rgba(0, 0, 0, 0.3)',
+              showline: true,
+              linecolor: 'black',
+              linewidth: 2,
+              mirror: true
+            },
+            yaxis: {
+              title: 'Chromaticity y',
+              range: [minY, maxY],
+              showgrid: showGrid,
+              gridcolor: 'rgba(0, 0, 0, 0.3)',
+              showline: true,
+              linecolor: 'black',
+              linewidth: 2,
+              mirror: true
+            },
+            annotations: annotations,
+            autosize: false,
+            margin: { l: 85, r: 85, b: 60, t: 75, pad: 4 },
+            showlegend: false
+          }}
+          config={{
+            scrollZoom: true,
+            displaylogo: false
+          }}
+        />
+        <div className="checkbox-container">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={showGrid}
+              onChange={() => setShowGrid(!showGrid)}
+            />
+            Show Grid
+          </label>
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={showLabels}
+              onChange={() => setShowLabels(!showLabels)}
+            />
+            Show Labels
+          </label>
+        </div>
+      </div>
     );
   } catch (error) {
     console.error("Error rendering plot:", error);

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Plot from 'react-plotly.js';
 import { useParameters } from '../../context/parameter-context';
 import LoadingIndicator from '../LoadingIndicator';
 import { useContentController } from '../../hooks/useContentController';
-import { MethodOption, titles } from '../../utils/propTypes'
+import { MethodOption, titles } from '../../utils/propTypes';
+import './props.css';
 
 type ThreeLineDiagram = {
   x: number[];
@@ -17,6 +18,7 @@ type ThreeLineDiagram = {
 const ThreeLineDiagram: React.FC = () => {
   const { computedData, isLoading } = useParameters();
   const { selectedOption } = useContentController();
+  const [showGrid, setShowGrid] = useState(true);
 
   const plotTitle = (selectedOption in titles) ? titles[selectedOption as MethodOption] : 'Select a method';
 
@@ -57,20 +59,49 @@ const ThreeLineDiagram: React.FC = () => {
   }
 
   return (
-    <Plot
-      data={chartData}
-      layout={{
-        width: 800,
-        height: 600,
-        title: plotTitle,
-        xaxis: { title: 'Wavelength (nm)' },
-        yaxis: { title: 'Relative energy sensitivities' }
-      }}
-      config={{
-        scrollZoom: true,
-        displaylogo: false
-      }}
-    />
+    <div>
+      <Plot
+        data={chartData}
+        layout={{
+          width: 800,
+          height: 600,
+          title: plotTitle,
+          margin: { l: 85, r: 10, b: 60, t: 75, pad: 4 },
+          xaxis: { 
+            title: 'Wavelength (nm)',
+            showgrid: showGrid,
+            gridcolor: 'rgba(0, 0, 0, 0.3)',
+            showline: true,
+            linecolor: 'black',
+            linewidth: 2,
+            mirror: true
+          },
+          yaxis: { 
+            title: 'Relative energy sensitivities',
+            showgrid: showGrid,
+            gridcolor: 'rgba(0, 0, 0, 0.3)',
+            showline: true,
+            linecolor: 'black',
+            linewidth: 2,
+            mirror: true
+          },
+        }}
+        config={{
+          scrollZoom: true,
+          displaylogo: false
+        }}
+      />
+      <div className="checkbox-container">
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={showGrid}
+            onChange={() => setShowGrid(!showGrid)}
+          />
+          Show Grid
+        </label>
+      </div>
+    </div>
   );
 };
 
