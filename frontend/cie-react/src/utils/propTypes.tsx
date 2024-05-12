@@ -20,6 +20,10 @@ export interface Parameters {
 export interface ComputedData {
   tableData: number[][];
   plotData: number[][];
+  plsArchData?: number[][];
+  purpleLineData?: number[][];
+  whitePointData?: number[];
+
 }
 
 export interface ParametersContextType {
@@ -37,6 +41,10 @@ export interface ParametersContextType {
 export interface ApiResponse {
     result: number[][];
     plot: number[][];
+    xyz_plot: number[][];
+    plot_purple: number[][]; 
+    plot_white: number[];
+
   }
 
 export const endpointMap: Record<string, string> = {

@@ -1,4 +1,4 @@
-import { createHashRouter, Outlet, RouterProvider } from "react-router-dom";
+import { createHashRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Navbar from "./components/navbar/navbar";
 import { PLOT_ROUTE, TABLE_ROUTE } from "./utils/router-urls";
 import PlotContent from "./components/plot/plot-content";
@@ -35,6 +35,7 @@ function App() {
       </UseContentControllerProvider>
       ),
       children: [
+        { path: "", element: <Navigate to={PLOT_ROUTE} replace /> },
         { path: PLOT_ROUTE, element: <ParametersLayout><PlotContent/></ParametersLayout> },
         { path: TABLE_ROUTE, element: <ParametersLayout><TableContent/></ParametersLayout> },
       ],

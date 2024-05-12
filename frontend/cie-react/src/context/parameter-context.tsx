@@ -16,7 +16,9 @@ const defaultContextValue: ParametersContextType = {
   setParameters: () => {},
   computedData : {
     tableData: [],
-    plotData: []
+    plotData: [],
+    purpleLineData: [],
+    whitePointData: []
   },
   setComputedData: () => {},
   computeData: async () => {},
@@ -35,7 +37,7 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   const [computedData, setComputedData] = useState<ComputedData>(defaultContextValue.computedData);
   const [htmlContent, setHtmlContent] = useState<string>('');
   const { isLoading, startLoading, stopLoading } = useLoading();
-  const [endpoint, setEndpoint] = useState<string>('');
+  const [endpoint, setEndpoint] = useState<string>('lms/');
 
 
   const updateSideMenu = useCallback(async () => {
@@ -53,15 +55,21 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
     startLoading();
     try {
       console.log("Current parameters:", parameters);
-      const { result, plot } = await fetchApiData(calculateData, parameters);
-      setComputedData({ tableData: result, plotData: plot });
+      const { result, plot, plot_purple, plot_white, xyz_plot } = await fetchApiData(calculateData, parameters);
+      setComputedData({ 
+        tableData: result, 
+        plotData: plot, 
+        purpleLineData: plot_purple,
+        whitePointData: plot_white,
+        plsArchData: xyz_plot,
+      });
       await updateSideMenu();
     } catch (error) {
       console.error('Error:', error);
     } finally {
       stopLoading();
     }
-  }, [endpoint, parameters, setComputedData]);
+  }, [endpoint, parameters, setComputedData, updateSideMenu, startLoading, stopLoading]);
 
   return (
     <ParametersContext.Provider value={{ parameters, setParameters, computedData, setComputedData, computeData, htmlContent,isLoading, endpoint, setEndpoint }}>

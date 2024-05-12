@@ -14,9 +14,8 @@ async function fetchApiData(endpoint: string, params: paramProps): Promise<ApiRe
     }
   });
 
-
   const url = `${SANIC_BASE_URL}${endpoint}?${queryParams.toString()}`;
-  console.log(url)
+  console.log(url);
   const response = await fetch(url, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
@@ -25,12 +24,17 @@ async function fetchApiData(endpoint: string, params: paramProps): Promise<ApiRe
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
   }
+
   return response.json().then(data => {
-    if (data.result && data.plot) {
-      return { result: data.result, plot: data.plot };
-    } else {
-      throw new Error('Unexpected response structure');
-    }
+    const apiResponse: ApiResponse = {
+      result: data.result ?? [],
+      plot: data.plot ?? [],
+      xyz_plot: data.xyz_plot ?? [],
+      plot_purple: data.plot_purple ?? [],
+      plot_white: data.plot_white ?? [],
+
+    };
+    return apiResponse;
   });
 }
 export {fetchApiData}
