@@ -1,9 +1,11 @@
 
 import { useContentController } from '../../hooks/useContentController.tsx';
 import ThreeLineDiagram from './ThreeLineDiagram.tsx';
-import ChromaticityDiagram1 from './ChromaticityDiagram1.tsx';
-import ChromaticityDiagram2 from './ChromaticityDiagram2.tsx';
-import ChromaticityDiagram3 from './ChromaticityDiagram3.tsx';
+import MacLeodBoyntonChromaticityDiagram from './MacLeodBoyntonChromaticityDiagram.tsx';
+import MaxwellianlmChromaticityDiagram from './MaxwellianlmChromaticityDiagram.tsx';
+import XyConeFundamentalBasedChromaticityDiagram from './XyConeFundamentalBasedChromaticityDiagram.tsx';
+import XyStandardChromaticityDiagram from './XyStandardChromaticityDiagram.tsx';
+import XyConeFundamentalBasedChromaticityDiagramPls from './XyConeFundamentalBasedChromaticityDiagramPls.tsx';
 
 
 const methodComponents: { [key: string]: React.ComponentType } = {
@@ -11,21 +13,21 @@ const methodComponents: { [key: string]: React.ComponentType } = {
  
   method2: ThreeLineDiagram, //correct
 
-  method3: ChromaticityDiagram2, //correct
+  method3: MacLeodBoyntonChromaticityDiagram, //correct
 
-  method4: ChromaticityDiagram1, //correct
+  method4: MaxwellianlmChromaticityDiagram, //correct
 
   method5: ThreeLineDiagram, //correct
 
-  method6: ChromaticityDiagram1, //correct
+  method6: XyConeFundamentalBasedChromaticityDiagram, //correct
 
   method7: ThreeLineDiagram, //correct
   
-  method8: ChromaticityDiagram3, //wrong
+  method8: XyConeFundamentalBasedChromaticityDiagramPls, //wrong
 
   method9: ThreeLineDiagram, //correct
 
-  method10: ChromaticityDiagram1, //correct
+  method10: XyStandardChromaticityDiagram, //correct
 };
 
 const PlotContent: React.FC = () => {

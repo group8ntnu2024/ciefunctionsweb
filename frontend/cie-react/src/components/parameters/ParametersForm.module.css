@@ -4,13 +4,14 @@
   align-items: center;
   width: 100%;
   margin-bottom: 20px;
+  margin-left: 5px;
 }
 
 .parametersControl {
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin: 10px 20px;
+  margin: 20px 0px;
 }
 
 .formControl {
@@ -26,7 +27,7 @@
 
 .btnPrimary {
   border-radius: 8px;
-  padding: 0.6em 1.2em;
+  padding: 0.8em 0.6em;
   font-size: 1em;
   font-weight: 500;
   background-color: #6a82fb;
