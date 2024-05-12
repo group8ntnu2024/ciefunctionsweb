@@ -219,7 +219,7 @@ def maxwellian_graph(parameters):
         title: '""" + title + """',
         margin: { l: 50, r: 10, b: 50, t: 50, pad: 4 },
         height: 800,
-        width: 800,
+        width: 600,
                 xaxis: {
                     nticks: 10,
                     zeroline: false,
@@ -356,6 +356,8 @@ def xyp_graph(parameters):
     # finds both info and calculations for normal xy (to get curve) and info from xyz_purples
     temp = parameters.copy()
     temp['info'] = False
+    # has to retrieve actual computation from xyz_purples for purpleline proper points
+    purpleplot = compute_xyz_purples_modular(temp)['plot']
     xy_json = cieapi.new_calculation_JSON(compute_XY_modular, temp)
     temp['info'] = True
     info_json = cieapi.new_calculation_JSON(compute_xyz_purples_modular, temp)
@@ -369,8 +371,6 @@ def xyp_graph(parameters):
     names = []
     points_x = []
     points_y = []
-    # has to retrieve actual computation from xyz_purples for purpleline proper points
-    purpleplot = compute_xyz_purples_modular(temp)['plot']
     points = np.arange(400, 700, 10)
     for l in points:
         ind = np.nonzero(purpleplot[:, 0] == l)[0]

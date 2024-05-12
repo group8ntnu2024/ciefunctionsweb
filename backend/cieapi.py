@@ -585,9 +585,9 @@ def createAndCheckParameters(disabled, calculation, request):
                 parameters.update({name: float(value)})
 
         # error handling for the values
-        if parameters['field_size'] > 5 or parameters['field_size'] < 1:
+        if parameters['field_size'] > 10 or parameters['field_size'] < 1:
             raise SanicException(("Value error.", "Invalid value for 'field_size'.",
-                                  "Control that the value is between 1.0 and 5.0."), status_code=422)
+                                  "Control that the value is between 1.0 and 10.0."), status_code=422)
         if parameters['age'] < 20 or parameters['age'] > 80:
             raise SanicException(("Value error.", "Invalid value for 'age'",
                                   "Control that the value is between 20.0 and 80.0."), status_code=422)
