@@ -37,7 +37,7 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   const [computedData, setComputedData] = useState<ComputedData>(defaultContextValue.computedData);
   const [htmlContent, setHtmlContent] = useState<string>('');
   const { isLoading, startLoading, stopLoading } = useLoading();
-  const [endpoint, setEndpoint] = useState<string>('');
+  const [endpoint, setEndpoint] = useState<string>('lms/');
 
 
   const updateSideMenu = useCallback(async () => {
