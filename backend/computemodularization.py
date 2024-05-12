@@ -1,15 +1,13 @@
-import json
 import warnings
 
 from compute import my_round, sign_figs, chrom_coords_µ, LMS_energy, chop, Vλ_energy_and_LM_weights, \
     tangent_points_purple_line, chrom_coords_E, VisualData, xyz_interpolated_reference_system, linear_transformation_λ, \
-    square_sum, XYZ_purples, compute_CIE_standard_XYZ, LMS_quantal, compute_tabulated, compute_LMS
+    square_sum, XYZ_purples, compute_CIE_standard_XYZ, LMS_quantal, compute_tabulated
 import numpy as np
 import scipy.optimize
 import scipy.interpolate
 
 """
-
     This module contains the modularized versions of the CIE functions found within compute.py, found at:
     https://github.com/ifarup/ciefunctions/blob/master/tc1_97/compute.py, consult with Ivar later on proper credit.
 
@@ -19,7 +17,6 @@ import scipy.interpolate
     Anyways, these functions are modularized in the sense that they output specific ndarrays depending on the endpoint,
     unlike everything at once.
 """
-
 
 def compute_LMS_Modular(parameters):
 
@@ -36,8 +33,9 @@ def compute_LMS_Modular(parameters):
 
     """
 
-    # compute.py lines 763-768
     def inner_LMS(variation):
+        # compute.py line 1565
+        λ_all = my_round(np.arange(390., 830. + .01, .1), 1)
         # compute.py line 1575
         LMS_base_all = LMS_energy(parameters['field_size'], parameters['age'])[0]
         if parameters['base']:
@@ -51,18 +49,36 @@ def compute_LMS_Modular(parameters):
         M_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, M)
         S_spline = scipy.interpolate.InterpolatedUnivariateSpline(λ_all, S)
 
-        (std, log) = compute_LMS(variation, L_spline, M_spline, S_spline, parameters['base'])
-        return (std, log)
+        # compute.py lines 763-768
+        LMS_sf = 6
+        logLMS_dp = 5
+        if parameters['base']:
+            LMS_sf = 9
+            logLMS_dp = 8
 
-    (std, log_std) = inner_LMS(np.arange(parameters['min'], parameters['max'] + .01, parameters['step_size']))
-    (plot, log_plot) = inner_LMS(my_round(np.arange(parameters['min'], parameters['max'] + .01, .1), 1))
+        # compute.py lines 770-772
+        (La, Ma, Sa) = np.array([sign_figs(L_spline(variation), LMS_sf),
+                                 sign_figs(M_spline(variation), LMS_sf),
+                                 sign_figs(S_spline(variation), LMS_sf)])
 
+        # compute.py line 773
+        LMS = chop(np.array([variation, La, Ma, Sa]).T)
+
+        if parameters['log']:
+            LMS[:, 1:][LMS[:, 1:] == 0] = -np.inf
+            LMS[:, 1:][LMS[:, 1:] > 0] = my_round(
+                np.log10(LMS[:, 1:][LMS[:, 1:] > 0]), logLMS_dp)
+            LMS[:, 0] = my_round(LMS[:, 0], 1)
+            return chop(LMS)
+        else:
+            LMS[:, 0] = my_round(LMS[:, 0], 1)
+            # compute.py line 779
+            return chop(LMS)
+        return LMS
 
     dict = {
-        "result": std,
-        "plot": plot,
-        "result_log": log_std,
-        "plot_log": log_plot
+        "result": inner_LMS(np.arange(parameters['min'], parameters['max'] + .01, parameters['step_size'])),
+        "plot": inner_LMS(my_round(np.arange(parameters['min'], parameters['max'] + .01, .1), 1))
     }
 
     return dict
@@ -113,37 +129,35 @@ def compute_MacLeod_Modular(parameters):
                             κM * M_plot / V_plot,
                             κS * S_plot / V_plot]).T
 
-    [L_mb_E, M_mb_E, S_mb_E] = [κL * np.sum(L_spec),
-                                κM * np.sum(M_spec),
-                                κS * np.sum(S_spec)]
-    V_E = sign_figs(np.array(L_mb_E + M_mb_E), 7)
-    lms_mb_E_plot = np.array([L_mb_E / V_E,
-                              M_mb_E / V_E,
-                              S_mb_E / V_E])
-    lms_mb_tg_purple_plot = tangent_points_purple_line(
-        lms_mb_plot, MacLeod_Boynton=True)
-    lms_mb_tg_purple = lms_mb_tg_purple_plot.copy()
-    lms_mb_tg_purple[:, 0] = my_round(lms_mb_tg_purple[:, 0], 1)
-    lms_mb_tg_purple[:, 1:] = my_round(lms_mb_tg_purple[:, 1:], 6)
-
     if parameters['info']:
+        [L_mb_E, M_mb_E, S_mb_E] = [κL * np.sum(L_spec),
+                                    κM * np.sum(M_spec),
+                                    κS * np.sum(S_spec)]
+        V_E = sign_figs(np.array(L_mb_E + M_mb_E), 7)
+        lms_mb_E_plot = np.array([L_mb_E / V_E,
+                                  M_mb_E / V_E,
+                                  S_mb_E / V_E])
+        lms_mb_tg_purple_plot = tangent_points_purple_line(
+            lms_mb_plot, MacLeod_Boynton=True)
+        lms_mb_tg_purple = lms_mb_tg_purple_plot.copy()
+        lms_mb_tg_purple[:, 0] = my_round(lms_mb_tg_purple[:, 0], 1)
+        lms_mb_tg_purple[:, 1:] = my_round(lms_mb_tg_purple[:, 1:], 6)
+
         output = {
             "norm": np.array([κL, κM, κS]),
             "white": my_round(lms_mb_E_plot, 6),
             "tg_purple": lms_mb_tg_purple
         }
         return output
-
-    # Compute spectral chromomaticity coordinates (for table)
-    lms_mb_spec = np.array([λ_spec, κL * L_spec / V_spec, κM * M_spec / V_spec, κS * S_spec / V_spec]).T
-    lms_mb_spec[:, 1:] = my_round(lms_mb_spec[:, 1:], 6)
-    # Compute plot points for spectrum locus
-    return {
-        "result": lms_mb_spec,
-        "plot": lms_mb_plot,
-        "plot_white": lms_mb_E_plot,
-        "plot_purple": lms_mb_tg_purple_plot
-    }
+    else:
+        # Compute spectral chromomaticity coordinates (for table)
+        lms_mb_spec = np.array([λ_spec, κL * L_spec / V_spec, κM * M_spec / V_spec, κS * S_spec / V_spec]).T
+        lms_mb_spec[:, 1:] = my_round(lms_mb_spec[:, 1:], 6)
+        # Compute plot points for spectrum locus
+        return {
+            "result": lms_mb_spec,
+            "plot": lms_mb_plot
+        }
 
 
 def compute_Maxwellian_Modular(parameters):
@@ -178,26 +192,27 @@ def compute_Maxwellian_Modular(parameters):
     (cL, cM, cS) = (1./np.sum(L_plot), 1./np.sum(M_plot), 1./np.sum(S_plot))
     LMS_plot_N = np.array([λ_plot, cL * L_plot, cM * M_plot, cS * S_plot]).T
     lms_mw_plot = chrom_coords_µ(LMS_plot_N)
-    lms_mw_E_plot = chrom_coords_E(LMS_spec_N)
-    lms_mw_tg_purple_plot = tangent_points_purple_line(lms_mw_plot)
 
     if not parameters['info']:
         return {
             "result": lms_mw_spec,
-            "plot": lms_mw_plot,
-            "plot_white": lms_mw_E_plot,
-            "plot_purple": lms_mw_tg_purple_plot
+            "plot": lms_mw_plot
         }
 
-    lms_mw_tg_purple = lms_mw_tg_purple_plot.copy()
-    lms_mw_tg_purple[:, 0] = my_round(lms_mw_tg_purple[:, 0], 1)
-    lms_mw_tg_purple[:, 1:] = my_round(lms_mw_tg_purple[:, 1:], 6)
-    dict = {
-        "norm": np.array([kL, kM, kS]),
-        "white": my_round(lms_mw_E_plot, 6),
-        "tg_purple": lms_mw_tg_purple,
-    }
-    return dict
+    else:
+        lms_mw_E_plot = chrom_coords_E(LMS_spec_N)
+        lms_mw_tg_purple_plot = tangent_points_purple_line(lms_mw_plot)
+        lms_mw_tg_purple = lms_mw_tg_purple_plot.copy()
+        lms_mw_tg_purple[:, 0] = my_round(lms_mw_tg_purple[:, 0], 1)
+        lms_mw_tg_purple[:, 1:] = my_round(lms_mw_tg_purple[:, 1:], 6)
+        dict = {
+            "norm": np.array([kL, kM, kS]),
+            "white": my_round(lms_mw_E_plot, 6),
+            # "white_plot": lms_mw_E_plot,
+            "tg_purple": lms_mw_tg_purple,
+            # "tg_purple_plot": lms_mw_tg_purple_plot
+        }
+        return dict
 
 def compute_XYZ_Modular(parameters):
     """
@@ -221,8 +236,6 @@ def compute_XYZ_Modular(parameters):
     LMS_results = compute_LMS_Modular(parameters)
     LMS_spec = LMS_results['result']
     LMS_plot = LMS_results['plot']
-
-    # small function that retrieves standardization function outputs to make frontend easier
 
     LMS_all = LMS_energy(parameters['field_size'], parameters['age'], base=True)[0]
     (Vλ_std_all, LM_weights) = Vλ_energy_and_LM_weights(parameters['field_size'], parameters['age'])
@@ -288,7 +301,6 @@ def compute_XYZ_Modular(parameters):
             XYZ_spec[:, 1:] = sign_figs(XYZ_spec[:, 1:], 7)
             XYZ_plot = linear_transformation_λ(trans_mat, LMS_plot)
             XYZ_plot[:, 1:] = sign_figs(XYZ_plot[:, 1:], 7)
-
             return {
                 "result": XYZ_spec,
                 "plot": XYZ_plot
@@ -332,44 +344,49 @@ def compute_XY_modular(parameters):
     XYZ_spec = XYZ['result']
     XYZ_plot = XYZ['plot']
 
-    xyz_E_plot = chrom_coords_E(XYZ_spec)
-    xyz_E = my_round(xyz_E_plot, 5)
+    def resplot():
+        xyz_spec = chrom_coords_µ(XYZ_spec)
+        xyz_spec[:, 1:] = my_round(xyz_spec[:, 1:], 5)
+        # returns xyz_spec, xyz_plot, xyz_spec_N, xyz_plot_N
+        return {
+            "result": xyz_spec,
+            "plot": chrom_coords_µ(XYZ_plot)
+        }
 
-    (xyz_tg_purple_plot,
-     XYZ_tg_purple_plot) = tangent_points_purple_line(
-        chrom_coords_µ(XYZ_plot), False, XYZ_plot)
-    xyz_tg_purple = xyz_tg_purple_plot.copy()
-    xyz_tg_purple[:, 0] = my_round(xyz_tg_purple[:, 0], 1)
-    xyz_tg_purple[:, 1:] = my_round(xyz_tg_purple[:, 1:], 5)
-    XYZ_tg_purple = XYZ_tg_purple_plot.copy()  # tg XYZ-space
-    XYZ_tg_purple[:, 0] = my_round(XYZ_tg_purple[:, 0], 1)  # tg XYZ-space
-    XYZ_tg_purple[:, 1:] = my_round(XYZ_tg_purple[:, 1:], 7)  # tg XYZ-space
+    def info():
+        xyz_E_plot = chrom_coords_E(XYZ_spec)
+        xyz_E = my_round(xyz_E_plot, 5)
+
+        (xyz_tg_purple_plot,
+         XYZ_tg_purple_plot) = tangent_points_purple_line(
+            chrom_coords_µ(XYZ_plot), False, XYZ_plot)
+        xyz_tg_purple = xyz_tg_purple_plot.copy()
+        xyz_tg_purple[:, 0] = my_round(xyz_tg_purple[:, 0], 1)
+        xyz_tg_purple[:, 1:] = my_round(xyz_tg_purple[:, 1:], 5)
+        XYZ_tg_purple = XYZ_tg_purple_plot.copy()  # tg XYZ-space
+        XYZ_tg_purple[:, 0] = my_round(XYZ_tg_purple[:, 0], 1)  # tg XYZ-space
+        XYZ_tg_purple[:, 1:] = my_round(XYZ_tg_purple[:, 1:], 7)  # tg XYZ-space
+
+        output = {
+            "xyz_white": xyz_E,
+            "xyz_tg_purple": xyz_tg_purple,
+            "XYZ_tg_purple": XYZ_tg_purple,
+        }
+        if parameters['purple']:
+            output.update({
+                "xyz_white_plot": xyz_E_plot,
+                "xyz_tg_purple_plot": xyz_tg_purple_plot,
+                "XYZ_tg_purple_plot": XYZ_tg_purple_plot
+            })
+        return output
 
     if parameters['purple']:
-        return {
-            "result": chrom_coords_µ(XYZ_spec),
-            "plot": chrom_coords_µ(XYZ_plot),
-            "xyz_white": xyz_E,
-            "xyz_tg_purple": xyz_tg_purple,
-            "XYZ_tg_purple": XYZ_tg_purple,
-            "xyz_white_plot": xyz_E_plot,
-            "xyz_tg_purple_plot": xyz_tg_purple_plot,
-            "XYZ_tg_purple_plot": XYZ_tg_purple_plot
-        }
+        asd = {**info(), **resplot()}
+        return asd
 
     if parameters['info']:
-        return {
-            "xyz_white": xyz_E,
-            "xyz_tg_purple": xyz_tg_purple,
-            "XYZ_tg_purple": XYZ_tg_purple,
-        }
-
-    return {
-        "result": chrom_coords_µ(XYZ_spec),
-        "plot": chrom_coords_µ(XYZ_plot),
-        "plot_purple": xyz_tg_purple_plot,
-        "plot_white": xyz_E_plot
-    }
+        return info()
+    return resplot()
 
 
 def compute_XYZ_purples_modular(parameters):
@@ -412,24 +429,15 @@ def compute_xyz_purples_modular(parameters):
     -------
     A ndarray of xyz cone-fundamental-based tristimulus values of purple-line stimuli, given parameters.
     """
-
-    temp = parameters.copy()
-    temp['purple'] = True
-    temp['info'] = False
-
     if parameters['info']:
         return compute_XY_modular(parameters)
     else:
-        dsfsdf = compute_XY_modular(temp)
         XYZ = compute_XYZ_purples_modular(parameters)
         result = chrom_coords_µ(XYZ['result'])
         result[:, 1:] = my_round(result[:, 1:], 5)
         return {
             "result": result,
-            "plot": chrom_coords_µ(XYZ['plot']),
-            "xyz_plot": dsfsdf["plot"],
-            "plot_purple": dsfsdf['xyz_tg_purple_plot'],
-            "plot_white": dsfsdf["xyz_white_plot"]
+            "plot": chrom_coords_µ(XYZ['plot'])
         }
 
 def compute_XYZ_standard_modular(parameters):
