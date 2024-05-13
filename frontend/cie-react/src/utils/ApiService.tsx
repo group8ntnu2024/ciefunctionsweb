@@ -59,3 +59,15 @@ async function fetchHtmlContent(endpoint: string, params: paramProps): Promise<s
   return response.text();
 }
 export {fetchHtmlContent}
+
+function stringBuilder(endpoint: string, params: paramProps): string {
+  const queryParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+          queryParams.append(key, value.toString());
+      }
+  });
+
+  return `${SANIC_BASE_URL}${endpoint}?${queryParams.toString()}`;
+}
+export { stringBuilder};

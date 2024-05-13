@@ -9,6 +9,8 @@ import { SidePanel } from "./components/SidePanel/SidePanel";
 import { ParametersProvider } from './context/parameter-context';
 import { UseContentControllerProvider } from "./hooks/useContentController";
 import { PlotTypeProvider } from "./context/PlotTypeContext";
+import PlotIframe from "./components/Iframe/plot-iframe";
+import SideMenuIframe from "./components/Iframe/sidemenu-iframe";
 
 function App() {
   const router = createHashRouter([
@@ -26,7 +28,7 @@ function App() {
                   <PulldownMenu />
                 </div>
                 <div className="sid">
-                  <SidePanel />
+                  <SideMenuIframe />
                 </div>
               </div>
             </div>
@@ -36,7 +38,7 @@ function App() {
       ),
       children: [
         { path: "", element: <Navigate to={PLOT_ROUTE} replace /> },
-        { path: PLOT_ROUTE, element: <ParametersLayout><PlotContent/></ParametersLayout> },
+        { path: PLOT_ROUTE, element: <ParametersLayout><PlotIframe/></ParametersLayout> },
         { path: TABLE_ROUTE, element: <ParametersLayout><TableContent/></ParametersLayout> },
       ],
     }

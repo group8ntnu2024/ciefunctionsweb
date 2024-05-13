@@ -36,6 +36,10 @@ export interface ParametersContextType {
     endpoint: string;
     setEndpoint: (url: string) => void;
     htmlContent: string;
+    plotUrl: string;
+    setPlotUrl: (url:string) => void;
+    sidemenuUrl: string;
+    setSidemenuUrl: (url:string) => void; 
   }
 
 export interface ApiResponse {
