@@ -26,15 +26,11 @@ async function fetchApiData(endpoint: string, params: paramProps): Promise<ApiRe
   }
 
   return response.json().then(data => {
-    const apiResponse: ApiResponse = {
-      result: data.result ?? [],
-      plot: data.plot ?? [],
-      xyz_plot: data.xyz_plot ?? [],
-      plot_purple: data.plot_purple ?? [],
-      plot_white: data.plot_white ?? [],
-
-    };
-    return apiResponse;
+    if (data.result && data.plot) {
+      return { result: data.result};
+    } else {
+      throw new Error('Unexpected response structure');
+    }
   });
 }
 export {fetchApiData}

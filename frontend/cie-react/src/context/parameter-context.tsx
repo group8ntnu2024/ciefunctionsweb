@@ -1,8 +1,7 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { Parameters, ComputedData, ParametersContextType } from '../utils/propTypes';
-import { fetchApiData, fetchHtmlContent, stringBuilder } from '../utils/ApiService';
+import { fetchApiData, stringBuilder } from '../utils/ApiService';
 import { useLoading } from '../hooks/useLoading';
-
 
 
 const defaultContextValue: ParametersContextType = {
@@ -15,10 +14,7 @@ const defaultContextValue: ParametersContextType = {
   },
   setParameters: () => {},
   computedData : {
-    tableData: [],
-    plotData: [],
-    purpleLineData: [],
-    whitePointData: []
+    tableData: []
   },
   setComputedData: () => {},
   computeData: async () => {},
@@ -40,22 +36,13 @@ export const useParameters = () => useContext(ParametersContext);
 export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   const [parameters, setParameters] = useState<Parameters>(defaultContextValue.parameters);
   const [computedData, setComputedData] = useState<ComputedData>(defaultContextValue.computedData);
-  const [htmlContent, setHtmlContent] = useState<string>('');
-  const { isLoading, startLoading, stopLoading } = useLoading();
+  const [htmlContent] = useState<string>('');
+  const { isLoading, stopLoading } = useLoading();
   const [endpoint, setEndpoint] = useState<string>('lms/');
   const [plotUrl, setPlotUrl] = useState<string>('');
   const [sidemenuUrl, setSidemenuUrl] = useState<string>('');
 
-
-  /*const updateSideMenu = useCallback(async () => {
-    try {
-      const sideMenuContent = await fetchHtmlContent(endpoint + 'sidemenu/', parameters);
-      setHtmlContent(sideMenuContent);
-    } catch (error) {
-      console.error('Error fetching sidemenu content:', error);
-    }
-  }, [endpoint, parameters]);*/
-
+  
   const updateIframes = useCallback(async () => {
     try {
       const plotUrl = stringBuilder(endpoint + 'plot/', parameters);
@@ -69,19 +56,11 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
 
   const computeData = useCallback(async () => {
     const calculateData = endpoint + 'calculation/';
-  
     try {
       console.log("Current parameters:", parameters);
-      const { result, plot, plot_purple, plot_white, xyz_plot } = await fetchApiData(calculateData, parameters);
-      setComputedData({ 
-        tableData: result, 
-        plotData: plot, 
-        purpleLineData: plot_purple,
-        whitePointData: plot_white,
-        plsArchData: xyz_plot,
-      });
+      const { result } = await fetchApiData(calculateData, parameters);
+      setComputedData({ tableData: result});
       updateIframes();
-      //await updateSideMenu();
     } catch (error) {
       console.error('Error:', error);
     } finally {

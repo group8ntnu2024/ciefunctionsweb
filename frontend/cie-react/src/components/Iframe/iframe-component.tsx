@@ -9,7 +9,7 @@ const IframeComponent: React.FC<IframeProps> = ({ iframe_url }) => {
   return (
     <iframe
       src={iframe_url}
-      style={{ width: '1000px', height: '875px', border: 'none' }}
+      style={{ width: '100%', height: '100%', border: 'none'}}
       title="iframe-component"
       allowFullScreen
     ></iframe>

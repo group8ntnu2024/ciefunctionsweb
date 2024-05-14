@@ -12,14 +12,16 @@
   flex-direction: row;
   align-items: center;
   margin: 20px 0px;
+  width: 100%;
 }
 
 .formControl {
-  padding: 1px;
+  padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  width: 55px;
+  width: 75px;
 }
+
 
 .labelSpacing {
   margin-right: 25px;  

@@ -1,11 +1,9 @@
 import { createHashRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Navbar from "./components/navbar/navbar";
 import { PLOT_ROUTE, TABLE_ROUTE } from "./utils/router-urls";
-import PlotContent from "./components/plot/plot-content";
 import TableContent from "./components/table/table-content";
 import ParametersLayout from "./components/parameters/parameters-layout";
 import { PulldownMenu } from "./components/PulldownMenu/PulldownMenu";
-import { SidePanel } from "./components/SidePanel/SidePanel";
 import { ParametersProvider } from './context/parameter-context';
 import { UseContentControllerProvider } from "./hooks/useContentController";
 import { PlotTypeProvider } from "./context/PlotTypeContext";

@@ -6,9 +6,7 @@ const SideMenuIframe: React.FC = () => {
 
 
     return (
-        <div>
-          {sidemenuUrl && <IframeComponent iframe_url={sidemenuUrl} />}
-        </div>
+      sidemenuUrl && <IframeComponent iframe_url={sidemenuUrl} />
       );
   };
   

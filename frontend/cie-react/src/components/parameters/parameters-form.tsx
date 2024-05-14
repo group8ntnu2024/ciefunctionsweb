@@ -4,6 +4,7 @@ import styles from './ParametersForm.module.css';
 import { endpointMap } from '../../utils/propTypes';
 import { LMS_CALC_URL } from '../../utils/ApiUrls';
 import { useContentController } from '../../hooks/useContentController';
+import * as yup from 'yup'
 
 
 const ParametersForm: React.FC = () => {
@@ -32,12 +33,19 @@ const ParametersForm: React.FC = () => {
   //Handles parameter change for every function except xyz
   const handleParameterChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = event.target;
-    if (name === 'field_size') {
-      setGeneralFieldSize(parseFloat(value));
-    }
-    setParameters(prev => ({ ...prev, [name]: parseFloat(value) }));
+    const numericValue = parseFloat(value);
+  
+    parameterSchema.validateAt(name, { [name]: numericValue })
+      .then(() => {
+        if (name === 'field_size') {
+          setGeneralFieldSize(numericValue);
+        }
+        setParameters(prev => ({ ...prev, [name]: numericValue }));
+      })
+      .catch(err => {
+        console.error(err.errors);
+      });
   };
-
   
   //Handles parameter change for xyz functions, where field size of either 2 or 10 degrees are the parameters
   const handleDropdownChange = (event: ChangeEvent<HTMLSelectElement>): void => {
@@ -65,14 +73,15 @@ const ParametersForm: React.FC = () => {
 
   const createParameterControl = (label: string, name: string, value: number, onChange: (event: ChangeEvent<HTMLInputElement>) => void) => (
     <div className={styles.parametersControl}>
-      <label htmlFor={name} className={`mb-0 ${label === "-" ? styles.labelSpacing : "  "}`}>{label}</label>
+      <label htmlFor={name}>{label}</label>
       <input
         type="number"
         className={styles.formControl}
         id={name}
         name={name}
-        value={value.toString()}
+        value={name === "age" ? value.toString() : value.toFixed(1)}
         onChange={onChange}
+        step={name === "age" ? 1 :  0.1}
       />
     </div>
   );
@@ -105,6 +114,29 @@ const ParametersForm: React.FC = () => {
     );
   }
 
+  const parameterSchema = yup.object().shape({
+    field_size: yup.number()
+      .required('Field size is required')
+      .min(1.0, 'Field size must be greater than 1.0')
+      .max(10.0, 'Field size must be less than 10.0'), 
+    age: yup.number()
+      .required('Age is required')
+      .min(20, 'Age must be greater than 20')
+      .max(80,  'Age must be less than 80'), 
+    min: yup.number()
+      .required('Min domain is required')
+      .min(390.0, 'Min domain must be greater than 390.0')
+      .max(400.0, 'Min domain must be less than 400.0'),
+    max: yup.number()
+      .required('Max domain is required')
+      .min(700.0, 'Max domain must be greater than 700.0')
+      .max(830.0, 'Max domain must be less than 830.0'),
+    step_size: yup.number()
+      .required('Step size is required')
+      .min(1.0, 'Step size must be greater than 1.0')
+      .max(5.0, 'Step size must be less than 5.0')
+  });
+
   const renderParameters = () => {
 
      const methodNumber = parseInt(selectedOption.replace('method', ''));
@@ -118,9 +150,7 @@ const ParametersForm: React.FC = () => {
 
   return (
     <div className={styles.parametersForm}>
-      <div style={{ flex: '1 1 auto' }}>
         {renderParameters()}
-      </div>
     </div>
   );
 };

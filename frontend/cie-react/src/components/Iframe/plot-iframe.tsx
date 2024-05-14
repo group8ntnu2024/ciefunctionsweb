@@ -5,9 +5,7 @@ const PlotIframe: React.FC = () => {
     const { plotUrl } = useParameters();
 
     return (
-      <div>
-        {plotUrl && <IframeComponent iframe_url={plotUrl} />}
-      </div>
+        plotUrl && <IframeComponent iframe_url={plotUrl} />
     );
   };
   

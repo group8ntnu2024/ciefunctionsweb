@@ -18,13 +18,7 @@ export interface Parameters {
   }
 
 export interface ComputedData {
-  tableData: number[][];
-  plotData: number[][];
-  plsArchData?: number[][];
-  purpleLineData?: number[][];
-  whitePointData?: number[];
-
-}
+  tableData: number[][];}
 
 export interface ParametersContextType {
     parameters: Parameters;
@@ -40,16 +34,11 @@ export interface ParametersContextType {
     setPlotUrl: (url:string) => void;
     sidemenuUrl: string;
     setSidemenuUrl: (url:string) => void; 
-  }
+}
 
 export interface ApiResponse {
     result: number[][];
-    plot: number[][];
-    xyz_plot: number[][];
-    plot_purple: number[][]; 
-    plot_white: number[];
-
-  }
+}
 
 export const endpointMap: Record<string, string> = {
   method1: "lms/",

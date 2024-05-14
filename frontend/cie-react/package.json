@@ -18,7 +18,8 @@
     "react-katex": "^3.0.1",
     "react-plotly.js": "^2.6.0",
     "react-router-dom": "^6.22.3",
-    "recharts": "^2.12.5"
+    "recharts": "^2.12.5",
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.55",
