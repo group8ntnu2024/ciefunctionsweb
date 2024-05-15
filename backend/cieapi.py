@@ -14,7 +14,7 @@ from pathlib import Path
 from datetime import datetime
 import time
 # from gevent.pywsgi import WSGIServer
-from sanic import Sanic, response, exceptions, SanicException, text, headers
+from sanic import Sanic, response, exceptions, SanicException, text
 from sanic.response import json, html
 from sanic_cors import CORS
 from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Modular, compute_LMS_Modular, \
@@ -28,7 +28,7 @@ from graph import LMS_graph, macleod_graph, maxwellian_graph, XYZ_graph, XY_grap
 from sanic.exceptions import NotFound
 
 api = Sanic(__name__)
-CORS(api)
+CORS(api, resources={r"/*": {"origins": "*"}})
 
 # constants for each endpoint
 API_HOMEPAGE = "/api"
@@ -332,11 +332,11 @@ async def LMS(request, more: str):
     if more == "calculation":
         return response.raw(new_calculation_JSON(compute_LMS_Modular,
                                                  createAndCheckParameters(True, compute_LMS_Modular, request)),
-                            content_type="application/json", headers={"cache-control": "private"})
+                            content_type="application/json")
     if more == "sidemenu":
-        return html(LMS_sidemenu(createAndCheckParameters(True, compute_LMS_Modular, request)), headers={"cache-control": "private"})
+        return html(LMS_sidemenu(createAndCheckParameters(True, compute_LMS_Modular, request)))
     if more == "plot":
-        return html(LMS_graph(createAndCheckParameters(True, compute_LMS_Modular, request)), headers={"cache-control": "private"})
+        return html(LMS_graph(createAndCheckParameters(True, compute_LMS_Modular, request)))
     else:
         # add later
         raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
@@ -350,15 +350,15 @@ async def MB(request, more: str):
     if more == "calculation":
         return response.raw(new_calculation_JSON(compute_MacLeod_Modular,
                                                  createAndCheckParameters(True, compute_MacLeod_Modular, request)),
-                            content_type="application/json", headers={"cache-control": "private"})
+                            content_type="application/json")
     if more == "sidemenu":
-        return html(LMS_MB_sidemenu(createAndCheckParameters(True, compute_MacLeod_Modular, request)), headers={"cache-control": "private"})
+        return html(LMS_MB_sidemenu(createAndCheckParameters(True, compute_MacLeod_Modular, request)))
     if more == "plot":
-        return html(macleod_graph(createAndCheckParameters(True, compute_MacLeod_Modular, request)), headers={"cache-control": "private"})
+        return html(macleod_graph(createAndCheckParameters(True, compute_MacLeod_Modular, request)))
     else:
         raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
                                "Please ensure that the value of your route is supported. "
-                               "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."), status_code=404, headers={"cache-control": "private"})
+                               "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."), status_code=404)
 
 
 # maxwellian
@@ -367,11 +367,11 @@ async def maxwellian(request, more: str):
     if more == "calculation":
         return response.raw(new_calculation_JSON(compute_Maxwellian_Modular,
                                                  createAndCheckParameters(True, compute_Maxwellian_Modular, request)),
-                            content_type="application/json", headers={"cache-control": "private"})
+                            content_type="application/json")
     if more == "sidemenu":
-        return html(LMS_MW_sidemenu(createAndCheckParameters(True, compute_Maxwellian_Modular, request)), headers={"cache-control": "private"})
+        return html(LMS_MW_sidemenu(createAndCheckParameters(True, compute_Maxwellian_Modular, request)))
     if more == "plot":
-        return html(maxwellian_graph(createAndCheckParameters(True, compute_Maxwellian_Modular, request)), headers={"cache-control": "private"})
+        return html(maxwellian_graph(createAndCheckParameters(True, compute_Maxwellian_Modular, request)))
     else:
         raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
                                "Please ensure that the value of your route is supported. "
@@ -384,11 +384,11 @@ async def xyz(request, more: str):
     if more == "calculation":
         return response.raw(new_calculation_JSON(compute_XYZ_Modular,
                                                  createAndCheckParameters(True, compute_XYZ_Modular, request)),
-                            content_type="application/json", headers={"cache-control": "private"})
+                            content_type="application/json")
     if more == "sidemenu":
-        return html(XYZ_sidemenu(createAndCheckParameters(True, compute_XYZ_Modular, request)), headers={"cache-control": "private"})
+        return html(XYZ_sidemenu(createAndCheckParameters(True, compute_XYZ_Modular, request)))
     if more == "plot":
-        return html(XYZ_graph(createAndCheckParameters(True, compute_XYZ_Modular, request)), headers={"cache-control": "private"})
+        return html(XYZ_graph(createAndCheckParameters(True, compute_XYZ_Modular, request)))
     else:
         raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
                                "Please ensure that the value of your route is supported. "
@@ -402,12 +402,12 @@ async def xy(request, more: str):
         return response.raw(
             new_calculation_JSON(compute_XY_modular,
                                  createAndCheckParameters(True, compute_XY_modular, request)),
-            content_type="application/json", headers={"cache-control": "private"}
+            content_type="application/json"
         )
     if more == "sidemenu":
-        return html(XY_sidemenu(createAndCheckParameters(True, compute_XY_modular, request)), headers={"cache-control": "private"})
+        return html(XY_sidemenu(createAndCheckParameters(True, compute_XY_modular, request)))
     if more == "plot":
-        return html(XY_graph(createAndCheckParameters(True, compute_XY_modular, request)), headers={"cache-control": "private"})
+        return html(XY_graph(createAndCheckParameters(True, compute_XY_modular, request)))
     else:
         raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
                                "Please ensure that the value of your route is supported. "
@@ -421,12 +421,12 @@ async def xyz_p(request, more: str):
         return response.raw(
             new_calculation_JSON(compute_XYZ_purples_modular,
                                  createAndCheckParameters(True, compute_XYZ_purples_modular, request)),
-            content_type="application/json", headers={"cache-control": "private"}
+            content_type="application/json"
         )
     if more == "sidemenu":
-        return html(XYZP_sidemenu(createAndCheckParameters(True, compute_XYZ_purples_modular, request)), headers={"cache-control": "private"})
+        return html(XYZP_sidemenu(createAndCheckParameters(True, compute_XYZ_purples_modular, request)))
     if more == "plot":
-        return html(XYZP_graph(createAndCheckParameters(True, compute_XYZ_purples_modular, request)), headers={"cache-control": "private"})
+        return html(XYZP_graph(createAndCheckParameters(True, compute_XYZ_purples_modular, request)))
     else:
         raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
                                "Please ensure that the value of your route is supported. "
@@ -440,12 +440,12 @@ async def xy_p(request, more: str):
         return response.raw(
             new_calculation_JSON(compute_xyz_purples_modular,
                                  createAndCheckParameters(True, compute_xyz_purples_modular, request)),
-            content_type="application/json", headers={"cache-control": "private"}
+            content_type="application/json"
         )
     if more == "sidemenu":
-        return html(XYP_sidemenu(createAndCheckParameters(True, compute_xyz_purples_modular, request)), headers={"cache-control": "private"})
+        return html(XYP_sidemenu(createAndCheckParameters(True, compute_xyz_purples_modular, request)))
     if more == "plot":
-        return html(xyp_graph(createAndCheckParameters(True, compute_xyz_purples_modular, request)), headers={"cache-control": "private"})
+        return html(xyp_graph(createAndCheckParameters(True, compute_xyz_purples_modular, request)))
     else:
         raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
                                "Please ensure that the value of your route is supported. "
@@ -459,12 +459,12 @@ async def xyz_std(request, more: str):
         return response.raw(
             new_calculation_JSON(compute_XYZ_standard_modular,
                                  createAndCheckParameters(False, compute_XYZ_standard_modular, request)),
-            content_type="application/json", headers={"cache-control": "private"}
+            content_type="application/json"
         )
     if more == "sidemenu":
-        return html(XYZ_std_sidemenu(createAndCheckParameters(False, compute_XYZ_standard_modular, request)), headers={"cache-control": "private"})
+        return html(XYZ_std_sidemenu(createAndCheckParameters(False, compute_XYZ_standard_modular, request)))
     if more == "plot":
-        return html(cieXYZ_std(createAndCheckParameters(False, compute_XYZ_standard_modular, request)), headers={"cache-control": "private"})
+        return html(cieXYZ_std(createAndCheckParameters(False, compute_XYZ_standard_modular, request)))
     else:
         raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
                                "Please ensure that the value of your route is supported. "
@@ -478,12 +478,12 @@ async def xy_std(request, more: str):
         return response.raw(
             new_calculation_JSON(compute_xyz_standard_modular,
                                  createAndCheckParameters(False, compute_xyz_standard_modular, request)),
-            content_type="application/json", headers={"cache-control": "private"}
+            content_type="application/json"
         )
     if more == "sidemenu":
-        return html(XY_std_sidemenu(createAndCheckParameters(False, compute_xyz_standard_modular, request)), headers={"cache-control": "private"})
+        return html(XY_std_sidemenu(createAndCheckParameters(False, compute_xyz_standard_modular, request)))
     if more == "plot":
-        return html(ciexyz_std(createAndCheckParameters(False, compute_xyz_standard_modular, request)), headers={"cache-control": "private"})
+        return html(ciexyz_std(createAndCheckParameters(False, compute_xyz_standard_modular, request)))
     else:
         raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
                                "Please ensure that the value of your route is supported. "
@@ -501,7 +501,7 @@ def statusEndpoint(request):
         "uptime": str(time.time() - server_start) + "s",
         "version": API_VERSION
     }
-    return response.json(status, status=200, headers={"cache-control": "no-store"})
+    return response.json(status, status=200)
 
 
 def createAndCheckParameters(disabled, calculation, request):
@@ -716,4 +716,6 @@ def createAndCheckParameters(disabled, calculation, request):
 
 
 if __name__ == '__main__':
-    api.run(debug=True, port=8080)
+    api.run(host="0.0.0.0", port=8000, workers=4)
+
+
