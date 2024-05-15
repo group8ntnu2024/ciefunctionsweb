@@ -361,7 +361,6 @@ def xyp_graph(parameters):
     xy_json = cieapi.new_calculation_JSON(compute_XY_modular, temp)
     temp['info'] = True
     info_json = cieapi.new_calculation_JSON(compute_xyz_purples_modular, temp)
-    xy_info = cieapi.new_calculation_JSON(compute_XY_modular, temp)
     # creates formatted title
     title = ("xy cone-fundamental-based chromaticity diagram (purple-line stimuli)<br> Field size: {}°, Age: {} "
              "yr, Domain: {} nm - {} nm, Step: {} nm").format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
@@ -398,7 +397,6 @@ def xyp_graph(parameters):
         const plot = JSON.parse('""" + cieapi.ndarray_to_JSON(purpleplot, ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"]) + """');
         const xy_plot = JSON.parse('""" + xy_json + """')['plot'];
         const info = JSON.parse('""" + info_json + """');
-        const xy_info = JSON.parse('""" + xy_info + """');
         
         // generic layout and config
         const config = {responsive: true}
@@ -467,8 +465,8 @@ def xyp_graph(parameters):
         }
         // creates the purple line
         var purpleline = {
-            x: [xy_info['xyz_tg_purple'][0][1], xy_info['xyz_tg_purple'][1][1]],
-            y: [xy_info['xyz_tg_purple'][0][2], xy_info['xyz_tg_purple'][1][2]],
+            x: [info['xyz_tg_purple'][0][1], info['xyz_tg_purple'][1][1]],
+            y: [info['xyz_tg_purple'][0][2], info['xyz_tg_purple'][1][2]],
             mode: 'lines',
             line: {
                 color: 'rgb(150, 32, 240)',
