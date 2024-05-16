@@ -55,7 +55,7 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   }, [endpoint, parameters]);
 
   const computeData = useCallback(async () => {
-    const calculateData = endpoint + 'calculation/';
+    const calculateData = endpoint + 'calculation';
     try {
       console.log("Current parameters:", parameters);
       const { result } = await fetchApiData(calculateData, parameters);
