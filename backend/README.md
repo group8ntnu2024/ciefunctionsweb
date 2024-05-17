@@ -23,7 +23,7 @@ To run tests and see coverage, use the following commands in terminal:
 
 ## v1
 
-placeholder ..
+The `/v1/` endpoints are not supported on this service. 
 
 ## 
 

@@ -1,23 +1,52 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-    A module specifically designed to be between the description.py module from CIE Functions,
-    and the API within cieapi_test.py.
+descriptionapi: Module consisting of functions responsible for generating HTML pages as
+                they are within the CIE Functions application.
+
+Copyright (C) 2012-2020 Ivar Farup and Jan Henrik Wold
+Copyright (C) 2024 Bachelor Thesis Group 8
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
+"""
+    NOTE:
+    
+    This module contains code based on the description.py module for CIE Functions:
+    https://github.com/ifarup/ciefunctions/blob/master/tc1_97/description.py
+
+    It contains both the direct usage of functions, as well as functions based on ones
+    that exist in that module.
+"""
+
+
+# ------------------------------------------------------------------------------------------
+
+"""
+    A version of _head() based on the one in description.py without included MathJax as file.
+    description.py, lines 25-61
 """
 
 import sys
 
 import cieapi
 import styles.description
-from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Modular, compute_XYZ_Modular, \
+from computemodularization import compute_MacLeod_modular, compute_Maxwellian_modular, compute_XYZ_modular, \
     compute_XY_modular, compute_XYZ_purples_modular, compute_xyz_standard_modular
 
-# ------------------------------------------------------------------------------------------
 
-"""
-    A version of _head() that doesn't use package_path with pathlib library.
-    Using this function directly doesn't link up right with the API, so it changes
-    the usage of them by instead using a statically hosted file for the CSS, and an official
-    and secure link for the mathjax.
-"""
 def _head():
     html_string = """
     <head>
@@ -55,6 +84,7 @@ def _head():
     """
     return html_string
 
+
 """
     The following functions are identical to their counterparts in description.py,
     just without the "_sidemenu" suffix. These have been adjusted to use the 'parameters' dictionary system
@@ -62,7 +92,20 @@ def _head():
     original counterparts.
 """
 
+
 def LMS_sidemenu(parameters):
+    """
+    LMS_sidemenu(...) is directly based on LMS(...) from description.py, lines 1089-1122.
+
+    Parameters
+    ----------
+    parameters: Global parameter system, dict of user inputs.
+
+    Returns
+    -------
+    Generated HTML page with sidemenu contents.
+
+    """
     html_string = ""
     html_string += _head()
 
@@ -76,25 +119,42 @@ def LMS_sidemenu(parameters):
     params['log10'] = params['log']
 
     if parameters['base']:
-        html_string += styles.description._heading('CIE LMS cone fundamentals (9 sign. figs.)')
+        html_string += styles.description._heading(
+            'CIE LMS cone fundamentals (9 sign. figs.)')
     else:
         html_string += styles.description._heading('CIE LMS cone fundamentals')
     html_string += (
         styles.description._parameters(params) +
         styles.description._functions('\\(\\bar l_{%s,\,%d}\\)' %
-                   (params['field_size'], params['age']),
-                   '\\(\\bar m_{\,%s,\,%d}\\)' %
-                   (params['field_size'], params['age']),
-                   '\\(\\bar s_{%s,\,%d}\\)' %
-                   (params['field_size'], params['age']),
-                   '\\(\\lambda\\) &nbsp;(wavelength)') +
-       styles.description._wavelenghts(params) +
-       styles.description._normalization_LMS(params) +
-       styles.description._precision_LMS(params, params['base'])
+                                      (params['field_size'],
+                                       params['age']),
+                                      '\\(\\bar m_{\,%s,\,%d}\\)' %
+                                      (params['field_size'],
+                                       params['age']),
+                                      '\\(\\bar s_{%s,\,%d}\\)' %
+                                      (params['field_size'],
+                                       params['age']),
+                                      '\\(\\lambda\\) &nbsp;(wavelength)') +
+        styles.description._wavelenghts(params) +
+        styles.description._normalization_LMS(params) +
+        styles.description._precision_LMS(params, params['base'])
     )
     return html_string
 
+
 def LMS_MB_sidemenu(parameters):
+    """
+    LMS_MB_sidemenu(...) is based directly on description.py, lines 1161-1196.
+
+    Parameters
+    ----------
+    parameters: Global parameter system, dict of user inputs.
+
+    Returns
+    -------
+    Generated HTML page with sidemenu contents.
+
+    """
     html_string = ""
     html_string += _head()
 
@@ -108,31 +168,44 @@ def LMS_MB_sidemenu(parameters):
 
     # needs info from macleod, does computation
     data['info'] = True
-    info = compute_MacLeod_Modular(data)
+    info = compute_MacLeod_modular(data)
     data['norm_coeffs_lms_mb'] = info['norm']
     data['lms_mb_white'] = info['white']
     data['lms_mb_tg_purple'] = info['tg_purple']
 
-
-    html_string += styles.description._heading(u'MacLeod\u2013Boynton ls chromaticity diagram')
+    html_string += styles.description._heading(
+        u'MacLeod\u2013Boynton ls chromaticity diagram')
     html_string += (
         styles.description._parameters(data) +
         styles.description._coordinates('\\(l_{\,\mathrm{MB},\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age']),
-                                 '\\(m_{\,\mathrm{MB},\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age']),
-                                 '\\(s_{\,\mathrm{MB},\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age'])) +
+                                        (data['field_size'], data['age']),
+                                        '\\(m_{\,\mathrm{MB},\,%s,\,%d}\\)' %
+                                        (data['field_size'], data['age']),
+                                        '\\(s_{\,\mathrm{MB},\,%s,\,%d}\\)' %
+                                        (data['field_size'], data['age'])) +
         styles.description._wavelenghts(data) +
         styles.description._normalization_lms_mb(data) +
         styles.description._LMS_to_lms_mb(data, data) +
         styles.description._precision_lms_mb() +
         styles.description._illuminant_E_lms_mb(data) +
-        styles.description._purpleline_tangentpoints_lms_mb(data) )
+        styles.description._purpleline_tangentpoints_lms_mb(data))
 
     return html_string
 
+
 def LMS_MW_sidemenu(parameters):
+    """
+    LMS_MW_sidemenu(...) is directly based description.py, lines 1199-1234.
+
+    Parameters
+    ----------
+    parameters: Global parameter system, dict of user inputs.
+
+    Returns
+    -------
+    Generated HTML page with sidemenu contents.
+
+    """
     html_string = ""
     html_string += _head()
 
@@ -146,7 +219,7 @@ def LMS_MW_sidemenu(parameters):
 
     # needs info from maxwell, does computation
     data['info'] = True
-    info = compute_Maxwellian_Modular(data)
+    info = compute_Maxwellian_modular(data)
     data['norm_coeffs_lms_mw'] = info['norm']
     data['lms_mw_white'] = info['white']
     data['lms_mw_tg_purple'] = info['tg_purple']
@@ -154,11 +227,13 @@ def LMS_MW_sidemenu(parameters):
     html_string += (styles.description._heading('Maxwellian lm chromaticity diagram') +
                     styles.description._parameters(data) +
                     styles.description._coordinates('\\(l_{\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age']),
-                                 '\\(m_{\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age']),
-                                 '\\(s_{\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age'])) +
+                                                    (data['field_size'],
+                                                     data['age']),
+                                                    '\\(m_{\,%s,\,%d}\\)' %
+                                                    (data['field_size'],
+                                                     data['age']),
+                                                    '\\(s_{\,%s,\,%d}\\)' %
+                                                    (data['field_size'], data['age'])) +
                     styles.description._wavelenghts(data) +
                     styles.description._normalization_lms_mw(data) +
                     styles.description._LMS_to_lms_mw(data) +
@@ -170,6 +245,18 @@ def LMS_MW_sidemenu(parameters):
 
 
 def XYZ_sidemenu(parameters):
+    """
+    XYZ_sidemenu(...) is directly based on description.py, lines 1237-1271.
+
+    Parameters
+    ----------
+    parameters: Global parameter system, dict of user inputs.
+
+    Returns
+    -------
+    Generated HTML page with sidemenu contents.
+
+    """
     html_string = ""
     html_string += _head()
 
@@ -182,23 +269,25 @@ def XYZ_sidemenu(parameters):
     data['λ_step'] = data['step_size']
 
     data['info'] = True
-    info = compute_XYZ_Modular(data)
-    # compute_XYZ_Modular makes the trans_mat itself either normal or not normalized, depending on
+    info = compute_XYZ_modular(data)
+    # compute_XYZ_modular makes the trans_mat itself either normal or not normalized, depending on
     # the value of parameters['norm']; if it is activated, 'trans_mat' is normalized, so it makes sure
     # that either way, it gets the right one
     data['trans_mat'] = info['trans_mat']
     data['trans_mat_N'] = info['trans_mat']
 
-
     html_string += (styles.description._heading('CIE XYZ cone-fundamental-based tristimulus functions') +
                     styles.description._parameters(data) +
                     styles.description._functions('\\(\\bar x_{\,\mathrm{F},\,%s,\,%d}\\)' %
-                               (data['field_size'], data['age']),
-                               '\\(\\bar y_{\,\mathrm{F},\,%s,\,%d}\\)' %
-                               (data['field_size'], data['age']),
-                               '\\(\\bar z_{\,\mathrm{F},\,%s,\,%d}\\)' %
-                               (data['field_size'], data['age']),
-                               '\\(\\lambda\\) &nbsp;(wavelength)') +
+                                                  (data['field_size'],
+                                                   data['age']),
+                                                  '\\(\\bar y_{\,\mathrm{F},\,%s,\,%d}\\)' %
+                                                  (data['field_size'],
+                                                   data['age']),
+                                                  '\\(\\bar z_{\,\mathrm{F},\,%s,\,%d}\\)' %
+                                                  (data['field_size'],
+                                                   data['age']),
+                                                  '\\(\\lambda\\) &nbsp;(wavelength)') +
                     styles.description._wavelenghts(data) +
                     styles.description._normalization_XYZ(data, data) +
                     styles.description._LMS_to_XYZ(data, data) +
@@ -206,7 +295,20 @@ def XYZ_sidemenu(parameters):
                     )
     return html_string
 
+
 def XY_sidemenu(parameters):
+    """
+    XY_sidemenu(...) is directly based on description.py, lines 1274-1309.
+
+    Parameters
+    ----------
+    parameters: Global parameter system, dict of user inputs.
+
+    Returns
+    -------
+    Generated HTML page with sidemenu contents.
+
+    """
     html_string = ""
     html_string += _head()
 
@@ -231,11 +333,11 @@ def XY_sidemenu(parameters):
         styles.description._heading("CIE xy cone-fundamental-based chromaticity diagram") +
         styles.description._parameters(data) +
         styles.description._coordinates('\\(x_{\,\mathrm{F},\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age']),
-                                 '\\(y_{\,\mathrm{F},\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age']),
-                                 '\\(z_{\,\mathrm{F},\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age'])) +
+                                        (data['field_size'], data['age']),
+                                        '\\(y_{\,\mathrm{F},\,%s,\,%d}\\)' %
+                                        (data['field_size'], data['age']),
+                                        '\\(z_{\,\mathrm{F},\,%s,\,%d}\\)' %
+                                        (data['field_size'], data['age'])) +
         styles.description._wavelenghts(data) +
         styles.description._normalization_xyz(data, data) +
         styles.description._XYZ_to_xyz(data) +
@@ -245,7 +347,20 @@ def XY_sidemenu(parameters):
     )
     return html_string
 
+
 def XYZP_sidemenu(parameters):
+    """
+    XYZP_sidemenu(...) is directly based on description.py, lines 1312-1349.
+
+    Parameters
+    ----------
+    parameters: Global parameter system, dict of user inputs.
+
+    Returns
+    -------
+    Generated HTML page with sidemenu contents.
+
+    """
     html_string = ""
     html_string += _head()
 
@@ -258,8 +373,8 @@ def XYZP_sidemenu(parameters):
     data['λ_step'] = data['step_size']
 
     data['info'] = True
-    info = compute_XYZ_Modular(data)
-    # compute_XYZ_Modular makes the trans_mat itself either normal or not normalized, depending on
+    info = compute_XYZ_modular(data)
+    # compute_XYZ_modular makes the trans_mat itself either normal or not normalized, depending on
     # the value of parameters['norm']; if it is activated, 'trans_mat' is normalized, so it makes sure
     # that either way, it gets the right one
     data['trans_mat'] = info['trans_mat']
@@ -277,13 +392,13 @@ def XYZP_sidemenu(parameters):
         styles.description._heading("XYZ cone-fundamental-based tristimulus functions for purple-line stimuli") +
         styles.description._parameters(data) +
         styles.description._functions(
-                            '\\(\\bar x_{\,\mathrm{Fp},\,%s,\,%d}\\)' %
-                            (data['field_size'], data['age']),
-                            '\\(\\bar y_{\,\mathrm{Fp},\,%s,\,%d}\\)' %
-                            (data['field_size'], data['age']),
-                            '\\(\\bar z_{\,\mathrm{Fp},\,%s,\,%d}\\)' %
-                            (data['field_size'], data['age']),
-                            '<nobr>\\(\\lambda_{\\mathrm{c}}\\)</nobr> \
+            '\\(\\bar x_{\,\mathrm{Fp},\,%s,\,%d}\\)' %
+            (data['field_size'], data['age']),
+            '\\(\\bar y_{\,\mathrm{Fp},\,%s,\,%d}\\)' %
+            (data['field_size'], data['age']),
+            '\\(\\bar z_{\,\mathrm{Fp},\,%s,\,%d}\\)' %
+            (data['field_size'], data['age']),
+            '<nobr>\\(\\lambda_{\\mathrm{c}}\\)</nobr> \
                             &nbsp;(complementary<font size="0.0em"> </font>\
                             &nbsp;wavelength)') +
         styles.description._wavelenghts_complementary(data, data) +
@@ -293,7 +408,20 @@ def XYZP_sidemenu(parameters):
     )
     return html_string
 
+
 def XYP_sidemenu(parameters):
+    """
+    LMS_sidemenu(...) is directly based on description.py, lines 1352-1387.
+
+    Parameters
+    ----------
+    parameters: Global parameter system, dict of user inputs.
+
+    Returns
+    -------
+    Generated HTML page with sidemenu contents.
+
+    """
     html_string = ""
     html_string += _head()
 
@@ -326,21 +454,35 @@ def XYP_sidemenu(parameters):
         styles.description._heading("xy cone-fundamental-based chromaticity diagram (purple-line stimuli)") +
         styles.description._parameters(data) +
         styles.description._coordinates('\\(x_{\,\mathrm{F},\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age']),
-                                 '\\(y_{\,\mathrm{F},\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age']),
-                                 '\\(z_{\,\mathrm{F},\,%s,\,%d}\\)' %
-                                 (data['field_size'], data['age'])) +
+                                        (data['field_size'], data['age']),
+                                        '\\(y_{\,\mathrm{F},\,%s,\,%d}\\)' %
+                                        (data['field_size'], data['age']),
+                                        '\\(z_{\,\mathrm{F},\,%s,\,%d}\\)' %
+                                        (data['field_size'], data['age'])) +
         styles.description._wavelenghts_complementary(data, data) +
         styles.description._normalization_xyz(data, data) +
         styles.description._XYZ_purples_to_xyz_purples(data) +
         styles.description._precision_xyz() +
         styles.description._illuminant_E_xyz(data, data) +
-        styles.description._purpleline_tangentpoints_xyz_complementary(data, data)
+        styles.description._purpleline_tangentpoints_xyz_complementary(
+            data, data)
     )
     return html_string
 
+
 def XYZ_std_sidemenu(parameters):
+    """
+    LMS_sidemenu(...) is directly based on LMS(...) from description.py, lines 1390-1454.
+
+    Parameters
+    ----------
+    parameters: Global parameter system, dict of user inputs.
+
+    Returns
+    -------
+    Generated HTML page with sidemenu contents.
+
+    """
     html_string = ""
     html_string += _head()
 
@@ -349,35 +491,49 @@ def XYZ_std_sidemenu(parameters):
     # changing their names to be equal to 'data' and 'options' keys, so that it
     # can use as much of the original material as possible
 
-    html_string += styles.description._heading("CIE XYZ standard colour-matching functions")
+    html_string += styles.description._heading(
+        "CIE XYZ standard colour-matching functions")
 
-    # field_size = 2
+    # description.py, lines 1390-1420
     if data['field_size'] == cieapi.STD_1931:
         html_string += (
             styles.description._parameters_std('2') +
             styles.description._functions('\\(\\bar x\\) ',
-                       '\\(\\bar y\\) ',
-                       '\\(\\bar z\\)',
-                       '\\(\\lambda\\) &nbsp;(wavelength)') +
+                                          '\\(\\bar y\\) ',
+                                          '\\(\\bar z\\)',
+                                          '\\(\\lambda\\) &nbsp;(wavelength)') +
             styles.description._wavelenghts_std() +
             styles.description._normalization_XYZ31() +
             styles.description._precision_XYZ()
         )
     else:
-        # field_size = 10
+        # description.py, lines 1423-1454
         html_string += (
             styles.description._parameters_std('10') +
             styles.description._functions('\\(\\bar x_{10}\\)',
-                               '\\(\\bar y_{10}\\)',
-                               '\\(\\bar z_{10}\\)',
-                               '\\(\\lambda\\) &nbsp;(wavelength)') +
+                                          '\\(\\bar y_{10}\\)',
+                                          '\\(\\bar z_{10}\\)',
+                                          '\\(\\lambda\\) &nbsp;(wavelength)') +
             styles.description._wavelenghts_std() +
             styles.description._normalization_XYZ64() +
             styles.description._precision_XYZ()
         )
     return html_string
 
+
 def XY_std_sidemenu(parameters):
+    """
+    LMS_sidemenu(...) is directly based on LMS(...) from description.py, lines 1457-1522.
+
+    Parameters
+    ----------
+    parameters: Global parameter system, dict of user inputs.
+
+    Returns
+    -------
+    Generated HTML page with sidemenu contents.
+
+    """
     html_string = ""
     html_string += _head()
 
@@ -392,29 +548,32 @@ def XY_std_sidemenu(parameters):
     data['xyz31_tg_purple'] = info['tg_purple']
     data['xyz64_tg_purple'] = info['tg_purple']
 
-    html_string += styles.description._heading("CIE xy standard chromaticity diagram")
+    html_string += styles.description._heading(
+        "CIE xy standard chromaticity diagram")
+    # description.py, lines 1457-1487
     if data['field_size'] == cieapi.STD_1931:
         html_string += (
-                styles.description._parameters_std('2') +
-                styles.description._coordinates('\\(x\\)', '\\(y\\)', '\\(z\\)') +
-                styles.description._wavelenghts_std() +
-                styles.description._normalization_xyz31() +
-                styles.description._XYZ31_to_xyz31() +
-                styles.description._precision_xyz() +
-                styles.description._illuminant_E_xyz31() +
-                styles.description._purpleline_tangentpoints_xyz31(data)
+            styles.description._parameters_std('2') +
+            styles.description._coordinates('\\(x\\)', '\\(y\\)', '\\(z\\)') +
+            styles.description._wavelenghts_std() +
+            styles.description._normalization_xyz31() +
+            styles.description._XYZ31_to_xyz31() +
+            styles.description._precision_xyz() +
+            styles.description._illuminant_E_xyz31() +
+            styles.description._purpleline_tangentpoints_xyz31(data)
         )
     else:
+        # description.py, lines 1490-1522
         html_string += (
-                styles.description._parameters_std('10') +
-                styles.description._coordinates('\\(x_{10}\\)',
-                             '\\(y_{\,10}\\)',
-                             '\\(z_{\,10}\\)') +
-                styles.description._wavelenghts_std() +
-                styles.description._normalization_xyz64() +
-                styles.description._XYZ64_to_xyz64() +
-                styles.description._precision_xyz() +
-                styles.description._illuminant_E_xyz64() +
-                styles.description._purpleline_tangentpoints_xyz64(data)
+            styles.description._parameters_std('10') +
+            styles.description._coordinates('\\(x_{10}\\)',
+                                            '\\(y_{\,10}\\)',
+                                            '\\(z_{\,10}\\)') +
+            styles.description._wavelenghts_std() +
+            styles.description._normalization_xyz64() +
+            styles.description._XYZ64_to_xyz64() +
+            styles.description._precision_xyz() +
+            styles.description._illuminant_E_xyz64() +
+            styles.description._purpleline_tangentpoints_xyz64(data)
         )
     return html_string

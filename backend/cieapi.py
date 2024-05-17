@@ -1,31 +1,39 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+cieapi: Webserver application for backend for server.
+
+Copyright (C) 2012-2020 Ivar Farup and Jan Henrik Wold
+Copyright (C) 2024 Bachelor Thesis Group 8
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import math
-
-import requests
-# from flask import Flask, request, jsonify, make_response, Response, render_template
-from flask_cors import CORS
-
-from compute import compute_tabulated, compute_LMS1, my_round, compute_LMS, LMS_energy, chop, \
-    Vλ_energy_and_LM_weights, compute_MacLeod_Boynton_diagram, compute_Maxwellian_diagram
-import scipy.interpolate
-import numpy as np
-import pandas as pd
 import json
-from pathlib import Path
-from datetime import datetime
 import time
-# from gevent.pywsgi import WSGIServer
-from sanic import Sanic, response, exceptions, SanicException, text
+from sanic import Sanic, response, SanicException
 from sanic.response import json, html
 from sanic_cors import CORS
-from computemodularization import compute_MacLeod_Modular, compute_Maxwellian_Modular, compute_LMS_Modular, \
-    compute_XYZ_Modular, compute_XY_modular, compute_XYZ_purples_modular, compute_xyz_purples_modular, \
-    compute_XYZ_standard_modular, compute_xyz_standard_modular
+from sanic.exceptions import NotFound
 
+from computemodularization import compute_LMS_modular, compute_xyz_purples_modular, compute_XYZ_standard_modular
 from descriptionapi import *
-from descriptionapi import _head
 from graph import LMS_graph, macleod_graph, maxwellian_graph, XYZ_graph, XY_graph, XYZP_graph, xyp_graph, \
     cieXYZ_std, ciexyz_std
-from sanic.exceptions import NotFound
+from compute import chop
+
 
 api = Sanic(__name__)
 CORS(api, resources={r"/*": {"origins": "*"}})
@@ -64,19 +72,23 @@ async def check_get(request):
     """
     if request.method != "GET":
         raise SanicException(
-            ("Method error.", "The HTTP Method you are trying to use is not supported by any endpoint in this server.",
+            ("METHOD ERROR",
+             "The HTTP Method you are trying to use is not supported by any endpoint in this server.",
              "All of the endpoints support only HTTP GET requests. We suggest you try that instead."),
             status_code=405)
+
+
 @api.exception(NotFound)
 async def notfound_handler(request, exception):
     return json(
         {
             "error": "Not Found",
             "status_code": 404,
-            "message": "Site you are trying to visit does not exist.",
-            "suggestion": "Please try another page."
+            "message": "Path you are trying to visit does not exist.",
+            "suggestion": "Please try another page, such as '/'."
         }, status=404
     )
+
 
 @api.exception(SanicException)
 async def error_handler(request, exception):
@@ -118,9 +130,7 @@ def endpoint_creator(homepage, version, endpoint=""):
     The combined URL.
 
     """
-    all = [homepage, version, endpoint]
-    temp = '/'.join(all)
-    return temp
+    return '/'.join([homepage, version, endpoint])
 
 
 """
@@ -178,7 +188,7 @@ calculation_formats = {
 api.static("/", "./templates/index.html", name="home-page")
 api.static("/api/v2/", "./templates/api-page.html", name="api-page")
 
-# hosting css
+# hosting css for description.css
 api.static("/styles/description.css", "./styles/description.css")
 
 
@@ -201,7 +211,7 @@ def new_calculation_JSON(calculation, parameters):
     if parameters['info']:
         return write_to_JSON(calculation(parameters), calculation_formats['info-1'])
 
-    if calculation is compute_LMS_Modular:
+    if calculation is compute_LMS_modular:
         if parameters['base']:
             if parameters['log']:
                 # log10 base LMS
@@ -217,9 +227,9 @@ def new_calculation_JSON(calculation, parameters):
                 # LMS
                 return write_to_JSON(calculation(parameters), calculation_formats['LMS'])
     # many of these share the same ones
-    if calculation in [compute_Maxwellian_Modular, compute_MacLeod_Modular]:
+    if calculation in [compute_Maxwellian_modular, compute_MacLeod_modular]:
         return write_to_JSON(calculation(parameters), calculation_formats["Maxwell-Macleod-resplot"])
-    if calculation in [compute_XYZ_Modular, compute_XYZ_purples_modular, compute_XYZ_standard_modular]:
+    if calculation in [compute_XYZ_modular, compute_XYZ_purples_modular, compute_XYZ_standard_modular]:
         return write_to_JSON(calculation(parameters), calculation_formats["XYZ-XYZP-XYZ-STD"])
     else:
         return write_to_JSON(calculation(parameters), calculation_formats["XY-XYP-XY-STD"])
@@ -297,9 +307,13 @@ def ndarray_to_JSON(body, formatta):
             output = ','.join(all)
             return '[' + output + ']'
         else:
+            # should only happen if the row format of a calculation does not match
+            # the given format (example, [x, y, z] =/= [f1, f2]
             raise SanicException(
-                ("Processing error.", "There has been an error inside of the server.",
-                 "Contact system administrator for server, or try again later."), status_code=500)
+                ("PROCESSING ERROR",
+                 "There has been an error inside of the server.",
+                 "Contact system administrator for server, or try again later."),
+                status_code=500)
     else:
         # create empty array
         temp = []
@@ -310,108 +324,175 @@ def ndarray_to_JSON(body, formatta):
         output = ','.join(temp)
         return '[' + output + ']'
 
+# handler for old version
+@api.get("/api/v1")
+async def old_version(request):
+    """
+    Handler of old version of API.
+    """
+    raise SanicException(("NOT SUPPORTED", "API v1 is not supported anymore.",
+                          "Please use the newest version of the API available ({}).".format(API_VERSION)),
+                         status_code=501)
 
 """
     The endpoints for the API.     
     They are all very equal, so all meaningful comments go here.
-
-    They all respond with the raw bytes of a JSON string produced based on the given calculation and parameters to
-    the function 'new_calculation_JSON'. The calculation function is the corresponding and modulated compute function
-    within computemodularization.py, while the parameter function returns a dictionary containing processed URL
-    parameters - but may raise an exception and respond instantly with a HTTP client-server error response.
-
-    The raw bytes are returned directly, with the content_type of "application/json" so that they are sent as such.
-    The json() method was not used as it uses json dumps, but we have already processed JSON strings that need
-    to be delivered as they are.
+    
+    They all have four paths/routes:
+        - /calculation, which sends a raw response of a JSON string with content_type of application/json
+        - /sidfemenu, returns a generated HTML of a sidemenu given the function and parameters
+        - /plot, returns a generated HTML of a diagram/plot for the function with parameters
+        - /{}, anything else it returns an error message of 404 with message
 """
 
 
+def not_found(more):
+    """
+    Helper function that reduces repeats in endpoints below while still giving
+    a meaningful error message.
+    """
+    raise SanicException(("NOT FOUND", "Invalid value ({}) for route.".format(more),
+                          "Please ensure that the value of your route is supported. "
+                          "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."),
+                         status_code=404)
+
 # lms
+
+
 @api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_ENDPOINT) + "/<more:str>")
-async def LMS(request, more: str):
+async def lms(request, more: str):
     if more == "calculation":
-        return response.raw(new_calculation_JSON(compute_LMS_Modular,
-                                                 createAndCheckParameters(True, compute_LMS_Modular, request)),
-                            content_type="application/json")
+        return response.raw(new_calculation_JSON(compute_LMS_modular,
+                                                 create_and_check_parameters(
+                                                     True,
+                                                     compute_LMS_modular,
+                                                     request)),
+                            content_type="application/json",
+                            headers={"cache-control": "private"})
     if more == "sidemenu":
-        return html(LMS_sidemenu(createAndCheckParameters(True, compute_LMS_Modular, request)))
+        return html(LMS_sidemenu(create_and_check_parameters(
+            True,
+            compute_LMS_modular,
+            request)),
+            headers={"cache-control": "private"})
     if more == "plot":
-        return html(LMS_graph(createAndCheckParameters(True, compute_LMS_Modular, request)))
+        return html(LMS_graph(create_and_check_parameters(
+            True,
+            compute_LMS_modular,
+            request)),
+            headers={"cache-control": "private"})
     else:
-        # add later
-        raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
-                               "Please ensure that the value of your route is supported. "
-                               "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."), status_code=404)
+        not_found(more)
 
 
 # macleod
 @api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MB_ENDPOINT) + "/<more:str>")
-async def MB(request, more: str):
+async def macleod(request, more: str):
     if more == "calculation":
-        return response.raw(new_calculation_JSON(compute_MacLeod_Modular,
-                                                 createAndCheckParameters(True, compute_MacLeod_Modular, request)),
-                            content_type="application/json")
+        return response.raw(new_calculation_JSON(compute_MacLeod_modular,
+                                                 create_and_check_parameters(
+                                                     True,
+                                                     compute_MacLeod_modular,
+                                                     request)),
+                            content_type="application/json",
+                            headers={"cache-control": "private"})
     if more == "sidemenu":
-        return html(LMS_MB_sidemenu(createAndCheckParameters(True, compute_MacLeod_Modular, request)))
+        return html(LMS_MB_sidemenu(create_and_check_parameters(
+            True,
+            compute_MacLeod_modular,
+            request)),
+            headers={"cache-control": "private"})
     if more == "plot":
-        return html(macleod_graph(createAndCheckParameters(True, compute_MacLeod_Modular, request)))
+        return html(macleod_graph(create_and_check_parameters(
+            True,
+            compute_MacLeod_modular,
+            request)),
+            headers={"cache-control": "private"})
     else:
-        raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
-                               "Please ensure that the value of your route is supported. "
-                               "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."), status_code=404)
+        not_found(more)
 
 
 # maxwellian
 @api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, LMS_MW_ENDPOINT) + "/<more:str>")
 async def maxwellian(request, more: str):
     if more == "calculation":
-        return response.raw(new_calculation_JSON(compute_Maxwellian_Modular,
-                                                 createAndCheckParameters(True, compute_Maxwellian_Modular, request)),
-                            content_type="application/json")
+        return response.raw(new_calculation_JSON(compute_Maxwellian_modular,
+                                                 create_and_check_parameters(
+                                                     True,
+                                                     compute_Maxwellian_modular,
+                                                     request)),
+                            content_type="application/json",
+                            headers={"cache-control": "private"})
     if more == "sidemenu":
-        return html(LMS_MW_sidemenu(createAndCheckParameters(True, compute_Maxwellian_Modular, request)))
+        return html(LMS_MW_sidemenu(create_and_check_parameters(
+            True,
+            compute_Maxwellian_modular,
+            request)),
+            headers={"cache-control": "private"})
     if more == "plot":
-        return html(maxwellian_graph(createAndCheckParameters(True, compute_Maxwellian_Modular, request)))
+        return html(maxwellian_graph(create_and_check_parameters(
+            True,
+            compute_Maxwellian_modular,
+            request)),
+            headers={"cache-control": "private"})
     else:
-        raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
-                               "Please ensure that the value of your route is supported. "
-                               "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."), status_code=404)
+        not_found(more)
 
 
 # xyz
 @api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYZ_ENDPOINT) + "/<more:str>")
 async def xyz(request, more: str):
     if more == "calculation":
-        return response.raw(new_calculation_JSON(compute_XYZ_Modular,
-                                                 createAndCheckParameters(True, compute_XYZ_Modular, request)),
-                            content_type="application/json")
+        return response.raw(new_calculation_JSON(compute_XYZ_modular,
+                                                 create_and_check_parameters(
+                                                     True,
+                                                     compute_XYZ_modular,
+                                                     request)),
+                            content_type="application/json",
+                            headers={"cache-control": "private"})
     if more == "sidemenu":
-        return html(XYZ_sidemenu(createAndCheckParameters(True, compute_XYZ_Modular, request)))
+        return html(XYZ_sidemenu(create_and_check_parameters(
+            True,
+            compute_XYZ_modular,
+            request)),
+            headers={"cache-control": "private"})
     if more == "plot":
-        return html(XYZ_graph(createAndCheckParameters(True, compute_XYZ_Modular, request)))
+        return html(XYZ_graph(create_and_check_parameters(
+            True,
+            compute_XYZ_modular,
+            request)),
+            headers={"cache-control": "private"})
     else:
-        raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
-                               "Please ensure that the value of your route is supported. "
-                               "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."), status_code=404)
-
+        not_found(more)
 
 # xy
+
+
 @api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XY_ENDPOINT) + "/<more:str>")
 async def xy(request, more: str):
     if more == "calculation":
         return response.raw(
             new_calculation_JSON(compute_XY_modular,
-                                 createAndCheckParameters(True, compute_XY_modular, request)),
-            content_type="application/json"
-        )
+                                 create_and_check_parameters(
+                                     True,
+                                     compute_XY_modular,
+                                     request)),
+            content_type="application/json",
+            headers={"cache-control": "private"})
     if more == "sidemenu":
-        return html(XY_sidemenu(createAndCheckParameters(True, compute_XY_modular, request)))
+        return html(XY_sidemenu(create_and_check_parameters(
+            True,
+            compute_XY_modular,
+            request)),
+            headers={"cache-control": "private"})
     if more == "plot":
-        return html(XY_graph(createAndCheckParameters(True, compute_XY_modular, request)))
+        return html(XY_graph(create_and_check_parameters(
+            True,
+            compute_XY_modular,
+            request)),
+            headers={"cache-control": "private"})
     else:
-        raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
-                               "Please ensure that the value of your route is supported. "
-                               "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."), status_code=404)
+        not_found(more)
 
 
 # xyz purples
@@ -420,17 +501,26 @@ async def xyz_p(request, more: str):
     if more == "calculation":
         return response.raw(
             new_calculation_JSON(compute_XYZ_purples_modular,
-                                 createAndCheckParameters(True, compute_XYZ_purples_modular, request)),
-            content_type="application/json"
-        )
+                                 create_and_check_parameters(
+                                     True,
+                                     compute_XYZ_purples_modular,
+                                     request)),
+            content_type="application/json",
+            headers={"cache-control": "private"})
     if more == "sidemenu":
-        return html(XYZP_sidemenu(createAndCheckParameters(True, compute_XYZ_purples_modular, request)))
+        return html(XYZP_sidemenu(create_and_check_parameters(
+            True,
+            compute_XYZ_purples_modular,
+            request)),
+            headers={"cache-control": "private"})
     if more == "plot":
-        return html(XYZP_graph(createAndCheckParameters(True, compute_XYZ_purples_modular, request)))
+        return html(XYZP_graph(create_and_check_parameters(
+            True,
+            compute_XYZ_purples_modular,
+            request)),
+            headers={"cache-control": "private"})
     else:
-        raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
-                               "Please ensure that the value of your route is supported. "
-                               "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."), status_code=404)
+        not_found(more)
 
 
 # xy purples
@@ -439,17 +529,26 @@ async def xy_p(request, more: str):
     if more == "calculation":
         return response.raw(
             new_calculation_JSON(compute_xyz_purples_modular,
-                                 createAndCheckParameters(True, compute_xyz_purples_modular, request)),
-            content_type="application/json"
-        )
+                                 create_and_check_parameters(
+                                     True,
+                                     compute_xyz_purples_modular,
+                                     request)),
+            content_type="application/json",
+            headers={"cache-control": "private"})
     if more == "sidemenu":
-        return html(XYP_sidemenu(createAndCheckParameters(True, compute_xyz_purples_modular, request)))
+        return html(XYP_sidemenu(create_and_check_parameters(
+            True,
+            compute_xyz_purples_modular,
+            request)),
+            headers={"cache-control": "private"})
     if more == "plot":
-        return html(xyp_graph(createAndCheckParameters(True, compute_xyz_purples_modular, request)))
+        return html(xyp_graph(create_and_check_parameters(
+            True,
+            compute_xyz_purples_modular,
+            request)),
+            headers={"cache-control": "private"})
     else:
-        raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
-                               "Please ensure that the value of your route is supported. "
-                               "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."), status_code=404)
+        not_found(more)
 
 
 # xyz standardization
@@ -458,40 +557,59 @@ async def xyz_std(request, more: str):
     if more == "calculation":
         return response.raw(
             new_calculation_JSON(compute_XYZ_standard_modular,
-                                 createAndCheckParameters(False, compute_XYZ_standard_modular, request)),
-            content_type="application/json"
-        )
+                                 create_and_check_parameters(
+                                     False,
+                                     compute_XYZ_standard_modular,
+                                     request)),
+            content_type="application/json",
+            headers={"cache-control": "private"})
     if more == "sidemenu":
-        return html(XYZ_std_sidemenu(createAndCheckParameters(False, compute_XYZ_standard_modular, request)))
+        return html(XYZ_std_sidemenu(create_and_check_parameters(
+            False,
+            compute_XYZ_standard_modular,
+            request)),
+            headers={"cache-control": "private"})
     if more == "plot":
-        return html(cieXYZ_std(createAndCheckParameters(False, compute_XYZ_standard_modular, request)))
+        return html(cieXYZ_std(create_and_check_parameters(
+            False,
+            compute_XYZ_standard_modular,
+            request)),
+            headers={"cache-control": "private"})
     else:
-        raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
-                               "Please ensure that the value of your route is supported. "
-                               "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."), status_code=404)
-
+        not_found(more)
 
 # xy standardization
+
+
 @api.get(endpoint_creator(API_HOMEPAGE, API_VERSION, XYSTD_ENDPOINT) + "/<more:str>")
 async def xy_std(request, more: str):
     if more == "calculation":
         return response.raw(
             new_calculation_JSON(compute_xyz_standard_modular,
-                                 createAndCheckParameters(False, compute_xyz_standard_modular, request)),
-            content_type="application/json"
-        )
+                                 create_and_check_parameters(
+                                     False,
+                                     compute_xyz_standard_modular,
+                                     request)),
+            content_type="application/json",
+            headers={"cache-control": "private"})
     if more == "sidemenu":
-        return html(XY_std_sidemenu(createAndCheckParameters(False, compute_xyz_standard_modular, request)))
+        return html(XY_std_sidemenu(create_and_check_parameters(
+            False,
+            compute_xyz_standard_modular,
+            request)),
+            headers={"cache-control": "private"})
     if more == "plot":
-        return html(ciexyz_std(createAndCheckParameters(False, compute_xyz_standard_modular, request)))
+        return html(ciexyz_std(create_and_check_parameters(
+            False,
+            compute_xyz_standard_modular,
+            request)),
+            headers={"cache-control": "private"})
     else:
-        raise SanicException( ("Not found.", "Invalid value ({}) for route.".format(more),
-                               "Please ensure that the value of your route is supported. "
-                               "The supported endpoints are: 'calculation', 'sidemenu' or 'plot'."), status_code=404)
+        not_found(more)
 
 
 @api.route(endpoint_creator(API_HOMEPAGE, API_VERSION, STATUS_ENDPOINT), methods=["GET"])
-def statusEndpoint(request):
+def status_endpoint(request):
     """
     A simple endpoint that returns a status, the current uptime of the server in seconds, and the current
     version of the API.
@@ -501,12 +619,12 @@ def statusEndpoint(request):
         "uptime": str(time.time() - server_start) + "s",
         "version": API_VERSION
     }
-    return response.json(status, status=200)
+    return response.json(status, status=200, headers={"cache-control": "no-store"})
 
 
-def createAndCheckParameters(disabled, calculation, request):
+def create_and_check_parameters(disabled, calculation, request):
     """
-    'createAndCheckParameters(...)' is a function that takes in three parameters described below, to then
+    'create_and_check_parameters(...)' is a function that takes in three parameters described below, to then
     either return a dictionary containing the processed URL parameters - or stop abruptely due to a raise of
     SanicException in case of an error.
 
@@ -527,10 +645,10 @@ def createAndCheckParameters(disabled, calculation, request):
     """
 
     # error handling
-    def string_to_type_else(string, type, other):
+    def string_to_type_else(string, given_type, other):
         # try to make the string into an instance of type
         try:
-            return type(string)
+            return given_type(string)
         # if it cannot be converted to type, then return the "other"
         except ValueError:
             return other
@@ -551,7 +669,7 @@ def createAndCheckParameters(disabled, calculation, request):
         for (name, value) in parameters.items():
             if value is None:
                 raise SanicException(
-                    ("Value error.", "Invalid input for '{}' either due to absence or invalid type".format(name),
+                    ("VALUE ERROR", "Invalid input for '{}' either due to absence or invalid type".format(name),
                      "Control that '{}' is present, and is of the 'float' type.".format(name)), status_code=422)
 
         parameters['age'] = round(parameters['age'])
@@ -570,15 +688,20 @@ def createAndCheckParameters(disabled, calculation, request):
         for (name, value) in optionals.items():
             # if not correct type
             if value is -1:
-                raise SanicException(("Type error.", "Invalid input for '{}' due to invalid type".format(name),
-                                      "Control that the value is of a 'float' type, or remove it to use default settings."),
-                                     status_code=422)
+                raise SanicException((
+                    "TYPE ERROR",
+                    "Invalid input for '{}' due to invalid type".format(name),
+                    "Control that the value is of a 'float' type, or remove it to use default settings."),
+                    status_code=422)
             # if not present at all
             if value is None:
                 given = 0
-                if name == "min": given = 390.0
-                if name == "max": given = 830.0
-                if name == "step_size": given = 1.0
+                if name == "min":
+                    given = 390.0
+                if name == "max":
+                    given = 830.0
+                if name == "step_size":
+                    given = 1.0
                 parameters.update({name: given})
             # if present and correct type
             else:
@@ -586,20 +709,21 @@ def createAndCheckParameters(disabled, calculation, request):
 
         # error handling for the values
         if parameters['field_size'] > 10 or parameters['field_size'] < 1:
-            raise SanicException(("Value error.", "Invalid value for 'field_size'.",
+            raise SanicException(("VALUE ERROR", "Invalid value for 'field_size'.",
                                   "Control that the value is between 1.0 and 10.0."), status_code=422)
         if parameters['age'] < 20 or parameters['age'] > 80:
-            raise SanicException(("Value error.", "Invalid value for 'age'",
+            raise SanicException(("VALUE ERROR", "Invalid value for 'age'",
                                   "Control that the value is between 20.0 and 80.0."), status_code=422)
         if parameters['min'] < 390 or parameters['min'] > 400:
-            raise SanicException(("Value error.", "Invalid value for 'min'-imum domain.",
-                                  "Control that the value is between 390.0 and 400.0. Alternatively, remove it from URL."),
+            raise SanicException(("VALUE ERROR", "Invalid value for 'min'-imum domain.",
+                                  "Control that the value is between 390.0 and 400.0. "
+                                  "Alternatively, remove it from URL."),
                                  status_code=422)
         if parameters['max'] > 830 or parameters['max'] < 700:
-            raise SanicException(("Value error.", "Invalid value for 'max'-imum domain.",
+            raise SanicException(("VALUE ERROR", "Invalid value for 'max'-imum domain.",
                                   "Control that the value is between 700.0 and 830.0."), status_code=422)
         if parameters['step_size'] > 5 or parameters['step_size'] < 0.1:
-            raise SanicException(("Value error.", "Invalid value for 'step size'",
+            raise SanicException(("VALUE ERROR", "Invalid value for 'step size'",
                                   "Control that the value is between 0.1 and 5.0."), status_code=422)
 
         # ----------------------
@@ -622,8 +746,10 @@ def createAndCheckParameters(disabled, calculation, request):
                 if param in optionals.keys():
                     optionals[param] = True
                 else:
-                    raise SanicException( ("Value error.", "Parameter list 'optional' contains unknown parameter '{}'.".format(param),
-                         "Check if the parameter has correct value, and try again. Alternatively, remove it if not."), status_code=422)
+                    raise SanicException(
+                        ("VALUE ERROR", "Parameter list 'optional' contains unknown parameter '{}'.".format(param),
+                         "Check if the parameter has correct value, and try again. Alternatively, remove it if not."),
+                        status_code=422)
 
         if optionals['sidemenu'] and optionals['info']:
             raise SanicException(("Value error", "Cannot combine parameters 'sidemenu' and 'info'.",
@@ -631,21 +757,28 @@ def createAndCheckParameters(disabled, calculation, request):
 
         for (name, body) in optionals.items():
             if body:
-                if (name == "log" or name == "base") and (calculation is not compute_LMS_Modular):
-                    raise SanicException(("Value error", "Invalid usage of '{}' for endpoint.".format(name),
-                                         "The '{}' parameter is exclusive to the /lms endpoint. Please remove it from the URL.".format(
-                                             name)), status_code=422)
-                if (((name == "info") and (calculation is compute_LMS_Modular))
-                        or ((name == "norm") and (calculation in [compute_LMS_Modular, compute_MacLeod_Modular,
-                                                                  compute_Maxwellian_Modular]))):
-                    raise SanicException(("Value error", "Invalid usage of '{}' for endpoint.".format(name),
-                                         "This endpoint does not support {}. Please, verify this, and try again. If not, remove it from URL.".format(
-                                             name)), status_code=422)
+                if (name == "log" or name == "base") and (calculation is not compute_LMS_modular):
+                    raise SanicException(("Value error",
+                                          "Invalid usage of '{}' for endpoint.".format(
+                                              name),
+                                          "The '{}' parameter is exclusive to the /lms endpoint. "
+                                          "Please remove it from the URL.".format(name)),
+                                         status_code=422)
+                if (((name == "info") and (calculation is compute_LMS_modular))
+                        or ((name == "norm") and (calculation in [compute_LMS_modular, compute_MacLeod_modular,
+                                                                  compute_Maxwellian_modular]))):
+                    raise SanicException(("Value error",
+                                          "Invalid usage of '{}' for endpoint.".format(
+                                              name),
+                                          "This endpoint does not support {}. Please, verify this, and try again. "
+                                          "If not, remove it from URL.".format(name)),
+                                         status_code=422)
             parameters.update({
                 name: body
             })
 
-        # parameter that cannot be triggered by any URL parameter, exclusive to XYZ-purples in usage for compute_xy_modular
+        # parameter that cannot be triggered by any URL parameter,
+        # exclusive to XYZ-purples in usage for compute_xy_modular
         # in order to save time
         parameters['purple'] = False
         # std-xy needs xyz-std, saves time
@@ -654,11 +787,14 @@ def createAndCheckParameters(disabled, calculation, request):
         return parameters
 
     else:
-        parameters = {"field_size": string_to_type_else(request.args.get('field_size'), float, None)}
+        parameters = {"field_size": string_to_type_else(
+            request.args.get('field_size'), float, None)}
         if parameters['field_size'] is None:
-            raise SanicException("Value error", "The value of 'field_size' is not present.",
-                                 "Please make sure that the parameter is present as a float value that is either 2.0 or 10.0.",
+            raise SanicException(("Value error", "The value of 'field_size' is not present.",
+                                 "Please make sure that the parameter is present as "
+                                  "a float value that is either 2.0 or 10.0."),
                                  status_code=422)
+
         optionals = {
             'log': False,
             'base': False,
@@ -672,7 +808,6 @@ def createAndCheckParameters(disabled, calculation, request):
         parameters['max'] = 830.0
         parameters['step_size'] = 1.0
 
-
         # if there is anything with "optional" in URL
         if request.args.get('optional') is not None:
             # split it by the comma to make a list of entries
@@ -684,25 +819,31 @@ def createAndCheckParameters(disabled, calculation, request):
                     optionals[param] = True
                 else:
                     raise SanicException(
-                        ("Value error.", "Parameter list 'optional' contains unknown parameter '{}'.".format(param),
-                         "Check if the parameter has correct value, and try again. Alternatively, remove it if not."),
+                        (
+                            "VALUE ERROR",
+                            "Parameter list 'optional' contains unknown parameter '{}'.".format(
+                                param),
+                            "Check if the parameter has correct value, and try again. "
+                            "Alternatively, remove it if not."),
                         status_code=422)
             # else, if it is not in it, then throw error
 
         for (name, body) in optionals.items():
-            if body == None:
+            if body is None:
                 if body is None:
                     parameters.update({name: False})
                     continue
             if body:
-                if (name == "log" or name == "base"):
+                if name == "log" or name == "base":
                     raise SanicException(("Value error", "Invalid usage of '{}' for endpoint.".format(name),
-                                         "The '{}' parameter is exclusive to the /lms endpoint. Please remove it from the URL.".format(
-                                             name)), status_code=422 )
+                                          "The '{}' parameter is exclusive to the /lms endpoint. "
+                                          " remove it from the URL.".format(
+                                              name)), status_code=422)
                 if ((name == "info") and (calculation is compute_XYZ_standard_modular)) or (name == "norm"):
                     raise SanicException(("Value error", "Invalid usage of '{}' for endpoint.".format(name),
-                                         "This endpoint does not support {}. Please, verify this, and try again. If not, remove it from URL.".format(
-                                             name)), status_code=422)
+                                          "This endpoint does not support {}. Please, verify this, and try again. "
+                                          "If not, remove it from URL.".format(
+                                              name)), status_code=422)
             parameters.update({
                 name: body
             })
@@ -711,11 +852,10 @@ def createAndCheckParameters(disabled, calculation, request):
             return parameters
 
         raise SanicException(("Value error", "Invalid value for 'field_size'.",
-                             "Please make sure that the parameter is present as a float value that is either 2.0 or 10.0."),
+                              "Please make sure that the parameter is present as a float "
+                              "value that is either 2.0 or 10.0."),
                              status_code=422)
 
 
 if __name__ == '__main__':
     api.run(host="0.0.0.0", port=8000, workers=4)
-
-

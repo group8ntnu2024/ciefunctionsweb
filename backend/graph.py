@@ -1,26 +1,49 @@
-import json
-import sys
-from array import array
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+graph: Module consisting of functions that generate HTML pages with embedded code to deliver plots
+        as they appear in CIE Functions.
 
-import cieapi
-import numpy as np
-import styles.description
-from computemodularization import compute_LMS_Modular, compute_MacLeod_Modular, compute_Maxwellian_Modular, \
-    compute_XYZ_Modular, \
-    compute_XY_modular, compute_XYZ_purples_modular, compute_xyz_standard_modular, compute_XYZ_standard_modular, \
-    compute_xyz_purples_modular
+Copyright (C) 2012-2020 Ivar Farup and Jan Henrik Wold
+Copyright (C) 2024 Bachelor Thesis Group 8
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
 
 """
     graph.py, module for creation of plot endpoints.
     Achieves this by dynamically creating a HTML page with embedded JS code to construct the plots
-    and add functionality through checkboxes.
-    
+    and add functionality through checkboxes. This module is loosely based on the original plotting module,
+    https://github.com/ifarup/ciefunctions/blob/master/tc1_97/plot.py .
+
     This module contains one instance of code lent from the internet, in the form of a transpose function
     for the embedded JS code. These are marked with '// from StackOverflow, see module description.'.
     The code is from this StackOverflow answer:
     https://stackoverflow.com/a/36164530
-    
+
 """
+import json
+import sys
+from array import array
+import numpy as np
+
+import cieapi
+from computemodularization import compute_LMS_modular, compute_MacLeod_modular, compute_Maxwellian_modular, \
+    compute_XYZ_modular, \
+    compute_XY_modular, compute_XYZ_purples_modular, compute_xyz_standard_modular, compute_XYZ_standard_modular, \
+    compute_xyz_purples_modular
+
 def checkboxes(graph_function):
     """
     checkboxes() is a function that constructs the HTML checkboxes, making them enabled/disabled
@@ -31,7 +54,7 @@ def checkboxes(graph_function):
     graph_function: Either a:
         - Function for plotting a certain calculation.
         - A string that represents the field_size and standardization function for the four unique instances
-            an user can use them (having to be different due to them using the same functions.)
+            a user can use them (having to be different due to them using the same functions.)
 
     Returns
     -------
@@ -39,10 +62,10 @@ def checkboxes(graph_function):
 
     """
     # "disabled" represents the four possible checkboxes,
-        # compare to cie1931
-        # compare to cie1964
-        # turn on/off grid
-        # turn on/off labels
+    # compare to cie1931
+    # compare to cie1964
+    # turn on/off grid
+    # turn on/off labels
     # some functions have some enabled/disabled; this routes that process
     disabled = []
     if graph_function in [LMS_graph, XYZP_graph]:
@@ -64,9 +87,9 @@ def checkboxes(graph_function):
 
     # html representations of each of these checkboxes
     templates = ['<input type="checkbox" id="cie1931" name="cie1931"',
-                  '<input type="checkbox" id="cie1964" name="cie1964"',
-                  '<input type="checkbox" checked id="grid" name="grid"',
-                  '<input type="checkbox" id="label" name="label"']
+                 '<input type="checkbox" id="cie1964" name="cie1964"',
+                 '<input type="checkbox" checked id="grid" name="grid"',
+                 '<input type="checkbox" id="label" name="label"']
 
     # goes through them, checking if they're enabled or disabled, disables them by adding the 'disabled' semantic
     for input in range(len(templates)):
@@ -121,17 +144,22 @@ def retrievePoints(func, param):
     A series of unique numbers that all represent the wavelength for points on specific graphs.
 
     """
+    # does this weird setup to remove potential duplicates
+
     if func == macleod_graph:
-        initial = list(set([int(param['min']), 410, 420, 430, 440, 450, 460, 470, 480, 490, 500, 550, 575, 600, 700, int(param['max'])]))
+        initial = list(set([int(param['min']), 410, 420, 430, 440, 450, 460, 470, 480, 490, 500, 550, 575, 600, 700,
+                            int(param['max'])]))
         return initial
     if func == maxwellian_graph:
-        initial = list(set([int(param['min']), 450, 460, 470, 480, 490, 500, 510, 520, 530, 540, 550, 560, 570, 580, 590, 600, 610, 620, 630, 700, int(param['max'])]))
+        initial = list(
+            set([int(param['min']), 450, 460, 470, 480, 490, 500, 510, 520, 530, 540, 550, 560, 570, 580, 590, 600, 610,
+                 620, 630, 700, int(param['max'])]))
         return initial
     if func == XY_graph:
-        initial = list(set([int(param['min']), 470, 480, 490, 500, 510, 520, 530, 540, 550, 560, 570, 580, 590, 600, 610, 700, int(param['max'])]))
+        initial = list(
+            set([int(param['min']), 470, 480, 490, 500, 510, 520, 530, 540, 550, 560, 570, 580, 590, 600, 610, 700,
+                 int(param['max'])]))
         return initial
-    if func == xyp_graph:
-        initial = [param[0][0], 500, 510, 520, 530, 540, 550, 560, param[1][0]]
 
 
 def head(function):
@@ -146,7 +174,6 @@ def head(function):
     -------
     String representing HTML for the start of the total HTML output.
     """
-
 
     return """
     <head>
@@ -174,6 +201,7 @@ def head(function):
     <script>
     """
 
+
 def maxwellian_graph(parameters):
     """
     maxwellian_graph(), plotting function responsible for the Maxwellian diagram.
@@ -191,17 +219,34 @@ def maxwellian_graph(parameters):
     # specifically made into JSONs as the endpoints offer to make sure values given to plot
     # are not affected by floating point
     temp = parameters.copy()
-    plots_json = cieapi.new_calculation_JSON(compute_Maxwellian_Modular, temp)
+    plots_json = cieapi.new_calculation_JSON(compute_Maxwellian_modular, temp)
     temp['info'] = True
-    info_json = cieapi.new_calculation_JSON(compute_Maxwellian_Modular, temp)
+    info_json = cieapi.new_calculation_JSON(compute_Maxwellian_modular, temp)
     # gets the points for the graph
     points = retrievePoints(maxwellian_graph, parameters)
 
     # creates formatted title, xaxis and yaxis names
-    title = ("Maxwellian lm chromaticity diagram<br> Field size: {}°, Age: {} yr, Domain: {} nm - {} nm, Step: {} nm, Renormalized values".
-             format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size']))
-    xaxis = "l<sub> {}, {} ({}-{}, {})</sub>".format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
-    yaxis = "m<sub> {}, {} ({}-{}, {})</sub>".format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
+    title = (
+        "Maxwellian lm chromaticity diagram<br> Field size: {}°, "
+        "Age: {} yr, Domain: {} nm - {} nm, Step: {} nm, Renormalized values".
+        format(
+            parameters['field_size'],
+            parameters['age'],
+            parameters['min'],
+            parameters['max'],
+            parameters['step_size']))
+    xaxis = "l<sub> {}, {} ({}-{}, {})</sub>".format(
+        parameters['field_size'],
+        parameters['age'],
+        parameters['min'],
+        parameters['max'],
+        parameters['step_size'])
+    yaxis = "m<sub> {}, {} ({}-{}, {})</sub>".format(
+        parameters['field_size'],
+        parameters['age'],
+        parameters['min'],
+        parameters['max'],
+        parameters['step_size'])
 
     # creates the html
     raw = head(maxwellian_graph) + """
@@ -337,9 +382,6 @@ def maxwellian_graph(parameters):
     return raw
 
 
-
-
-
 def xyp_graph(parameters):
     """
     The plotting function for xy-p endpoint.
@@ -363,9 +405,15 @@ def xyp_graph(parameters):
     info_json = cieapi.new_calculation_JSON(compute_xyz_purples_modular, temp)
     # creates formatted title
     title = ("xy cone-fundamental-based chromaticity diagram (purple-line stimuli)<br> Field size: {}°, Age: {} "
-             "yr, Domain: {} nm - {} nm, Step: {} nm").format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
+             "yr, Domain: {} nm - {} nm, Step: {} nm").format(
+        parameters['field_size'],
+        parameters['age'],
+        parameters['min'],
+        parameters['max'],
+        parameters['step_size'])
 
-    # creation of points, unlike previous ones which were ranges in essence, needs exacts due to variations from parameters
+    # creation of points, unlike previous ones which were ranges in essence,
+    # needs exacts due to variations from parameters
     # based on plot.py in ciefunctions, lines 560, 575-578
     names = []
     points_x = []
@@ -380,21 +428,36 @@ def xyp_graph(parameters):
             points_y.append(purpleplot[ind, 2])
     purpleline = json.loads(info_json)['xyz_tg_purple']
     # formats them into strings to make them usable for embedded js
-    names = '[' + str(purpleline[0][0]) + "," + ','.join(map(str, np.array(names).flatten())) + "," + str(purpleline[1][0]) + ']'
-    points_x = '[' + str(purpleline[0][1]) + "," + ','.join(map(str, np.array(points_x).flatten())) + "," + str(purpleline[1][1]) + ']'
-    points_y = '[' + str(purpleline[0][2]) + "," + ','.join(map(str, np.array(points_y).flatten())) + "," + str(purpleline[1][2]) + ']'
+    names = '[' + str(purpleline[0][0]) + "," + ','.join(map(str, np.array(names).flatten())) + "," + str(
+        purpleline[1][0]) + ']'
+    points_x = '[' + str(purpleline[0][1]) + "," + ','.join(map(str, np.array(points_x).flatten())) + "," + str(
+        purpleline[1][1]) + ']'
+    points_y = '[' + str(purpleline[0][2]) + "," + ','.join(map(str, np.array(points_y).flatten())) + "," + str(
+        purpleline[1][2]) + ']'
 
     # adds to title if normalization parameter is on
     if parameters['norm']:
         title += ", Renormalized values"
 
     # names xaxis and yaxis with formatting
-    xaxis = "X<sub>F {}, {} ({}-{}, {})</sub>".format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
-    yaxis = "Y<sub>F {}, {} ({}-{}, {})</sub>".format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
+    xaxis = "X<sub>F {}, {} ({}-{}, {})</sub>".format(
+        parameters['field_size'],
+        parameters['age'],
+        parameters['min'],
+        parameters['max'],
+        parameters['step_size'])
+    yaxis = "Y<sub>F {}, {} ({}-{}, {})</sub>".format(
+        parameters['field_size'],
+        parameters['age'],
+        parameters['min'],
+        parameters['max'],
+        parameters['step_size'])
 
     raw = head(xyp_graph) + """
         // creates variables for values from JSONs in calculation
-        const plot = JSON.parse('""" + cieapi.ndarray_to_JSON(purpleplot, ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"]) + """');
+        const plot = JSON.parse('""" + cieapi.ndarray_to_JSON(
+        purpleplot,
+        ["{:.1f}", "{:.5f}", "{:.5f}", "{:.5f}"]) + """');
         const xy_plot = JSON.parse('""" + xy_json + """')['plot'];
         const info = JSON.parse('""" + info_json + """');
         
@@ -524,10 +587,8 @@ def xyp_graph(parameters):
     </body>
 </html>
     """
-    
+
     return raw
-
-
 
 
 def macleod_graph(parameters):
@@ -544,17 +605,21 @@ def macleod_graph(parameters):
     """
     # finds the plot and info for MacLeod to get both curve and purplelinestimulus+illuminant E
     temp = parameters.copy()
-    plots_json = cieapi.new_calculation_JSON(compute_MacLeod_Modular, temp)
+    plots_json = cieapi.new_calculation_JSON(compute_MacLeod_modular, temp)
     temp['info'] = True
-    info_json = cieapi.new_calculation_JSON(compute_MacLeod_Modular, temp)
+    info_json = cieapi.new_calculation_JSON(compute_MacLeod_modular, temp)
     # retrieves relevant datapoints from a range
     points = retrievePoints(macleod_graph, parameters)
 
     # creates the formatted strings for title and xaxis/yaxis
-    title = ("MacLeod-Boynton ls chromaticity diagram<br> Field size: {}°, Age: {} yr, Domain: {} nm - {} nm, Step: {} nm".
-             format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size']))
-    xaxis = "l<sub>MB</sub>. {}, {}".format(parameters['field_size'], parameters['age'])
-    yaxis = "S<sub>MB</sub>. {}, {}".format(parameters['field_size'], parameters['age'])
+    title = (
+        "MacLeod-Boynton ls chromaticity diagram<br> Field size: {}°, Age: {} yr, Domain: {} nm - {} nm, Step: {} nm".
+        format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'],
+               parameters['step_size']))
+    xaxis = "l<sub>MB</sub>. {}, {}".format(
+        parameters['field_size'], parameters['age'])
+    yaxis = "S<sub>MB</sub>. {}, {}".format(
+        parameters['field_size'], parameters['age'])
 
     # creates the raw html
     raw = head(macleod_graph) + """
@@ -686,6 +751,7 @@ def macleod_graph(parameters):
     """
     return raw
 
+
 def XY_graph(parameters):
     """
     Plotting function for the 'xy' endpoint.
@@ -709,11 +775,22 @@ def XY_graph(parameters):
 
     # creates formatted strings representing title, xaxis and yaxis for plot
     title = ("CIE xy-cone fundamental-based chromaticity diagram<br>Field size: {}°, Age: {} yr, Domain: {} nm - "
-             "{} nm, Step: {} nm").format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
+             "{} nm, Step: {} nm").format(parameters['field_size'], parameters['age'], parameters['min'],
+                                          parameters['max'], parameters['step_size'])
     if parameters['norm']:
         title += ", Renormalized values"
-    xaxis = "X<sub>F{}, {} ({}-{}, {})</sub>".format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
-    yaxis = "Y<sub>F{}, {} ({}-{}, {})</sub>".format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
+    xaxis = "X<sub>F{}, {} ({}-{}, {})</sub>".format(
+        parameters['field_size'],
+        parameters['age'],
+        parameters['min'],
+        parameters['max'],
+        parameters['step_size'])
+    yaxis = "Y<sub>F{}, {} ({}-{}, {})</sub>".format(
+        parameters['field_size'],
+        parameters['age'],
+        parameters['min'],
+        parameters['max'],
+        parameters['step_size'])
 
     # constructs html for output
     raw = head(XY_graph) + """
@@ -881,6 +958,7 @@ def XY_graph(parameters):
     """
     return raw
 
+
 def XYZP_graph(parameters):
     """
     Plotting function for the xyz-p endpoint.
@@ -897,8 +975,12 @@ def XYZP_graph(parameters):
     data = cieapi.new_calculation_JSON(compute_XYZ_purples_modular, temp)
     # creates formatted title
     title = ("XYZ cone-fundamental-based tristumulus functions for purple-line stimuli<br>Field size: "
-             "{}°, Age: {} yr, Domain: {} nm - {} nm, Step: {} nm").format(parameters['field_size'],
-                                                                           parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
+             "{}°, Age: {} yr, Domain: {} nm - {} nm, Step: {} nm").format(
+        parameters['field_size'],
+        parameters['age'],
+        parameters['min'],
+        parameters['max'],
+        parameters['step_size'])
 
     if parameters['norm']:
         title += ", Renormalized values"
@@ -975,7 +1057,6 @@ def XYZP_graph(parameters):
 </html>
     """
     return raw
-
 
 
 def comparison_xy_1964(parameters, mode="dot"):
@@ -1060,6 +1141,7 @@ def comparison_xy_1964(parameters, mode="dot"):
 
     """
 
+
 def comparison_xy_1931(parameters, mode="dash"):
     """
     Partial-HTML constructor for plotting of xy-1931 (field size 2).
@@ -1078,9 +1160,13 @@ def comparison_xy_1931(parameters, mode="dash"):
     temp = parameters.copy()
     temp['field_size'] = 2
     temp['info'] = False
-    data = cieapi.new_calculation_JSON(compute_xyz_standard_modular, temp)
+    data = cieapi.new_calculation_JSON(
+        compute_xyz_standard_modular,
+        temp)
     temp['info'] = True
-    info_data = cieapi.new_calculation_JSON(compute_xyz_standard_modular, temp)
+    info_data = cieapi.new_calculation_JSON(
+        compute_xyz_standard_modular,
+        temp)
     # retrieves relevant datapoints
     points = retrievePoints(XY_graph, parameters)
 
@@ -1156,10 +1242,13 @@ def XYZ_graph(parameters):
 
     """
     # finds the calculation, not info due to not needed or non existant
-    json = cieapi.new_calculation_JSON(compute_XYZ_Modular, parameters)
+    json = cieapi.new_calculation_JSON(compute_XYZ_modular, parameters)
     # creates formatted string title
-    title = ("CIE XYZ cone-fundamental-based tristumulus functions<br>Field size: {}°, Age: {} yr, Domain: {} nm - {} nm, Step: {} nm".
-             format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size']))
+    title = (
+        "CIE XYZ cone-fundamental-based tristumulus functions<br>Field size: {}°"
+        ", Age: {} yr, Domain: {} nm - {} nm, Step: {} nm".
+        format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'],
+               parameters['step_size']))
     # adds it to the title
     if parameters['norm']:
         title += ", Renormalized values"
@@ -1267,6 +1356,7 @@ def XYZ_graph(parameters):
     """
     return raw
 
+
 def comparsion_graph_1931(parameters, mode="dot"):
     """
     Plotting function for xyz 1931 (field size 2), with different mode of render depending on
@@ -1327,6 +1417,7 @@ def comparsion_graph_1931(parameters, mode="dot"):
         
     """
     return raw
+
 
 def cieXYZ_std(parameters):
     """
@@ -1426,6 +1517,7 @@ def cieXYZ_std(parameters):
         
     """
     return raw
+
 
 def ciexyz_std(parameters):
     """
@@ -1620,6 +1712,7 @@ def comparsion_graph_1964(parameters, mode="dash"):
     """
     return raw
 
+
 def LMS_graph(parameters):
     """
     The plotting function for the LMS endpoint.
@@ -1633,10 +1726,10 @@ def LMS_graph(parameters):
 
     """
     # generate computations for LMS + log LMS
-    json = cieapi.new_calculation_JSON(compute_LMS_Modular, parameters);
+    json = cieapi.new_calculation_JSON(compute_LMS_modular, parameters)
     temp = parameters.copy()
     temp['log'] = not parameters['log']
-    other_json = cieapi.new_calculation_JSON(compute_LMS_Modular, temp);
+    other_json = cieapi.new_calculation_JSON(compute_LMS_modular, temp)
 
     # creates title customary of given log and base
     titles = ["CIE 2006 LMS cone fundamentals",
@@ -1645,8 +1738,10 @@ def LMS_graph(parameters):
     if parameters['base']:
         titles[0] += " (9 signs. figs. data)"
 
-    title = titles[0] + titles[1].format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
-    log_title = titles[0] + titles[2].format(parameters['field_size'], parameters['age'], parameters['min'], parameters['max'], parameters['step_size'])
+    title = titles[0] + titles[1].format(parameters['field_size'], parameters['age'], parameters['min'],
+                                         parameters['max'], parameters['step_size'])
+    log_title = titles[0] + titles[2].format(parameters['field_size'], parameters['age'], parameters['min'],
+                                             parameters['max'], parameters['step_size'])
 
     # adds functionality to tackle specifically given
     if parameters['log']:
