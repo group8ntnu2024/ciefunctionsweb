@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { Parameters, ComputedData, ParametersContextType } from '../utils/propTypes';
-import { fetchApiData, stringBuilder } from '../utils/ApiService';
+import { Parameters, ComputedData, ParametersContextType } from '../utils/prop-types';
+import { fetchApiData } from '../utils/api-service';
 import { useLoading } from '../hooks/useLoading';
+import { stringBuilder } from '../utils/string-builder';
 
 
 const defaultContextValue: ParametersContextType = {
@@ -21,7 +22,6 @@ const defaultContextValue: ParametersContextType = {
   isLoading: true,
   endpoint: '',
   setEndpoint: () => {},
-  htmlContent: '',
   plotUrl: '',
   setPlotUrl: () => {},
   sidemenuUrl: '',
@@ -36,7 +36,6 @@ export const useParameters = () => useContext(ParametersContext);
 export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   const [parameters, setParameters] = useState<Parameters>(defaultContextValue.parameters);
   const [computedData, setComputedData] = useState<ComputedData>(defaultContextValue.computedData);
-  const [htmlContent] = useState<string>('');
   const { isLoading, stopLoading } = useLoading();
   const [endpoint, setEndpoint] = useState<string>('lms/');
   const [plotUrl, setPlotUrl] = useState<string>('');
@@ -45,8 +44,8 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   
   const updateIframes = useCallback(async () => {
     try {
-      const plotUrl = stringBuilder(endpoint + 'plot/', parameters);
-      const menuUrl = stringBuilder(endpoint + 'sidemenu/', parameters);
+      const plotUrl = stringBuilder(endpoint + 'plot', parameters);
+      const menuUrl = stringBuilder(endpoint + 'sidemenu', parameters);
       setPlotUrl(plotUrl);
       setSidemenuUrl(menuUrl);
     } catch (error) {
@@ -55,7 +54,7 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   }, [endpoint, parameters]);
 
   const computeData = useCallback(async () => {
-    const calculateData = endpoint + 'calculation/';
+    const calculateData = endpoint + 'calculation';
     try {
       console.log("Current parameters:", parameters);
       const { result } = await fetchApiData(calculateData, parameters);
@@ -69,7 +68,7 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   }, [endpoint, parameters]);
 
   return (
-    <ParametersContext.Provider value={{ parameters, setParameters, computedData, setComputedData, computeData, htmlContent,isLoading, endpoint, setEndpoint, plotUrl, setPlotUrl, sidemenuUrl, setSidemenuUrl }}>
+    <ParametersContext.Provider value={{ parameters, setParameters, computedData, setComputedData, computeData, isLoading, endpoint, setEndpoint, plotUrl, setPlotUrl, sidemenuUrl, setSidemenuUrl }}>
       {children}
     </ParametersContext.Provider>
   );

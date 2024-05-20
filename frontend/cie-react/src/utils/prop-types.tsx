@@ -29,7 +29,6 @@ export interface ParametersContextType {
     isLoading: boolean;
     endpoint: string;
     setEndpoint: (url: string) => void;
-    htmlContent: string;
     plotUrl: string;
     setPlotUrl: (url:string) => void;
     sidemenuUrl: string;

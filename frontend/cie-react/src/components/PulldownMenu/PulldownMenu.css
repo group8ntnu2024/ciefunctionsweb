@@ -1,10 +1,11 @@
 .pulldownMenu {
-    margin: 10px;
-    margin-left: 20px;
-  }
-  
-  .pulldownSelect {
-    padding: 5px;
-    font-size: 16px;
-  }
-  
+  width: 50%; 
+  box-sizing: border-box;
+  margin: 10px;
+}
+
+.pulldownSelect {
+  width: 100%;
+  padding: 5px;
+  font-size: 16px;
+}

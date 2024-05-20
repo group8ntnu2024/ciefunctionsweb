@@ -1,34 +1,33 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { useParameters } from '../../context/parameter-context';
 import styles from './ParametersForm.module.css';
-import { endpointMap } from '../../utils/propTypes';
-import { LMS_CALC_URL } from '../../utils/ApiUrls';
+import { endpointMap } from '../../utils/prop-types';
+import { LMS_URL } from '../../utils/api-urls';
 import { useContentController } from '../../hooks/useContentController';
-import * as yup from 'yup'
+import { parameterSchema } from '../../utils/parameters-form-component-util';
 
 
 const ParametersForm: React.FC = () => {
   const { parameters, setParameters, computeData, setEndpoint, endpoint } = useParameters();
   const { selectedOption } = useContentController();
+  const [generalFieldSize, setGeneralFieldSize] = useState(parameters.field_size);
+  const [dropdownFieldSize, setDropdownFieldSize] = useState(parameters.field_size);
 
   //useeffect to set new endpoint based on selected option in pulldown
   useEffect(() => {
     console.log("\n -------------------------------------------------------- \n" + "Selected method:", selectedOption);
-    const newEndpoint = endpointMap[selectedOption] || LMS_CALC_URL;
+    const newEndpoint = endpointMap[selectedOption] || LMS_URL;
     setEndpoint(newEndpoint);
     console.log("endpoint: " + newEndpoint)
   }, [selectedOption, setEndpoint]);
 
-  //useffect to call computedata when endpoint is changed
+  //useffect to call computedata when endpoint is changed or when dropDownFieldSize is changed
   useEffect(() => {
-    if (endpoint) {
+    if (endpoint || dropdownFieldSize) {
       computeData();
     }
-  }, [endpoint]);
+  }, [endpoint, dropdownFieldSize]);
 
-  //Different states for field size based on selected function
-  const [generalFieldSize, setGeneralFieldSize] = useState(parameters.field_size);
-  const [dropdownFieldSize, setDropdownFieldSize] = useState(parameters.field_size);
 
   //Handles parameter change for every function except xyz
   const handleParameterChange = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -54,12 +53,6 @@ const ParametersForm: React.FC = () => {
     setParameters(prev => ({ ...prev, field_size: selectedDegree }));
   };
 
-  //useeffect to do api call when the field size for xyz is changed.
-  useEffect(() => {
-    if (dropdownFieldSize) {
-      computeData();
-    }
-  }, [dropdownFieldSize]);
 
   //useeffect to use generalFieldSize for function 1-8 and dropDownFieldSize for function 9 and 10. State handling for the two different field sizes
   useEffect(() => {
@@ -73,7 +66,7 @@ const ParametersForm: React.FC = () => {
 
   const createParameterControl = (label: string, name: string, value: number, onChange: (event: ChangeEvent<HTMLInputElement>) => void) => (
     <div className={styles.parametersControl}>
-      <label htmlFor={name}>{label}</label>
+      <label className={styles.parameterLabel} htmlFor={name}>{label}</label>
       <input
         type="number"
         className={styles.formControl}
@@ -114,28 +107,7 @@ const ParametersForm: React.FC = () => {
     );
   }
 
-  const parameterSchema = yup.object().shape({
-    field_size: yup.number()
-      .required('Field size is required')
-      .min(1.0, 'Field size must be greater than 1.0')
-      .max(10.0, 'Field size must be less than 10.0'), 
-    age: yup.number()
-      .required('Age is required')
-      .min(20, 'Age must be greater than 20')
-      .max(80,  'Age must be less than 80'), 
-    min: yup.number()
-      .required('Min domain is required')
-      .min(390.0, 'Min domain must be greater than 390.0')
-      .max(400.0, 'Min domain must be less than 400.0'),
-    max: yup.number()
-      .required('Max domain is required')
-      .min(700.0, 'Max domain must be greater than 700.0')
-      .max(830.0, 'Max domain must be less than 830.0'),
-    step_size: yup.number()
-      .required('Step size is required')
-      .min(1.0, 'Step size must be greater than 1.0')
-      .max(5.0, 'Step size must be less than 5.0')
-  });
+  
 
   const renderParameters = () => {
 

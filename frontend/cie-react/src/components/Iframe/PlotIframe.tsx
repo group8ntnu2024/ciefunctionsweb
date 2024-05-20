@@ -1,5 +1,5 @@
 import { useParameters } from "../../context/parameter-context";
-import IframeComponent from "./iframe-component";
+import IframeComponent from "./IframeComponent";
 
 const PlotIframe: React.FC = () => {
     const { plotUrl } = useParameters();

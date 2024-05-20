@@ -2,6 +2,7 @@
     flex-grow: 1;
     overflow-y: auto;
     max-height: 100%;
+    margin-bottom: 6px
   }
   
   .scrollable-table table {
