@@ -8,7 +8,6 @@ export const PulldownMenu: React.FC = () => {
   return (
     <div className="pulldownMenu">
       <select className="pulldownSelect" onChange={(e) => setSelectedOption(e.target.value)}>
-        {/* <option value="">Select a Data Display Method</option> */}
         <option value="method1">CIE LMS cone fundamentals</option>
         <option value="method2">CIE LMS cone fundamentals (9 sign. figs.)</option>
         <option value="method3">MacLeod-Boynton Is chromaticity diagram</option>

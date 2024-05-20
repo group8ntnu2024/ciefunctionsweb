@@ -6,7 +6,7 @@ import LoadingIndicator from '../LoadingIndicator';
 /**
  * A class to construct the table with the  computed data. Gets computed 
  */
-const FetchedTable = () => {
+const TableContent = () => {
   const { computedData, isLoading } = useParameters();
 
   if (isLoading) {
@@ -39,4 +39,4 @@ const FetchedTable = () => {
 };
 
 
-export default FetchedTable;
+export default TableContent;
