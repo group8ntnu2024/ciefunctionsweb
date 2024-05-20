@@ -1,6 +1,6 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { useParameters } from '../../context/parameter-context';
-import styles from './ParametersForm.module.css';
+import './Parameters-form.css'
 import { endpointMap } from '../../utils/prop-types';
 import { LMS_URL } from '../../utils/api-urls';
 import { useContentController } from '../../hooks/useContentController';
@@ -79,11 +79,11 @@ const ParametersForm: React.FC = () => {
   };
 
   const createParameterControl = (label: string, name: string, value: number, onChange: (event: ChangeEvent<HTMLInputElement>) => void) => (
-    <div className={styles.parametersControl}>
-      <label className={styles.parameterLabel} htmlFor={name}>{label}</label>
+    <div className="parametersControl">
+      <label className="parameterLabel" htmlFor={name}>{label}</label>
       <input
         type="number"
-        className={styles.formControl}
+        className="formControl"
         id={name}
         name={name}
         value={name === "age" ? value.toString() : value.toFixed(1)}
@@ -94,10 +94,10 @@ const ParametersForm: React.FC = () => {
   );
 
   const createDegreeDropdown = () => (
-    <div className={styles.parametersControl}>
+    <div className="parametersControl">
       <label htmlFor="degree-selection">Field size:	</label>
       <select
-        className={styles.formControl}
+        className="formControl"
         id="degree-selection"
         name="degree-selection"
         value={dropdownFieldSize.toString()}
@@ -110,13 +110,13 @@ const ParametersForm: React.FC = () => {
   );
 
   const createParameterForm = () => {
-    return(<div className={styles.parametersForm}>
+    return(<div className="parametersForm">
       {createParameterControl("Field size:", "field_size", generalFieldSize, handleParameterChange)}
       {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
       {createParameterControl("Domain min(nm):", "min", parameters.min, handleParameterChange)}
       {createParameterControl("Domain max (nm):", "max", parameters.max, handleParameterChange)}
       {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
-      <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
+      <button className="btnPrimary" onClick={computeData}>Compute</button>
     </div>
     );
   }
@@ -133,7 +133,7 @@ const ParametersForm: React.FC = () => {
   };
 
   return (
-    <div className={styles.parametersForm}>
+    <div className="parametersForm">
         {renderParameters()}
     </div>
   );

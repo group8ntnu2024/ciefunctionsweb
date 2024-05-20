@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import './navbar.css'
 import { PLOT_ROUTE, TABLE_ROUTE } from '../../utils/router-urls';
 
+/**
+ * 
+ * @returns 
+ */
 const Navbar = () => {
     return (
         <nav className="navbar">

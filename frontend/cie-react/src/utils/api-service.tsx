@@ -28,17 +28,3 @@ async function fetchApiData(endpoint: string, params: Parameters): Promise<ApiRe
 }
 export {fetchApiData}
 
-async function fetchHtmlContent(endpoint: string, params: Parameters): Promise<string> {
-  const url = stringBuilder(endpoint, params)
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: { 'Accept': 'text/html' },
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  console.log(response)
-  return response.text();
-}
-export {fetchHtmlContent}
-

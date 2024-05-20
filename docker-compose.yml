@@ -10,6 +10,7 @@ services:
       - backend
     networks:
       - app-network
+    restart: always
 
   backend:
     build:
@@ -19,6 +20,7 @@ services:
       - "8000:8000"
     networks:
       - app-network
+    restart: always  
 
 networks:
   app-network:

@@ -5,7 +5,7 @@ import TableContent from "./components/table/TableComponent.tsx";
 import ParametersLayout from "./components/parameters/ParametersLayout.tsx";
 import { ParametersProvider } from './context/parameter-context.tsx';
 import { UseContentControllerProvider } from "./hooks/useContentController.tsx";
-import PlotIframe from "./components/Iframe/PlotIframe.tsx";
+import PlotIframe from "./components/Iframe/PlotIframeComponent.tsx";
 import { renderRightGridInformationIframe, renderBottomGridInformationIframe } from "./utils/side-menu-iframe-util.tsx";
 
 function App() {

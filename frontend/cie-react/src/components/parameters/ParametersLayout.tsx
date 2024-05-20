@@ -1,7 +1,7 @@
 import React from 'react';
 import ParametersForm from './ParametersFormComponent';
 import { PulldownMenu } from '../PulldownMenu/PulldownMenuComponent';
-import styles from './ParametersForm.module.css';
+import './Parameters-form.css';
 
 
 interface LayoutProps {
@@ -12,12 +12,11 @@ const ParametersLayout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <>
       {children}
-      <div className={styles.parameterCard}>
+      <div className="parameterCard">
         <PulldownMenu />
         <ParametersForm  />
       </div>
     </>
   );
 };
-
 export default ParametersLayout;

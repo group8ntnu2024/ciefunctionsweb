@@ -1,5 +1,5 @@
 import { useScreenWidth } from '../hooks/useScreenWidth';
-import SideMenuIframe from '../components/Iframe/SideMenuIframe';
+import SideMenuIframe from '../components/Iframe/SideMenuIframeComponent';
 
 export const renderRightGridInformationIframe = () => {
   const screenWidth = useScreenWidth();
