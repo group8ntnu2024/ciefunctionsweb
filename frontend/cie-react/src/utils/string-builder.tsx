@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "./api-urls";
-import { paramProps } from "./prop-types";
+import { Parameters } from "./prop-types";
 
-function stringBuilder(endpoint: string, params: paramProps): string {
+function stringBuilder(endpoint: string, params: Parameters): string {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined) {

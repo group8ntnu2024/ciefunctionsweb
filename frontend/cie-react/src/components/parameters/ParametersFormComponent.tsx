@@ -12,22 +12,46 @@ const ParametersForm: React.FC = () => {
   const { selectedOption } = useContentController();
   const [generalFieldSize, setGeneralFieldSize] = useState(parameters.field_size);
   const [dropdownFieldSize, setDropdownFieldSize] = useState(parameters.field_size);
+  const [paramsUpdated, setParamsUpdated] = useState(false);
 
   //useeffect to set new endpoint based on selected option in pulldown
   useEffect(() => {
-    console.log("\n -------------------------------------------------------- \n" + "Selected method:", selectedOption);
     const newEndpoint = endpointMap[selectedOption] || LMS_URL;
     setEndpoint(newEndpoint);
-    console.log("endpoint: " + newEndpoint)
   }, [selectedOption, setEndpoint]);
+
+   //useeffect to use generalFieldSize for function 1-8 and dropDownFieldSize for function 9 and 10. State handling for the two different field sizes
+   useEffect(() => {
+    const methodNumber = parseInt(selectedOption.replace('method', ''));
+    setParameters(prev => {
+      let updatedParams = { ...prev };
+
+      // Handle optional parameter for method2
+      if (selectedOption === 'method2') {
+        updatedParams.optional = 'base';
+      } else {
+        delete updatedParams.optional;
+      }
+
+      // Handle field size based on method number
+      if (methodNumber >= 1 && methodNumber <= 8) {
+        updatedParams.field_size = generalFieldSize;
+      } else if (methodNumber >= 9 && methodNumber <= 10) {
+        updatedParams.field_size = dropdownFieldSize;
+      }
+
+      return updatedParams;
+    });
+    setParamsUpdated(true);
+  }, [selectedOption, dropdownFieldSize, setParameters]);
 
   //useffect to call computedata when endpoint is changed or when dropDownFieldSize is changed
   useEffect(() => {
-    if (endpoint || dropdownFieldSize) {
+    if (paramsUpdated) {
       computeData();
+      setParamsUpdated(false);
     }
-  }, [endpoint, dropdownFieldSize]);
-
+}, [endpoint, selectedOption, paramsUpdated, setParameters]);
 
   //Handles parameter change for every function except xyz
   const handleParameterChange = (event: ChangeEvent<HTMLInputElement>): void => {
@@ -51,18 +75,8 @@ const ParametersForm: React.FC = () => {
     const selectedDegree = parseFloat(event.target.value);
     setDropdownFieldSize(selectedDegree);
     setParameters(prev => ({ ...prev, field_size: selectedDegree }));
+    setParamsUpdated(true);
   };
-
-
-  //useeffect to use generalFieldSize for function 1-8 and dropDownFieldSize for function 9 and 10. State handling for the two different field sizes
-  useEffect(() => {
-    const methodNumber = parseInt(selectedOption.replace('method', ''));
-    if (methodNumber >= 1 && methodNumber <= 8) {
-      setParameters(prev => ({ ...prev, field_size: generalFieldSize }));
-    } else if (methodNumber >= 9 && methodNumber <= 10) {
-      setParameters(prev => ({ ...prev, field_size: dropdownFieldSize }));
-    }
-  }, [selectedOption, generalFieldSize, dropdownFieldSize]);
 
   const createParameterControl = (label: string, name: string, value: number, onChange: (event: ChangeEvent<HTMLInputElement>) => void) => (
     <div className={styles.parametersControl}>
@@ -99,15 +113,13 @@ const ParametersForm: React.FC = () => {
     return(<div className={styles.parametersForm}>
       {createParameterControl("Field size:", "field_size", generalFieldSize, handleParameterChange)}
       {createParameterControl("Age:", "age", parameters.age, handleParameterChange)}
-      {createParameterControl("Domain(nm):", "min", parameters.min, handleParameterChange)}
-      {createParameterControl("-", "max", parameters.max, handleParameterChange)}
+      {createParameterControl("Domain min(nm):", "min", parameters.min, handleParameterChange)}
+      {createParameterControl("Domain max (nm):", "max", parameters.max, handleParameterChange)}
       {createParameterControl("Step(nm):", "step_size", parameters.step_size, handleParameterChange)}
       <button className={`${styles.btnPrimary} btn`} onClick={computeData}>Compute</button>
     </div>
     );
   }
-
-  
 
   const renderParameters = () => {
 

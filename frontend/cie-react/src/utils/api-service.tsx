@@ -1,4 +1,4 @@
-import { ApiResponse, paramProps } from "./prop-types";
+import { ApiResponse, Parameters } from "./prop-types";
 import { stringBuilder } from "./string-builder";
 
 
@@ -6,7 +6,7 @@ import { stringBuilder } from "./string-builder";
 /**
  * Fetches data from the backend API.
  */
-async function fetchApiData(endpoint: string, params: paramProps): Promise<ApiResponse> {
+async function fetchApiData(endpoint: string, params: Parameters): Promise<ApiResponse> {
   const url = stringBuilder(endpoint, params);
   console.log(url);
   const response = await fetch(url, {
@@ -28,7 +28,7 @@ async function fetchApiData(endpoint: string, params: paramProps): Promise<ApiRe
 }
 export {fetchApiData}
 
-async function fetchHtmlContent(endpoint: string, params: paramProps): Promise<string> {
+async function fetchHtmlContent(endpoint: string, params: Parameters): Promise<string> {
   const url = stringBuilder(endpoint, params)
   const response = await fetch(url, {
     method: 'GET',
