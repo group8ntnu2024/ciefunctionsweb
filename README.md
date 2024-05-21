@@ -1,46 +1,14 @@
-# Frontend setup
-1. navigate to frontend/cie-react
-2. npm install
-4. npm install recharts
-5. npm install react-router-dom
-5. npm install react-plotly.js plotly.js
+# To run deployed application
+1. Connect to NTNU to network.
+2. Navigate to the VM's IP adress
 
-npm install react-katex
-npm i --save-dev @types/react-katex
+For frontend application navigate to 10.212.136.66:80 \
+For backend API navigate to 10.212.136.66:8000
 
-5. npm run dev 
+# To run on local machine
+1. Install Docker and docker-compose
+2. Clone the repoistory
+3. Navigate to root folder of the project
+4. run docker-compose up --build
 
-Accessible at http://localhost:5173/
-
-# Backend setup
-### Windows:
-1. Navigate to backend directory
-2. Enter command "python -m venv venv" to create virtual environment
-3. Enter command ".\venv\Scripts\activate"
-4. Enter command "pip install Flask"
-5. Enter command "pip install flask-cors"
-6. Enter command "pip install numpy"
-7. Enter command "pip install scipy"
-8. Enter command "python cieapi.py"
-
-Accessible at http://localhost:5000/
-
-### Mac OS/Linux:
-1. python3 -m venv venv
-2. source venv/bin/activate
-3. pip install Flask
-3. pip install flask-cors
-4. pip install numpy
-5. pip install scipy
-6. export FLASK_APP=cieapi.py
-7. flask run
-
-Accessible at http://localhost:5000/
-
----
-- `pip install Sanic`
-- http://localhost:8000/
-
-### Disable virtual environment:
-
-deactivate
+For running on local machine or outside the VM environment where the application is deployed, you need to update the ip adresss in 'frontend/cie-react/utils/api-urls.tsx' to match your setup. You might also need to configure ports in the docker-compose.yml in the root folder of this project.

@@ -1,5 +1,5 @@
-/*side-menu-iframe-util.tsx: For rendering sidemenu
-based on the current screen width
+/*BottomSideMenuComponent.tsx: For rendering sidemenu to the right
+of plot/table based on the current screen width
 
 Copyright (C) 2012-2020 Ivar Farup and Jan Henrik Wold
 Copyright (C) 2024 Bachelor Thesis Group 8
@@ -18,14 +18,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
-import { useScreenWidth } from '../hooks/useScreenWidth';
-import SideMenuIframe from '../components/Iframe/SideMenuIframeComponent';
+import { useScreenWidth } from '../../hooks/useScreenWidth';
+import SideMenuIframe from './SideMenuIframeComponent';
 
 /**
- * Function for rendering the sidemenu when it is to be placed to the right of the plot/table
+ * React functional component for rendering the sidemenu when it is to be placed to the right of the plot/table
  * @returns  {JSX.Element} The rendered sidemenu iframe if the screen width is less than or equal to 1200px.
  */
-export const renderRightGridInformationIframe = () => {
+const BottomSideMenuComponent: React.FC = () => {
   const screenWidth = useScreenWidth();
   return (
     <>
@@ -37,20 +37,4 @@ export const renderRightGridInformationIframe = () => {
     </>
   );
 };
-
-/**
- * Function for rendering the sidemenu when it is to be placed to the right of the plot/table
- * @returns  {JSX.Element} The rendered sidemenu iframe if the screen width is more than 1200px.
- */
-export const renderBottomGridInformationIframe = () => {
-  const screenWidth = useScreenWidth();
-  return (
-    <>
-      {screenWidth > 1200 && (
-        <div className="sid">
-          <SideMenuIframe />
-        </div>
-      )}
-    </>
-  );
-};
+export default BottomSideMenuComponent;

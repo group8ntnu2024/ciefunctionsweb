@@ -25,7 +25,8 @@ import ParametersLayout from "./components/parameters/ParametersLayoutComponent.
 import { ParametersProvider } from './context/parameter-context.tsx';
 import { UseContentControllerProvider } from "./hooks/useContentController.tsx";
 import PlotIframe from "./components/Iframe/PlotIframeComponent.tsx";
-import { renderRightGridInformationIframe, renderBottomGridInformationIframe } from "./utils/side-menu-iframe-util.tsx";
+import RightSideMenuComponent from "./components/Iframe/BottomSideMenuComponent.tsx";
+import BottomSideMenuComponent from "./components/Iframe/RightSideMenuComponent.tsx";
 
 /**
  * Application component that sets up routing, context providers.
@@ -52,16 +53,16 @@ function App() {
         { path: PLOT_ROUTE, element: <div className="inner-container">
         <div className="plo">
           <ParametersLayout><PlotIframe/></ParametersLayout>
-          {renderRightGridInformationIframe()}
+          < RightSideMenuComponent/>
         </div>
-        {renderBottomGridInformationIframe()}
+        < BottomSideMenuComponent/>
         </div> },
         { path: TABLE_ROUTE, element: <div className="inner-container">
         <div className="tab">
           <ParametersLayout><TableContent/></ParametersLayout>
-          {renderRightGridInformationIframe()}
+          < RightSideMenuComponent/>
         </div>
-        {renderBottomGridInformationIframe()}
+        < BottomSideMenuComponent/>
       </div> },
       ],
     }
