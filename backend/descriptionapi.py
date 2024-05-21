@@ -50,7 +50,35 @@ from computemodularization import compute_MacLeod_modular, compute_Maxwellian_mo
 def _head():
     html_string = """
     <head>
-    <link type="text/css" rel="stylesheet" href="../../../styles/description.css" />
+        <style>  
+            body {
+            font-family: Sans-Serif;
+            }
+            .matrix {
+                position: relative;
+                border-spacing: 10px 0;
+            }
+            .matrix:before {
+                content: "";
+                position: absolute;
+                left: -6px;
+                top: 0;
+                border: 1px solid #000;
+                border-right: 0px;
+                width: 6px;
+                height: 100%;
+            }
+            .matrix:after {
+                content: "";
+                position: absolute;
+                right: -6px;
+                top: 0;
+                border: 1px solid #000;
+                border-left: 0px;
+                width: 6px;
+                height: 100%;
+            }
+        </style>
     <script type="text/javascript"
     src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
     </script>
