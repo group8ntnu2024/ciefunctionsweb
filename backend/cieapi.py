@@ -188,9 +188,6 @@ calculation_formats = {
 api.static("/", "./templates/index.html", name="home-page")
 api.static("/api/v2/", "./templates/api-page.html", name="api-page")
 
-# hosting css for description.css
-api.static("/styles/description.css", "./styles/description.css")
-
 
 def new_calculation_JSON(calculation, parameters):
     """
