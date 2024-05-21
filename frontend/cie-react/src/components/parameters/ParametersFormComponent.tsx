@@ -1,12 +1,21 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
 import { useParameters } from '../../context/parameter-context';
-import './Parameters-form.css'
+import './parameters-form.css'
 import { endpointMap } from '../../utils/prop-types';
 import { LMS_URL } from '../../utils/api-urls';
 import { useContentController } from '../../hooks/useContentController';
 import { parameterSchema } from '../../utils/parameters-form-component-util';
 
-
+/**
+ * React functional component that renders the parametersform. Creates the parameterform based on the selected function,
+ * and renders a parameterform with the needed elements for userinput. 
+ * 
+ * Renders parameter form with a dropdown menu for field size
+ * 
+ * Renders parameter form with input fields for field size, age, min and max for domain size and step size and a 
+ * compute button for every other colormatch function.
+ * @returns {JSX.Element} ParametersForm as a JSX element.
+ */
 const ParametersForm: React.FC = () => {
   const { parameters, setParameters, computeData, setEndpoint, endpoint } = useParameters();
   const { selectedOption } = useContentController();
@@ -20,11 +29,14 @@ const ParametersForm: React.FC = () => {
     setEndpoint(newEndpoint);
   }, [selectedOption, setEndpoint]);
 
-   //useeffect to use generalFieldSize for function 1-8 and dropDownFieldSize for function 9 and 10. State handling for the two different field sizes
+   //useeffect to use generalFieldSize for function 1-8 and dropDownFieldSize 
+   //for function 9 and 10. State handling for the two different field sizes
+   //handles the logic for adding a optional parameter 'base' if the selected
+   //is method2
    useEffect(() => {
     const methodNumber = parseInt(selectedOption.replace('method', ''));
     setParameters(prev => {
-      let updatedParams = { ...prev };
+      const updatedParams = { ...prev };
 
       // Handle optional parameter for method2
       if (selectedOption === 'method2') {
@@ -51,13 +63,14 @@ const ParametersForm: React.FC = () => {
       computeData();
       setParamsUpdated(false);
     }
-}, [endpoint, selectedOption, paramsUpdated, setParameters]);
+}, [endpoint, selectedOption, paramsUpdated, setParameters, computeData]);
 
   //Handles parameter change for every function except xyz
   const handleParameterChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const { name, value } = event.target;
     const numericValue = parseFloat(value);
-  
+    
+    //validates the user specified input
     parameterSchema.validateAt(name, { [name]: numericValue })
       .then(() => {
         if (name === 'field_size') {
@@ -78,6 +91,7 @@ const ParametersForm: React.FC = () => {
     setParamsUpdated(true);
   };
 
+  //Creates the parametercontrols for the parameters form. These are the string and input fields for a given parameter in the form.
   const createParameterControl = (label: string, name: string, value: number, onChange: (event: ChangeEvent<HTMLInputElement>) => void) => (
     <div className="parametersControl">
       <label className="parameterLabel" htmlFor={name}>{label}</label>
@@ -93,6 +107,8 @@ const ParametersForm: React.FC = () => {
     </div>
   );
 
+  //Creates the dropdown menu for selecting field size for the two
+  //standard functions; method9 and method 10
   const createDegreeDropdown = () => (
     <div className="parametersControl">
       <label htmlFor="degree-selection">Field size:	</label>
@@ -109,6 +125,7 @@ const ParametersForm: React.FC = () => {
     </div>
   );
 
+  //Creates the parameter form with the required fields for userinput. 
   const createParameterForm = () => {
     return(<div className="parametersForm">
       {createParameterControl("Field size:", "field_size", generalFieldSize, handleParameterChange)}
@@ -121,6 +138,12 @@ const ParametersForm: React.FC = () => {
     );
   }
 
+  //Takes in the selected color matching function, parses the method name to determine
+  //which method it is and decides which parameters form to display:
+  //- For method 1-8 the createParametersForm is displayed. This contains option for 
+  //  field_size(1-10), age, domain min and max, step size
+  //- For method 9 and 10 the createDegreeDropDown is displayed. This only contains
+  //  the dropdown menu for selecting 2 or 10 as field_size 
   const renderParameters = () => {
 
      const methodNumber = parseInt(selectedOption.replace('method', ''));

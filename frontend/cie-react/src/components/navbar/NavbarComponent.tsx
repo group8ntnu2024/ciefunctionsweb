@@ -4,8 +4,10 @@ import './navbar.css'
 import { PLOT_ROUTE, TABLE_ROUTE } from '../../utils/router-urls';
 
 /**
- * 
- * @returns 
+ * React functional component that renders a navigation bar using react-router-dom.
+ * Provides links to routes to the application: plot and table. When clicked this routes to the respective
+ * component that the user wants to display.
+ * @returns {JSX.Element} Navbar component as a JSX element
  */
 const Navbar = () => {
     return (

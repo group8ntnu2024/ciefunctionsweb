@@ -4,7 +4,10 @@ import { fetchApiData } from '../utils/api-service';
 import { useLoading } from '../hooks/useLoading';
 import { stringBuilder } from '../utils/string-builder';
 
-
+/**
+ * Default values for the context of parameters and functions
+ * related to the context of parameters.
+ */
 const defaultContextValue: ParametersContextType = {
   parameters: {
     field_size: 2.0,
@@ -29,10 +32,15 @@ const defaultContextValue: ParametersContextType = {
 
 };
 
+/**
+ * Creates a context with default values. Contains a set of functions to help manipulate
+ * parameter state.
+ * 
+ * Exports ParameterProvider which wraps children and allows for state handling of
+ * parameters through the applicaiton.
+ */
 const ParametersContext = createContext<ParametersContextType>(defaultContextValue);
-
 export const useParameters = () => useContext(ParametersContext);
-
 export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   const [parameters, setParameters] = useState<Parameters>(defaultContextValue.parameters);
   const [computedData, setComputedData] = useState<ComputedData>(defaultContextValue.computedData);
@@ -41,7 +49,7 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
   const [plotUrl, setPlotUrl] = useState<string>('');
   const [sidemenuUrl, setSidemenuUrl] = useState<string>('');
 
-  
+  //fetches the iframe for sidemenu and plot from the backend API
   const updateIframes = useCallback(async () => {
     try {
       const plotUrl = stringBuilder(endpoint + 'plot', parameters);
@@ -53,6 +61,8 @@ export const ParametersProvider = ({ children }: { children?: ReactNode }) => {
     }
   }, [endpoint, parameters]);
 
+  //fetches the result data from the backend API
+  //to be displayed in the TableComponent
   const computeData = useCallback(async () => {
     const calculateData = endpoint + 'calculation';
     try {

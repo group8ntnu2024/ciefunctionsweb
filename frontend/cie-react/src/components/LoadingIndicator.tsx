@@ -9,7 +9,7 @@ const LoadingIndicator: React.FC = () => {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      height: '600px',
+      height: '100%',
       fontSize: '20px'
     }}>
       Loading...

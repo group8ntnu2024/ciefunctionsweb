@@ -1,5 +1,8 @@
 import * as yup from 'yup'
 
+/**
+ * Defines the rules for input validation in the parametersform.
+ */
 export const parameterSchema = yup.object().shape({
     field_size: yup.number()
       .required('Field size is required')

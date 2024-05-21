@@ -4,7 +4,10 @@ import LoadingIndicator from '../LoadingIndicator';
 
 
 /**
- * A class to construct the table with the  computed data. Gets computed 
+ * React functinoal component to construct the table with the computed data.
+ * Takes the JSON response from the api call and puts the result.data into 
+ * the table
+ * @returns {JSX.Element} TableContent as JSX Element
  */
 const TableContent = () => {
   const { computedData, isLoading } = useParameters();

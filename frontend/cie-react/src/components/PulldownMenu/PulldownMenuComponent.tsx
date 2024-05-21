@@ -2,6 +2,11 @@ import React from 'react';
 import './PulldownMenu.css';
 import { useContentController } from '../../hooks/useContentController';
 
+/**
+ * React functional component that renders a PulldownMenu allowing the user to select which
+ * function they want to inspect.
+ * @returns {JSX.Element} Renders PulldownMenu as a JSX Element
+ */
 export const PulldownMenu: React.FC = () => {
   const { setSelectedOption } = useContentController();
 
